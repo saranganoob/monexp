@@ -14,6 +14,8 @@ See `PLAN.md` for the agreed plan and decisions, and `CLAUDE.md` for the origina
 
 Node 24, npm 11, MongoDB running locally (`brew services list` should show `mongodb-community started`).
 
+You can run `npm run dev`, `npm test`, `npm run seed` and `npm run create-user` from the project folder too – they pass through to `backend/`.
+
 ## Backend – first-time setup
 
 ```bash

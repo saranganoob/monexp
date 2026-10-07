@@ -1,0 +1,12 @@
+{
+  "name": "monexp",
+  "private": true,
+  "description": "Shortcuts so you can run the backend's commands from the project folder",
+  "scripts": {
+    "dev": "npm --prefix backend run dev",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test",
+    "seed": "npm --prefix backend run seed --",
+    "create-user": "npm --prefix backend run create-user"
+  }
+}

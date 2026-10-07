@@ -1,0 +1,128 @@
+<div class="page">
+  <div role="tablist" aria-label="Profile sections" style="display: flex; gap: 8px; flex-wrap: wrap">
+    @for (t of tabs(); track t[0]) {
+      <button role="tab" [attr.aria-selected]="current() === t[0]" (click)="picked.set(t[0])" [style]="segStyle(current() === t[0])">{{ t[1] }}</button>
+    }
+  </div>
+
+  @if (current() === 'account') {
+    <section class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; max-width: 640px">
+      <div>
+        <h2 style="margin: 0; font-size: 17px; font-weight: 800">Account details</h2>
+        <p style="margin: 4px 0 0; font-size: 14px; color: #4B5563">You can sign in with either of these.</p>
+      </div>
+      <div><label for="accEmail" class="label" style="display: block; margin-bottom: 6px">Email</label><input id="accEmail" type="email" class="field" [value]="accEmail()" (input)="accEmail.set(val($event)); accStatus.set('')" placeholder="you@example.com" autocomplete="email"></div>
+      <div><label for="accPhone" class="label" style="display: block; margin-bottom: 6px">Phone number</label>
+        <div style="display: flex; gap: 8px; align-items: center"><span style="min-height: 44px; display: flex; align-items: center; padding: 0 12px; border: 1px solid #CDD3DB; border-radius: 10px; background: #F4F5F7; font-weight: 600">+91</span><input id="accPhone" type="tel" class="field num" inputmode="numeric" [value]="accPhone()" (input)="accPhone.set(val($event)); accStatus.set('')" placeholder="10-digit mobile number" autocomplete="tel-national"></div>
+      </div>
+      @if (accErr()) { <div role="alert" class="err">{{ accErr() }}</div> }
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+        <button class="btn btn-primary" (click)="saveAccount()">Save changes</button>
+        <button class="btn" (click)="signOut()">Sign out</button>
+        <span style="font-size: 14px; color: #0B6B4B; font-weight: 600">{{ accStatus() }}</span>
+      </div>
+      <p style="margin: 0; font-size: 13px; color: #4B5563">To change your password, run <strong>npm run create-user</strong> in the MonEXP folder with the same email.</p>
+    </section>
+  }
+
+  @if (current() === 'cards') {
+    <section style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 16px">
+      @for (t of cardTiles(); track t.c.id) {
+        <article class="card" style="overflow: hidden">
+          <div [style]="t.face">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+              <span style="font-weight: 800; font-size: 16px">{{ t.c.name }}</span>
+              <span style="font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; background: rgba(255,255,255,0.18); border-radius: 6px; padding: 3px 8px">{{ t.c.network || 'Network not set' }}</span>
+            </div>
+            <div class="num" style="font-size: 18px; letter-spacing: .18em; font-weight: 700">•••• •••• •••• {{ t.c.last4 || '····' }}</div>
+          </div>
+          <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+            <div style="font-size: 13px; color: #374151">{{ t.stats }}</div>
+            @if (cardMsg()?.id === t.c.id) { <div role="alert" style="font-size: 13px; color: #A3201A; font-weight: 600">{{ cardMsg()!.text }}</div> }
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <button class="btn btn-sm" (click)="editCard(t.c)">Edit</button>
+              <button class="btn btn-sm" (click)="toggleClosed(t.c)">{{ t.c.closedOn ? 'Reopen' : 'Mark closed' }}</button>
+              <button class="btn btn-ghost btn-sm" (click)="deleteCard(t.c)" [attr.aria-label]="'Delete ' + t.c.name">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>Delete
+              </button>
+            </div>
+          </div>
+        </article>
+      }
+    </section>
+    <section class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; max-width: 760px">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 800">{{ cardEdit() ? 'Edit card' : 'Add a card' }}</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; align-items: end">
+        <div><label for="cfName" class="label" style="display: block; margin-bottom: 6px">Card name</label><input id="cfName" class="field" [value]="cfName()" (input)="cfName.set(val($event)); cfErr.set('')" placeholder="e.g. SBI SimplyCLICK"></div>
+        <div><label for="cfLast4" class="label" style="display: block; margin-bottom: 6px">Last 4 digits</label><input id="cfLast4" class="field num" inputmode="numeric" maxlength="4" [value]="cfLast4()" (input)="cfLast4.set(val($event).replace(/[^0-9]/g, '')); cfErr.set('')" placeholder="1234"></div>
+        <div><label for="cfNet" class="label" style="display: block; margin-bottom: 6px">Network</label>
+          <select id="cfNet" class="field" (change)="cfNet.set(val($event)); cfErr.set('')">
+            <option value="" [selected]="!cfNet()">Choose…</option>
+            @for (n of ['Visa', 'RuPay', 'Maestro', 'Mastercard']; track n) { <option [value]="n" [selected]="cfNet() === n">{{ n }}</option> }
+          </select>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <button class="btn btn-primary" (click)="saveCard()">{{ cardEdit() ? 'Save card' : 'Add card' }}</button>
+          @if (cardEdit()) { <button class="btn" (click)="cancelCard()">Cancel</button> }
+        </div>
+      </div>
+      @if (cfErr()) { <div role="alert" class="err">{{ cfErr() }}</div> }
+      <div style="display: flex; gap: 10px; align-items: flex-start; background: #F4F5F7; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: #374151; line-height: 1.5">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M6 10V7a6 6 0 0 1 12 0v3M5 10h14v11H5z"></path></svg>
+        <span>MonEXP only keeps the card name, network and last 4 digits — enough to tell your cards apart. It never asks for the full card number or CVV.</span>
+      </div>
+    </section>
+  }
+
+  @if (current() === 'persons') {
+    <section class="card" style="overflow: hidden">
+      <div style="padding: 14px 20px; background: #F8F9FB; border-bottom: 1px solid #E3E6EB; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 800">People you lend to, borrow from, or run EMIs for</h2>
+        <span class="num" style="font-size: 13px; font-weight: 700; color: #1D4ED8">{{ inr(owedTotal()) }} owed to you right now</span>
+      </div>
+      @for (p of store.people(); track p.id) {
+        @let v = personView(p);
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 20px; border-top: 1px solid #EEF0F3">
+          <div style="width: 40px; height: 40px; flex: none; border-radius: 50%; background: #E8EEFC; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-weight: 800">{{ p.name.charAt(0).toUpperCase() }}</div>
+          <div style="flex: 1 1 220px; min-width: 0">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px"><span style="font-weight: 700">{{ p.name }}</span>
+              @if (p.relation) { <span style="font-size: 12px; font-weight: 700; background: #EEF0F3; color: #374151; border-radius: 999px; padding: 2px 8px">{{ p.relation }}</span> }
+            </div>
+            <div style="font-size: 13px; color: #4B5563">{{ v.contact }}</div>
+            <div style="font-size: 13px; color: #374151; margin-top: 2px">{{ v.stats }}</div>
+            @if (personMsg()?.id === p.id) { <div role="alert" style="font-size: 13px; color: #A3201A; font-weight: 600; margin-top: 2px">{{ personMsg()!.text }}</div> }
+          </div>
+          <div class="num" style="text-align: right"><div style="font-weight: 800" [style.color]="v.owedColor">{{ v.owedStr }}</div><div style="font-size: 12px; color: #4B5563">{{ v.owedLabel }}</div></div>
+          <div style="display: flex; gap: 6px">
+            <button class="btn btn-sm" (click)="editPerson(p)">Edit</button>
+            <button class="btn btn-ghost btn-sm" style="width: 36px; padding: 0" (click)="deletePerson(p)" [attr.aria-label]="'Delete ' + p.name">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>
+            </button>
+          </div>
+        </div>
+      } @empty {
+        <div style="padding: 28px 20px; text-align: center; color: #4B5563">No people yet. Add someone below.</div>
+      }
+    </section>
+    <section id="person-form" class="card" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 800">{{ personEdit() ? 'Edit person' : 'Add a person' }}</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px; align-items: end">
+        <div><label for="pfName" class="label" style="display: block; margin-bottom: 6px">Name</label><input id="pfName" class="field" [value]="pfName()" (input)="pfName.set(val($event)); pfErr.set('')" placeholder="e.g. Sathish Rajan"></div>
+        <div><label for="pfRel" class="label" style="display: block; margin-bottom: 6px">Relationship</label>
+          <select id="pfRel" class="field" (change)="pfRel.set(val($event))">
+            <option value="" [selected]="!pfRel()">Not set</option>
+            @for (r of ['Friend', 'Family', 'Colleague', 'Roommate', 'Other']; track r) { <option [value]="r" [selected]="pfRel() === r">{{ r }}</option> }
+          </select>
+        </div>
+        <div><label for="pfPhone" class="label" style="display: block; margin-bottom: 6px">Phone (optional)</label><input id="pfPhone" type="tel" class="field num" inputmode="numeric" [value]="pfPhone()" (input)="pfPhone.set(val($event).replace(/[^0-9]/g, '').slice(0, 10)); pfErr.set('')" placeholder="10-digit mobile"></div>
+        <div><label for="pfUpi" class="label" style="display: block; margin-bottom: 6px">UPI ID (optional)</label><input id="pfUpi" class="field" [value]="pfUpi()" (input)="pfUpi.set(val($event)); pfErr.set('')" placeholder="name@bank"></div>
+        <div style="grid-column: 1 / -1"><label for="pfNote" class="label" style="display: block; margin-bottom: 6px">Note (optional)</label><input id="pfNote" class="field" [value]="pfNote()" (input)="pfNote.set(val($event))" placeholder="e.g. Pays on the 10th after salary"></div>
+      </div>
+      @if (pfErr()) { <div role="alert" class="err">{{ pfErr() }}</div> }
+      <div style="display: flex; gap: 8px">
+        <button class="btn btn-primary" (click)="savePerson()">{{ personEdit() ? 'Save changes' : 'Add person' }}</button>
+        @if (personEdit()) { <button class="btn" (click)="cancelPerson()">Cancel</button> }
+      </div>
+    </section>
+  }
+</div>

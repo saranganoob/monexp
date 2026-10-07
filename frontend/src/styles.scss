@@ -1,0 +1,26 @@
+/* Global styles – values copied from design/web-app/Main.dc.html */
+body { margin: 0; background: #F4F5F7; color: #111827; font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif; }
+* { box-sizing: border-box; }
+.num { font-variant-numeric: tabular-nums; }
+.btn { font: inherit; font-weight: 600; font-size: 14px; min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #D5DAE1; background: #fff; color: #111827; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+.btn:hover { background: #F1F3F6; }
+.btn:disabled { opacity: .6; cursor: default; }
+.btn-primary { background: #1D4ED8; border-color: #1D4ED8; color: #fff; }
+.btn-primary:hover { background: #1E40AF; }
+.btn-ghost { border-color: transparent; background: transparent; color: #374151; }
+.btn-ghost:hover { background: #EEF0F3; }
+.btn-sm { min-height: 36px; font-size: 13px; padding: 0 12px; }
+.icon-btn { width: 44px; padding: 0; }
+.card { background: #fff; border: 1px solid #E3E6EB; border-radius: 16px; }
+.label { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #5B6474; }
+.field { font: inherit; font-size: 14px; min-height: 44px; padding: 0 12px; border: 1px solid #CDD3DB; border-radius: 10px; background: #fff; color: #111827; width: 100%; }
+.field:focus, .btn:focus-visible, .navbtn:focus-visible { outline: 2px solid #1D4ED8; outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+a { color: #1D4ED8; }
+a:hover { color: #1E40AF; }
+.err { color: #A3201A; font-size: 14px; font-weight: 600; }
+.page { display: flex; flex-direction: column; gap: 24px; }
+.split { margin: 0 20px 16px 76px; }
+.hide-xs { }
+@media (max-width: 860px) { .split { margin: 0 16px 16px 16px; } }
+@media (max-width: 520px) { .hide-xs { display: none; } }

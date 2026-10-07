@@ -6,7 +6,7 @@ See `PLAN.md` for the agreed plan and decisions, and `CLAUDE.md` for the origina
 | Folder | What's in it |
 |---|---|
 | `backend/` | Node + Express API, MongoDB (Mongoose) models, money calculations |
-| `frontend/` | Angular app *(Phase 2 – not built yet)* |
+| `frontend/` | Angular 21 app – the screens |
 | `design/` | Design reference only – not part of the app |
 | `sample-data.xlsx` | Sample of the Google Sheet (Jan–Oct 2026) |
 
@@ -14,7 +14,7 @@ See `PLAN.md` for the agreed plan and decisions, and `CLAUDE.md` for the origina
 
 Node 24, npm 11, MongoDB running locally (`brew services list` should show `mongodb-community started`).
 
-You can run `npm run dev`, `npm test`, `npm run seed` and `npm run create-user` from the project folder too – they pass through to `backend/`.
+You can run `npm run dev` (backend), `npm run web` (website), `npm test`, `npm run seed` and `npm run create-user` from the project folder too.
 
 ## Backend – first-time setup
 
@@ -35,6 +35,19 @@ npm run dev                 # restarts automatically when code changes
 
 The API runs at http://localhost:3000/api – check http://localhost:3000/api/health shows `{"ok":true}`.
 To try requests, open `backend/requests.http` in VS Code with the **REST Client** extension.
+
+## Run the website
+
+Needs the backend running at the same time (two terminal tabs).
+
+```bash
+cd frontend
+npm install                 # first time only
+npm start
+```
+
+Open http://localhost:4200 and sign in with the account from `npm run create-user`.
+On a phone on the same Wi-Fi: run `npm start -- --host 0.0.0.0` and open `http://<your Mac's IP>:4200`.
 
 ## Tests
 

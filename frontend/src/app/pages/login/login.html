@@ -1,0 +1,59 @@
+<div class="wrap">
+  <section class="login-brand">
+    <div class="ring"></div>
+    <div class="blob"></div>
+    <div style="display: flex; align-items: center; gap: 12px; position: relative">
+      <div class="logo">₹</div>
+      <span style="font-weight: 800; font-size: 20px">MonEXP</span>
+    </div>
+    <div style="position: relative; max-width: 460px">
+      <h1>Every rupee for the month, in one place.</h1>
+      <p style="margin: 16px 0 0; font-size: 16px; line-height: 1.6; color: #C9D6F5">Bills, credit cards, EMIs for you and your friends, and who owes you what — without rebuilding a spreadsheet tab every month.</p>
+      <div class="login-feats">
+        @for (f of ['Tick bills paid and watch your balance update', 'Track friends’ EMIs on your cards until they close', 'Ask the assistant about your spends in plain words']; track f) {
+          <div style="display: flex; gap: 12px; align-items: center">
+            <span class="tick"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>{{ f }}
+          </div>
+        }
+      </div>
+    </div>
+    <div style="font-size: 13px; color: #9FB2E4; position: relative">Your data stays private to your account.</div>
+  </section>
+
+  <main class="form-side">
+    <form class="card form" (submit)="$event.preventDefault(); submit()">
+      <div>
+        <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.01em">Sign in</h2>
+        <p style="margin: 6px 0 0; color: #4B5563; font-size: 15px">Welcome back. Pick up where you left off.</p>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div>
+          <label for="lId" class="label" style="display: block; margin-bottom: 6px">Email or mobile number</label>
+          <input id="lId" class="field" [value]="id()" (input)="id.set(val($event)); err.set('')" autocomplete="username" placeholder="you@example.com or 98xxxxxxxx" [attr.aria-invalid]="!!err()">
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px">
+            <label for="lPw" class="label">Password</label>
+            <button type="button" class="link" (click)="showHelp.set(!showHelp())">Forgot password?</button>
+          </div>
+          <div class="pw">
+            <input id="lPw" [type]="showPw() ? 'text' : 'password'" [value]="pw()" (input)="pw.set(val($event)); err.set('')" autocomplete="current-password" placeholder="At least 8 characters">
+            <button type="button" class="toggle" (click)="showPw.set(!showPw())" [attr.aria-pressed]="showPw()" [attr.aria-label]="showPw() ? 'Hide password' : 'Show password'">{{ showPw() ? 'Hide' : 'Show' }}</button>
+          </div>
+        </div>
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #374151; cursor: pointer; min-height: 32px">
+          <input type="checkbox" [checked]="remember()" (change)="remember.set(checked($event))" style="width: 18px; height: 18px; accent-color: #1D4ED8">Keep me signed in on this device
+        </label>
+      </div>
+      @if (showHelp()) {
+        <div role="status" style="font-size: 14px; color: #1E3A8A; background: #E8EEFC; border-radius: 10px; padding: 10px 12px; line-height: 1.5">
+          To set a new password, run <strong>npm run create-user</strong> in the MonEXP folder and enter the same email.
+        </div>
+      }
+      @if (err()) {
+        <div role="alert" style="font-size: 14px; color: #A3201A; background: #FDE8E6; border-radius: 10px; padding: 10px 12px; font-weight: 600">{{ err() }}</div>
+      }
+      <button type="submit" class="btn btn-primary" [disabled]="busy()" style="min-height: 48px; font-size: 15px; width: 100%">{{ busy() ? 'Signing in…' : 'Sign in' }}</button>
+    </form>
+  </main>
+</div>

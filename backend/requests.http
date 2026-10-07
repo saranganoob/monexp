@@ -1,0 +1,80 @@
+# Try the API from VS Code: install the "REST Client" extension (humao.rest-client),
+# start the server (npm run dev), then click "Send Request" above any request below.
+# Run "Sign in" first – the login cookie is remembered for the other requests.
+
+@api = http://localhost:3000/api
+@ym = 2026-10
+
+### Health check (no login needed)
+GET {{api}}/health
+
+### Sign in – asks for your email and password
+# @prompt email Your email
+# @prompt password Your password
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "identifier": "{{email}}", "password": "{{password}}", "remember": true }
+
+### Who am I
+GET {{api}}/auth/me
+
+### Everything for October 2026 (totals, bills, cards, people, sudden spends)
+GET {{api}}/months/{{ym}}
+
+### A month that doesn't exist yet – shows what it can roll over from
+GET {{api}}/months/2026-11
+
+### Change the budget
+PATCH {{api}}/months/{{ym}}
+Content-Type: application/json
+
+{ "budget": 66000 }
+
+### Add a bill
+POST {{api}}/months/{{ym}}/bills
+Content-Type: application/json
+
+{ "name": "Electricity", "category": "house", "amount": 1450, "dueDay": 12, "status": "unpaid" }
+
+### Mark a bill paid – paste a bill "id" from the month view
+PATCH {{api}}/bills/PASTE_BILL_ID
+Content-Type: application/json
+
+{ "status": "paid" }
+
+### Undo the last change – paste the "undoToken" from the previous response
+POST {{api}}/undo/PASTE_UNDO_TOKEN
+
+### Add a sudden spend
+POST {{api}}/months/{{ym}}/sudden
+Content-Type: application/json
+
+{ "name": "Bike service", "amount": 2200, "mode": "UPI", "date": "2026-10-06" }
+
+### Someone owes me
+POST {{api}}/months/{{ym}}/people-entries
+Content-Type: application/json
+
+{ "direction": "in", "name": "Ravi · movie tickets", "amount": 450 }
+
+### Cards, EMIs, plans, people
+GET {{api}}/cards
+
+###
+GET {{api}}/emis
+
+###
+GET {{api}}/plans
+
+###
+GET {{api}}/people?at={{ym}}
+
+### Installments, closing soonest first
+GET {{api}}/installments?at={{ym}}
+
+### Year view
+GET {{api}}/years/2026
+
+### Sign out
+POST {{api}}/auth/logout

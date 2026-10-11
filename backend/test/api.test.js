@@ -45,6 +45,40 @@ test('wrong password is rejected, right one signs in', async () => {
   assert.equal((await request(app).post('/api/auth/login').send({ identifier: '+91 98765 43210', password: LOGIN.password })).status, 200);
 });
 
+test('OTP sign-in: off unless DEV_OTP is set, then needs “Send OTP” first and the right code', async () => {
+  const saved = config.devOtp;
+  try {
+    config.devOtp = '';
+    assert.equal((await request(app).get('/api/auth/otp')).body.enabled, false);
+    assert.equal((await request(app).post('/api/auth/otp/request').send({ identifier: LOGIN.identifier })).status, 400);
+
+    config.devOtp = '123456';
+    const otpAgent = request.agent(app);
+    // Verifying before asking for an OTP doesn't work.
+    assert.equal((await otpAgent.post('/api/auth/otp/verify').send({ identifier: LOGIN.identifier, otp: '123456' })).status, 401);
+    // Unknown accounts and bad input are refused.
+    assert.equal((await otpAgent.post('/api/auth/otp/request').send({ identifier: 'nobody@example.com' })).status, 404);
+    assert.equal((await otpAgent.post('/api/auth/otp/request').send({ identifier: 'not-an-email' })).status, 400);
+
+    // By email
+    const sent = await otpAgent.post('/api/auth/otp/request').send({ identifier: LOGIN.identifier });
+    assert.deepEqual(sent.body, { sentTo: 't•••@example.com', demo: true });
+    assert.equal((await otpAgent.post('/api/auth/otp/verify').send({ identifier: LOGIN.identifier, otp: '111111' })).status, 401);
+    const ok = await otpAgent.post('/api/auth/otp/verify').send({ identifier: LOGIN.identifier, otp: '123456' });
+    assert.equal(ok.status, 200);
+    assert.equal((await otpAgent.get('/api/auth/me')).body.email, LOGIN.identifier);
+    // The same OTP can't be used twice.
+    assert.equal((await request(app).post('/api/auth/otp/verify').send({ identifier: LOGIN.identifier, otp: '123456' })).status, 401);
+
+    // By mobile number, and too many wrong tries cancel the OTP.
+    assert.equal((await request(app).post('/api/auth/otp/request').send({ identifier: '9876543210' })).body.sentTo, '•••••• 3210');
+    for (let i = 0; i < 5; i++) await request(app).post('/api/auth/otp/verify').send({ identifier: '9876543210', otp: '000000' });
+    assert.equal((await request(app).post('/api/auth/otp/verify').send({ identifier: '9876543210', otp: '123456' })).status, 401);
+  } finally {
+    config.devOtp = saved;
+  }
+});
+
 test('month view has the calculated totals', async () => {
   const res = await agent.get('/api/months/2026-10');
   assert.equal(res.status, 200);

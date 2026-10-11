@@ -58,7 +58,7 @@ npm install                 # first time only
 npm start
 ```
 
-Open http://localhost:4200 and sign in with the account from `npm run create-user`.
+Open http://localhost:4200 and sign in with the account from `npm run create-user` – with your password, or on the **OTP** tab with the demo code from `DEV_OTP` in `backend/.env` (no SMS/email is actually sent; remove that line to turn OTP sign-in off).
 On a phone on the same Wi-Fi: run `npm start -- --host 0.0.0.0` and open `http://<your Mac's IP>:4200`.
 
 ## Tests
@@ -84,7 +84,7 @@ Months are written as `2026-10`. Money is always whole rupees.
 
 | Area | Routes |
 |---|---|
-| Sign in | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /auth/me` |
+| Sign in | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /auth/me`, `GET /auth/otp`, `POST /auth/otp/request`, `POST /auth/otp/verify` |
 | A month | `GET /months/:ym` (everything + totals), `GET /months?year=`, `POST /months/:ym` (roll over / blank), `PATCH /months/:ym` (budget) |
 | Bills | `POST /months/:ym/bills`, `PATCH /bills/:id`, `DELETE /bills/:id` |
 | Card bills | `PUT /months/:ym/cards/:cardId/bill`, `PATCH /months/:ym/emis/:emiId`, `POST /months/:ym/cards/:cardId/spends`, `DELETE /card-spends/:id` |

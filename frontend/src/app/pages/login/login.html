@@ -26,25 +26,46 @@
         <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.01em">Sign in</h2>
         <p style="margin: 6px 0 0; color: #4B5563; font-size: 15px">Welcome back. Pick up where you left off.</p>
       </div>
+      @if (otpEnabled()) {
+        <div role="tablist" aria-label="Sign-in method" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #EEF0F3; border-radius: 12px; padding: 4px">
+          <button type="button" role="tab" [attr.aria-selected]="mode() === 'pw'" (click)="setMode('pw')" [style]="tabStyle(mode() === 'pw')">Password</button>
+          <button type="button" role="tab" [attr.aria-selected]="mode() === 'otp'" (click)="setMode('otp')" [style]="tabStyle(mode() === 'otp')">OTP</button>
+        </div>
+      }
       <div style="display: flex; flex-direction: column; gap: 14px">
         <div>
           <label for="lId" class="label" style="display: block; margin-bottom: 6px">Email or mobile number</label>
-          <input id="lId" class="field" [value]="id()" (input)="id.set(val($event)); err.set('')" autocomplete="username" placeholder="you@example.com or 98xxxxxxxx" [attr.aria-invalid]="!!err()">
+          <input id="lId" class="field" [value]="id()" (input)="changeId($event)" autocomplete="username" placeholder="you@example.com or 98xxxxxxxx" [attr.aria-invalid]="!!err()">
         </div>
-        <div>
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px">
-            <label for="lPw" class="label">Password</label>
-            <button type="button" class="link" (click)="showHelp.set(!showHelp())">Forgot password?</button>
+        @if (mode() === 'pw') {
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px">
+              <label for="lPw" class="label">Password</label>
+              <button type="button" class="link" (click)="showHelp.set(!showHelp())">Forgot password?</button>
+            </div>
+            <div class="pw">
+              <input id="lPw" [type]="showPw() ? 'text' : 'password'" [value]="pw()" (input)="pw.set(val($event)); err.set('')" autocomplete="current-password" placeholder="At least 8 characters">
+              <button type="button" class="toggle" (click)="showPw.set(!showPw())" [attr.aria-pressed]="showPw()" [attr.aria-label]="showPw() ? 'Hide password' : 'Show password'">{{ showPw() ? 'Hide' : 'Show' }}</button>
+            </div>
           </div>
-          <div class="pw">
-            <input id="lPw" [type]="showPw() ? 'text' : 'password'" [value]="pw()" (input)="pw.set(val($event)); err.set('')" autocomplete="current-password" placeholder="At least 8 characters">
-            <button type="button" class="toggle" (click)="showPw.set(!showPw())" [attr.aria-pressed]="showPw()" [attr.aria-label]="showPw() ? 'Hide password' : 'Show password'">{{ showPw() ? 'Hide' : 'Show' }}</button>
+        }
+        @if (mode() === 'otp' && otpSent()) {
+          <div>
+            <label for="lOtp" class="label" style="display: block; margin-bottom: 6px">6-digit OTP</label>
+            <input id="lOtp" class="field num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" [value]="otp()" (input)="otp.set(val($event).replace(/[^0-9]/g, '').slice(0, 6)); err.set('')" placeholder="••••••" style="font-size: 20px; letter-spacing: .4em; text-align: center; font-weight: 700">
+            <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; color: #4B5563; flex-wrap: wrap">
+              <span>Sent to {{ sentTo() }}</span>
+              <button type="button" class="link" style="padding: 0" (click)="sendOtp()">Resend OTP</button>
+            </div>
           </div>
-        </div>
+        }
         <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #374151; cursor: pointer; min-height: 32px">
           <input type="checkbox" [checked]="remember()" (change)="remember.set(checked($event))" style="width: 18px; height: 18px; accent-color: #1D4ED8">Keep me signed in on this device
         </label>
       </div>
+      @if (info()) {
+        <div role="status" style="font-size: 14px; color: #1E3A8A; background: #E8EEFC; border-radius: 10px; padding: 10px 12px">{{ info() }}</div>
+      }
       @if (showHelp()) {
         <div role="status" style="font-size: 14px; color: #1E3A8A; background: #E8EEFC; border-radius: 10px; padding: 10px 12px; line-height: 1.5">
           To set a new password, run <strong>npm run create-user</strong> in the MonEXP folder and enter the same email.
@@ -53,7 +74,10 @@
       @if (err()) {
         <div role="alert" style="font-size: 14px; color: #A3201A; background: #FDE8E6; border-radius: 10px; padding: 10px 12px; font-weight: 600">{{ err() }}</div>
       }
-      <button type="submit" class="btn btn-primary" [disabled]="busy()" style="min-height: 48px; font-size: 15px; width: 100%">{{ busy() ? 'Signing in…' : 'Sign in' }}</button>
+      <button type="submit" class="btn btn-primary" [disabled]="busy()" style="min-height: 48px; font-size: 15px; width: 100%">{{ submitLabel() }}</button>
+      @if (mode() === 'otp') {
+        <div style="font-size: 12px; color: #4B5563; line-height: 1.5; border-top: 1px solid #EEF0F3; padding-top: 14px">Demo mode: no SMS or email is sent yet. Use the OTP set in <strong>backend/.env</strong> (DEV_OTP).</div>
+      }
     </form>
   </main>
 </div>

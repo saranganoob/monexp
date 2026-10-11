@@ -5,10 +5,16 @@ export const config = {
   mongoUri: env.MONGODB_URI || 'mongodb://localhost:27017/monexp',
   jwtSecret: env.JWT_SECRET || '',
   isProd: env.NODE_ENV === 'production',
+  // Demo OTP sign-in: no SMS/email is sent, this fixed 6-digit code is accepted instead.
+  // Leave it empty to turn OTP sign-in off.
+  devOtp: env.DEV_OTP || '',
 };
 
 export function assertConfig() {
   if (!config.jwtSecret || config.jwtSecret.length < 32) {
     throw new Error('JWT_SECRET is missing or shorter than 32 characters. Set it in backend/.env (see .env.example).');
+  }
+  if (config.devOtp && !/^\d{6}$/.test(config.devOtp)) {
+    throw new Error('DEV_OTP in backend/.env must be exactly 6 digits, or empty to turn OTP sign-in off.');
   }
 }

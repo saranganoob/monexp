@@ -26,6 +26,9 @@ export class Api {
 
   // sign in
   login(identifier: string, password: string, remember: boolean) { return this.post<Account>('/auth/login', { identifier, password, remember }); }
+  otpStatus() { return this.get<{ enabled: boolean }>('/auth/otp'); }
+  requestOtp(identifier: string) { return this.post<{ sentTo: string; demo: boolean }>('/auth/otp/request', { identifier }); }
+  verifyOtp(identifier: string, otp: string, remember: boolean) { return this.post<Account>('/auth/otp/verify', { identifier, otp, remember }); }
   logout() { return this.post<{ ok: boolean }>('/auth/logout'); }
   me() { return this.get<Account>('/auth/me'); }
   updateMe(body: Partial<Account>) { return this.patch<Account>('/auth/me', body); }

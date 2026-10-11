@@ -22,6 +22,10 @@ export class Auth {
     this.account.set(await this.api.login(identifier, password, remember));
   }
 
+  async loginWithOtp(identifier: string, otp: string, remember: boolean) {
+    this.account.set(await this.api.verifyOtp(identifier, otp, remember));
+  }
+
   async logout() {
     try { await this.api.logout(); } finally { this.account.set(null); }
   }

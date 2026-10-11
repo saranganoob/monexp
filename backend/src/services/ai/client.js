@@ -39,7 +39,10 @@ export function friendlyAiError(err) {
   }
   if (err instanceof Anthropic.RateLimitError) return 'Claude is busy right now (rate limit). Wait a minute and try again.';
   if (err instanceof Anthropic.APIConnectionError) return 'Can’t reach Claude. Check your internet connection and try again.';
-  if (err instanceof Anthropic.BadRequestError) return `Claude couldn’t handle that request: ${err.message}`;
+  if (err instanceof Anthropic.BadRequestError) {
+    // Show the API's own sentence (e.g. "Your credit balance is too low…"), not the raw JSON.
+    return `Claude couldn’t handle that request: ${err.error?.error?.message ?? err.message}`;
+  }
   if (err instanceof Anthropic.APIError) return `Claude had a problem (${err.status ?? 'error'}). Try again in a moment.`;
   return 'Something went wrong talking to Claude.';
 }

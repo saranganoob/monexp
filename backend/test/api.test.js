@@ -75,6 +75,18 @@ test('edit a card bill total stores my spends', async () => {
   assert.equal(view.totals.toPay, 55466 - 2474 + 3000);
 });
 
+test('add a new spend on top of a card’s existing spends', async () => {
+  const card = (await agent.get('/api/cards')).body.find((c) => c.name === 'HDFC Swiggy');
+  const before = (await agent.get('/api/months/2026-10')).body.cards.find((c) => c.id === card.id).spends;
+  const res = await agent.put(`/api/months/2026-10/cards/${card.id}/bill`).send({ add: '321' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.message, `₹321 added to HDFC Swiggy spends · now ₹${(before + 321).toLocaleString('en-IN')}`);
+  assert.equal((await agent.get('/api/months/2026-10')).body.cards.find((c) => c.id === card.id).spends, before + 321);
+  assert.equal((await agent.put(`/api/months/2026-10/cards/${card.id}/bill`).send({ add: 0 })).status, 400);
+  await agent.post(`/api/undo/${res.body.undoToken}`);
+  assert.equal((await agent.get('/api/months/2026-10')).body.cards.find((c) => c.id === card.id).spends, before);
+});
+
 test('money must be whole rupees', async () => {
   for (const amount of [-5, 12.5, 'abc']) {
     const res = await agent.post('/api/months/2026-10/bills').send({ name: 'Test', category: 'fam', amount });

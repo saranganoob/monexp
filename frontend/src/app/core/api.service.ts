@@ -34,7 +34,7 @@ export class Api {
   month(ym: string) { return this.get<MonthView>(`/months/${ym}`); }
   createMonth(ym: string, mode: 'rollover' | 'blank', carryIds: string[] = []) { return this.post<ChangeResult>(`/months/${ym}`, { mode, carryIds }); }
   setBudget(ym: string, budget: number) { return this.patch<ChangeResult>(`/months/${ym}`, { budget }); }
-  setCardBill(ym: string, cardId: string, body: { total: number } | { spends: number }) { return this.put<ChangeResult>(`/months/${ym}/cards/${cardId}/bill`, body); }
+  setCardBill(ym: string, cardId: string, body: { total: number } | { spends: number } | { add: number }) { return this.put<ChangeResult>(`/months/${ym}/cards/${cardId}/bill`, body); }
   setEmiMonth(ym: string, emiId: string, body: { amount?: number | null; received?: 'pending' | 'done' }) { return this.patch<ChangeResult>(`/months/${ym}/emis/${emiId}`, body); }
 
   // bills

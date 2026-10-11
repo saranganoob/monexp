@@ -60,8 +60,9 @@ router.patch('/:ym', async (req, res) => {
   res.json(out);
 });
 
-// PUT /api/months/:ym/cards/:cardId/bill  { total } or { spends }
+// PUT /api/months/:ym/cards/:cardId/bill  { total } or { spends } or { add }
 // "Edit bill" takes the statement total; we store the part that's my own spends.
+// { add: 321 } puts a new spend on top of what's already there (100 → 421).
 router.put('/:ym/cards/:cardId/bill', async (req, res) => {
   const cardId = toId(req.params.cardId, 'card');
   const card = await Card.findById(cardId).lean();
@@ -72,7 +73,13 @@ router.put('/:ym/cards/:cardId/bill', async (req, res) => {
   const emiTotal = cv.myEmis + cv.friendEmis;
 
   let spends;
-  if (req.body?.total !== undefined) {
+  let message = null;
+  if (req.body?.add !== undefined) {
+    const add = toAmount(req.body.add, 'Amount to add');
+    if (!add) throw badRequest('Enter an amount above ₹0 to add.');
+    spends = cv.spends + add;
+    message = `${inr(add)} added to ${card.name} spends · now ${inr(spends)}`;
+  } else if (req.body?.total !== undefined) {
     const total = toAmount(req.body.total, 'Bill total');
     if (total < emiTotal) throw badRequest(`The bill can’t be less than the EMIs on this card (${inr(emiTotal)}). Check the amount, or edit the EMIs.`);
     spends = total - emiTotal;
@@ -82,7 +89,7 @@ router.put('/:ym/cards/:cardId/bill', async (req, res) => {
   const out = await withUndo({ yms: [req.ym] }, async () => {
     await Month.updateOne({ ym: req.ym }, { $set: { [`cardSpends.${cardId}`]: spends } });
     return {};
-  }, `${card.name} bill for ${ymLabel(req.ym)} set to ${inr(spends + emiTotal)}`);
+  }, message ?? `${card.name} bill for ${ymLabel(req.ym)} set to ${inr(spends + emiTotal)}`);
   res.json(out);
 });
 

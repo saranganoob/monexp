@@ -33,6 +33,22 @@
             <div>
               <label [for]="'sp-' + t.c.id" class="label" style="display: block; margin-bottom: 6px">My spends this month (₹)</label>
               <input [id]="'sp-' + t.c.id" class="field num" inputmode="numeric" [value]="fmtInput(t.c.spends)" (change)="setSpends(t.c, $event)" (keydown.enter)="$any($event.target).blur()">
+              <div style="font-size: 12px; color: #4B5563; margin-top: 4px">Type here to replace the total.</div>
+            </div>
+            <div style="background: #F3F6FD; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+              <label [for]="'add-' + t.c.id" class="label" style="color: #1E3A8A">Add a new spend (₹)</label>
+              <div style="display: flex; gap: 8px">
+                <input [id]="'add-' + t.c.id" class="field num" inputmode="numeric" [value]="addText()[t.c.id] ?? ''" (input)="setAddText(t.c, $event)" (keydown.enter)="addSpend(t.c)" placeholder="e.g. 321">
+                <button class="btn btn-primary" (click)="addSpend(t.c)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add
+                </button>
+              </div>
+              @if (addPreview(t.c)) {
+                <div class="num" style="font-size: 13px; color: #1E3A8A; font-weight: 600">{{ addPreview(t.c) }}</div>
+              } @else {
+                <div style="font-size: 12px; color: #4B5563">Adds on top of your spends so far.</div>
+              }
+              @if (addErr()[t.c.id]) { <div role="alert" style="font-size: 13px; color: #A3201A; font-weight: 600">{{ addErr()[t.c.id] }}</div> }
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center">
               <div class="label">Running EMIs · {{ t.c.emis.length }}</div>

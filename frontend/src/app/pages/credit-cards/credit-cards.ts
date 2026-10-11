@@ -77,6 +77,25 @@ export class CreditCardsPage {
     const v = parseNum(val(e));
     if (v !== c.spends) this.store.run(this.api.setCardBill(this.store.ym(), c.id, { spends: v }));
   }
+  // ---- "Add a new spend" box on each card: existing + new = updated ----
+  protected addText = signal<Partial<Record<string, string>>>({});
+  protected addErr = signal<Record<string, string>>({});
+  setAddText(c: CardView, e: Event) {
+    this.addText.update((m) => ({ ...m, [c.id]: val(e) }));
+    this.addErr.update((m) => ({ ...m, [c.id]: '' }));
+  }
+  addPreview(c: CardView) {
+    const add = parseNum(this.addText()[c.id] ?? '');
+    return add ? `${inr(c.spends)} + ${inr(add)} = ${inr(c.spends + add)}` : '';
+  }
+  async addSpend(c: CardView) {
+    const add = parseNum(this.addText()[c.id] ?? '');
+    if (!add) return this.addErr.update((m) => ({ ...m, [c.id]: 'Enter an amount above ₹0 to add.' }));
+    const error = await this.store.run(this.api.setCardBill(this.store.ym(), c.id, { add }), { quiet: true });
+    if (error) return this.addErr.update((m) => ({ ...m, [c.id]: error }));
+    this.addText.update((m) => ({ ...m, [c.id]: '' }));
+  }
+
   setMonthly(e: EmiView, ev: Event) {
     const v = parseNum(val(ev));
     if (v !== e.monthly) this.store.run(this.api.updateEmi(e.id, { monthly: v }));

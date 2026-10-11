@@ -70,6 +70,12 @@ Then use the **Ask AI** button (bottom-right) or **Summarise this month** on Ove
 The model is `claude-opus-5-5` by default; add `ANTHROPIC_MODEL=claude-sonnet-5-5` to `.env` for a cheaper one.
 Claude only *reads* your data through a few lookup tools – every total is calculated by the backend, not by the AI.
 
+## Putting it live
+
+See **[DEPLOY.md](DEPLOY.md)** – Render (app) + MongoDB Atlas (database), both on free plans.
+`npm run build` builds everything; `npm start` runs the API and serves the website on one address.
+Backups of the live data: `MONGODB_URI="..." npm run backup`.
+
 ## Tests
 
 ```bash

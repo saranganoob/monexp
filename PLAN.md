@@ -45,3 +45,7 @@ Approved by the owner on 8 Oct 2026. Where this file and CLAUDE.md disagree, thi
    Read-only tools (get_month, get_year, get_installments, get_people, find_payments) – all maths
    in compute.js. Chat history isn't stored; summaries are cached per month and marked out of date
    when the figures change.
+5. Deploy live (added 12 Oct 2026): Render free web service (Express serves the Angular build) +
+   MongoDB Atlas free M0 (Mumbai). Production: HTTPS-only cookies, demo OTP always off, sign-in rate
+   limit, security headers, backup/restore scripts. Own domain (monexp.in) optional, later.
+   Steps in DEPLOY.md.

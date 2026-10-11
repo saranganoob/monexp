@@ -1,0 +1,25 @@
+# Render Blueprint – one web service runs the whole app (Express API + Angular site).
+# Secrets marked "sync: false" are typed into the Render dashboard, never stored in git.
+services:
+  - type: web
+    name: monexp
+    runtime: node
+    plan: free
+    region: singapore          # closest Render region to India
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: MONGODB_URI        # your MongoDB Atlas connection string
+        sync: false
+      - key: JWT_SECRET         # signs login sessions – Render generates a random one
+        generateValue: true
+      - key: ANTHROPIC_API_KEY  # optional – only for Ask AI / Summarise
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5-5

@@ -1,13 +1,19 @@
 {
   "name": "monexp",
   "private": true,
-  "description": "Shortcuts so you can run the backend and frontend from the project folder",
+  "description": "MonEXP – run the backend and frontend from the project folder; build/start are what Render uses",
   "scripts": {
     "dev": "npm --prefix backend run dev",
     "web": "npm --prefix frontend start",
+    "build": "npm ci --prefix backend --omit=dev && npm ci --prefix frontend --include=dev && npm --prefix frontend run build",
     "start": "npm --prefix backend start",
     "test": "npm --prefix backend test",
     "seed": "npm --prefix backend run seed --",
-    "create-user": "npm --prefix backend run create-user"
+    "create-user": "npm --prefix backend run create-user",
+    "backup": "npm --prefix backend run backup --",
+    "restore": "npm --prefix backend run restore --"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

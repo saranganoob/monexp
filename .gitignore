@@ -16,3 +16,6 @@ coverage/
 .vscode/*
 !.vscode/extensions.json
 *.log
+
+# Database backups (personal data – keep out of git)
+backups/

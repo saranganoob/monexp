@@ -29,7 +29,7 @@ function readIdentifier(body) {
 function startSession(res, user, remember) {
   const maxAgeMs = remember ? LONG_SESSION_DAYS * 24 * 60 * 60 * 1000 : undefined; // undefined = until the browser closes
   const token = jwt.sign({ sub: String(user._id) }, config.jwtSecret, { expiresIn: remember ? `${LONG_SESSION_DAYS}d` : '12h' });
-  res.cookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: config.isProd, maxAge: maxAgeMs });
+  res.cookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: config.cookieSecure, maxAge: maxAgeMs });
   res.json(publicUser(user));
 }
 
@@ -92,7 +92,7 @@ router.post('/otp/verify', async (req, res) => {
 });
 
 router.post('/logout', (_req, res) => {
-  res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: 'lax', secure: config.isProd });
+  res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: 'lax', secure: config.cookieSecure });
   res.json({ ok: true });
 });
 
@@ -100,7 +100,7 @@ router.get('/me', requireAuth, async (req, res) => {
   const user = await User.findById(req.userId).lean();
   if (!user) {
     // The session belongs to an account that no longer exists – treat it as signed out.
-    res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: 'lax', secure: config.isProd });
+    res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: 'lax', secure: config.cookieSecure });
     throw new HttpError(401, 'Please sign in again.');
   }
   res.json(publicUser(user));

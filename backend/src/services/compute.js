@@ -1,6 +1,5 @@
 // Pure money calculations – no database access, so they're easy to test.
 // Every total shown in the app (and later given to the AI) comes from here.
-// Mirrors compute() in design/web-app/Main.dc.html.
 //
 // Inputs are plain objects with string ids (see normalize.js).
 

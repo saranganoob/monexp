@@ -1,7 +1,6 @@
 # MonEXP – frontend (Angular 21)
 
 Standalone components, signals, zoneless change detection and typed Reactive Forms.
-Screens follow `design/web-app/Main.dc.html` (a design reference only – nothing from `design/` is loaded by the app).
 All data comes from the backend through `/api` (the dev server forwards it to http://localhost:3000, see `proxy.conf.json`).
 
 ```bash
@@ -40,7 +39,7 @@ src/
     ├── layout/               shell, sidebar, top-bar, page-header, month-picker,
     │                         add-expense-dialog, undo-toast
     └── features/             one folder per screen, child components inside
-        ├── auth/login
+        ├── login
         ├── overview/         budget-card, pay-summary, still-to-pay, people-owe-you, closing-next
         ├── need-to-pay/      bill-row
         ├── credit-cards/     card-tile, card-spends, card-emi, add-emi-form, friend-emis

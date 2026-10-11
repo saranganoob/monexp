@@ -40,18 +40,8 @@ MacBook Air M4 (Apple Silicon, arm64), zsh shell.
 The UI design was created in Claude Design: an interactive web-app prototype.
 
 - Design link: https://claude.ai/artifact/GsuFqnvtyhouChQwtDHned
-- The design's **source files** are in the `design/` folder of this project:
-  - `design/web-app/` – HTML export of the full interactive web prototype
-    (`Main.dc.html` + `support.js` + `vendor/` runtime). `Main.dc.html` contains every
-    screen (Overview, Need to pay, EMIs & plans, People, Sudden spends, Year view), the
-    sample data and the interactions.
-  - `design/mobile.dc.html` (if present) – the mobile layout (390 x 844).
-- `.dc.html` files are "Design Component" files: normal HTML/inline CSS plus a small
-  template syntax (`{{value}}` holes, `<sc-for>` loops, `<sc-if>` conditions) and a
-  `class Component extends DCLogic` script holding the screen logic and sample data.
-  **Read them as the exact reference** for layout, colors, fonts, spacing, wording, sample
-  data and behavior, then rebuild them as proper Angular components. Do not copy the
-  design runtime (`support.js`, `vendor/`) into the app.
+- The design's prototype files (`design/` folder) were **removed on 11 Oct 2026** at the owner's
+  request – the Angular app in `frontend/` is now the reference for layout, colours and wording.
 
 Match the design closely: layout, spacing, colors, typography, card styles, and wording.
 
@@ -128,7 +118,6 @@ Later (not v1): auto-categorizing sudden spends, receipt scanning, budget alerts
 ```
 MonEXP/
 ├── CLAUDE.md
-├── design/            # design source files (reference only, not part of the app)
 ├── sample-data.csv    # Google Sheet structure sample
 ├── backend/           # Node + Express + MongoDB (Mongoose) + Claude SDK
 └── frontend/          # Angular 21 app
@@ -141,7 +130,7 @@ Include a root `README.md` explaining how to run everything, a `.gitignore`
 
 ## 7. How to work with the owner
 
-- **Plan first.** Before writing code, read this file, the design files in `design/` and
+- **Plan first.** Before writing code, read this file and
   `sample-data.csv`, then propose a build plan: collections and fields, API endpoints,
   Angular pages/components, and the phases below. **Wait for approval.**
 - **Build in phases**, and after each one tell the owner exactly how to run and test it:

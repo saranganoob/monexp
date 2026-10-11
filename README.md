@@ -7,7 +7,6 @@ See `PLAN.md` for the agreed plan and decisions, and `CLAUDE.md` for the origina
 |---|---|
 | `backend/` | Node + Express API, MongoDB (Mongoose) models, money calculations |
 | `frontend/` | Angular 21 app – the screens |
-| `design/` | Design reference only – not part of the app |
 | `sample-data.xlsx` | The old Google Sheet sample (reference only – data is now entered in the app) |
 
 ## Where to do what

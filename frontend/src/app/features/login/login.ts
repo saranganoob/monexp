@@ -1,10 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../core/auth/auth.service';
-import { Api, errorMessage } from '../../../core/api.service';
-import { emailOrMobile, firstError } from '../../../core/forms/validators';
-import { Icon } from '../../../shared/ui/icon/icon';
+import { AuthService } from '../../core/auth/auth.service';
+import { Api, errorMessage } from '../../core/api.service';
+import { emailOrMobile, firstError } from '../../core/forms/validators';
+import { Icon } from '../../shared/ui/icon/icon';
 
 type Mode = 'pw' | 'otp';
 

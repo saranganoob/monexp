@@ -11,7 +11,7 @@ export const routes: Routes = [
     path: 'login',
     title: 'Sign in · MonEXP',
     canActivate: [loginGuard],
-    loadComponent: () => import('./features/auth/login/login').then((m) => m.LoginPage),
+    loadComponent: () => import('./features/login/login').then((m) => m.LoginPage),
   },
   {
     path: '',

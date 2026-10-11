@@ -1,0 +1,8 @@
+:host { display: block; }
+.budget { padding: 20px; display: flex; flex-direction: column; gap: 8px; height: 100%; }
+.title { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--navy-ink); }
+.input-wrap { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-sm); padding: 0 12px;
+  &:focus-within { outline: 2px solid #fff; outline-offset: 2px; }
+  input { font: inherit; font-size: 26px; font-weight: 800; color: #fff; background: transparent; border: none; outline: none; min-height: 48px; width: 100%; min-width: 0; } }
+.rupee { font-size: 24px; font-weight: 800; }
+.note { font-size: 13px; color: var(--navy-ink); }

@@ -1,0 +1,35 @@
+<form class="edit-box" [formGroup]="form" (ngSubmit)="save()" (keydown.escape)="done.emit()">
+  <div class="edit-box__title">Edit {{ bill().name }}</div>
+  <div class="fields">
+    <label class="name">
+      <span class="field-label">Name</span>
+      <input class="field" formControlName="name">
+    </label>
+    <label>
+      <span class="field-label">Amount (₹)</span>
+      <input class="field num" inputmode="numeric" formControlName="amount">
+    </label>
+    <label>
+      <span class="field-label">Group</span>
+      <select class="field" formControlName="category">
+        @for (g of groups; track g.key) { <option [value]="g.key">{{ g.label }}</option> }
+      </select>
+    </label>
+    <label>
+      <span class="field-label">Due day</span>
+      <input class="field num" inputmode="numeric" formControlName="dueDay" placeholder="1–31">
+    </label>
+    <label class="span-all">
+      <span class="field-label">Note (optional)</span>
+      <input class="field" formControlName="note" placeholder="e.g. Paid via UPI">
+    </label>
+  </div>
+  @if (bill().planId) {
+    <p class="small hint">This changes this month only. To change every month, edit the plan on the Installments page.</p>
+  }
+  @if (error()) { <div role="alert" class="err err--sm">{{ error() }}</div> }
+  <div class="row-flex">
+    <button type="submit" class="btn btn--primary">Save</button>
+    <button type="button" class="btn" (click)="done.emit()">Cancel</button>
+  </div>
+</form>

@@ -1,0 +1,20 @@
+<div class="card card--pad box">
+  <div class="between">
+    <h2 class="card__title">Closing next</h2>
+    <a class="btn btn--ghost btn--sm" routerLink="/installments">All installments</a>
+  </div>
+  @for (row of top(); track row.i.type + row.i.id) {
+    <div class="item">
+      <div class="between line">
+        <span class="strong">{{ row.i.name }}</span>
+        <span class="num muted">
+          @if (row.n < 1) { starts {{ row.i.startYm | ym: 'short' }} } @else { {{ row.n }} of {{ row.i.total }} }
+          · ends {{ row.i.endYm | ym: 'short' }}
+        </span>
+      </div>
+      <app-progress-bar [value]="row.pct" [tone]="row.tone" />
+    </div>
+  } @empty {
+    <p class="muted empty">No running EMIs or installment plans.</p>
+  }
+</div>

@@ -1,0 +1,51 @@
+<section class="grid-fill-280">
+  @for (t of tiles(); track t.c.id) {
+    <article class="card card--clip">
+      <div class="face" [class]="'face ' + t.networkClass" [class.is-closed]="!!t.c.closedOn">
+        <div class="between">
+          <span class="heavy face__name">{{ t.c.name }}</span>
+          <span class="network">{{ t.c.network || 'Network not set' }}</span>
+        </div>
+        <div class="num digits">•••• •••• •••• {{ t.c.last4 || '····' }}</div>
+      </div>
+      <div class="body">
+        <div class="small stats">
+          @if (t.c.closedOn) {
+            Closed on {{ t.c.closedOn | ym: 'day' }} {{ t.c.closedOn.slice(0, 4) }} · kept for history
+          } @else {
+            Active · {{ store.ym() | ym }} bill {{ t.bill | inr }} · {{ t.running }} EMI{{ t.running === 1 ? '' : 's' }} running
+          }
+        </div>
+        @if (message()?.id === t.c.id) { <div role="alert" class="err err--sm">{{ message()!.text }}</div> }
+        <div class="row-flex">
+          <button class="btn btn--sm" (click)="edit(t.c)">Edit</button>
+          <button class="btn btn--sm" (click)="toggleClosed(t.c)">{{ t.c.closedOn ? 'Reopen' : 'Mark closed' }}</button>
+          <button class="btn btn--ghost btn--sm" (click)="remove(t.c)" [attr.aria-label]="'Delete ' + t.c.name"><app-icon name="trash" [stroke]="1.8" />Delete</button>
+        </div>
+      </div>
+    </article>
+  }
+</section>
+
+<form class="card card--pad form" [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="card__title">{{ editingId() ? 'Edit card' : 'Add a card' }}</h2>
+  <div class="form-grid">
+    <label><span class="field-label">Card name</span><input id="cfName" class="field" formControlName="name" placeholder="e.g. SBI SimplyCLICK"></label>
+    <label><span class="field-label">Last 4 digits</span><input class="field num" inputmode="numeric" maxlength="4" formControlName="last4" placeholder="1234"></label>
+    <label><span class="field-label">Network</span>
+      <select class="field" formControlName="network">
+        <option value="">Choose…</option>
+        @for (n of networks; track n) { <option [value]="n">{{ n }}</option> }
+      </select>
+    </label>
+    <div class="row-flex">
+      <button type="submit" class="btn btn--primary">{{ editingId() ? 'Save card' : 'Add card' }}</button>
+      @if (editingId()) { <button type="button" class="btn" (click)="cancel()">Cancel</button> }
+    </div>
+  </div>
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+  <div class="notice notice--muted privacy">
+    <app-icon name="lock" [stroke]="1.8" />
+    <span>MonEXP only keeps the card name, network and last 4 digits — enough to tell your cards apart. It never asks for the full card number or CVV.</span>
+  </div>
+</form>

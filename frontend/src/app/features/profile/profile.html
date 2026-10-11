@@ -1,0 +1,12 @@
+<div class="page">
+  <div class="seg-group" role="tablist" aria-label="Profile sections">
+    @for (t of tabs(); track t.key) {
+      <button role="tab" class="seg" [class.is-on]="current() === t.key" [attr.aria-selected]="current() === t.key" (click)="picked.set(t.key)">{{ t.label }}</button>
+    }
+  </div>
+  @switch (current()) {
+    @case ('account') { <app-account-tab /> }
+    @case ('cards') { <app-cards-tab /> }
+    @case ('persons') { <app-people-tab /> }
+  }
+</div>

@@ -1,0 +1,27 @@
+<section class="card card--pad">
+  <div class="between wrap">
+    <h2 class="card__title">Budget vs spent, month by month</h2>
+    <div class="legend">
+      <span><i class="swatch swatch--budget"></i>Budget</span>
+      <span><i class="swatch swatch--spent"></i>Spent</span>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="bars">
+      @for (b of bars(); track b.ym) {
+        <button class="month" (click)="open.emit(b.ym)" [attr.aria-label]="b.aria">
+          @if (b.has) {
+            <div class="pair">
+              <div class="bar bar--budget" [style.height.px]="b.budgetPx"></div>
+              <div class="bar bar--spent" [style.height.px]="b.spentPx"></div>
+            </div>
+          } @else {
+            <div class="none">No data</div>
+          }
+          <span class="name" [class.is-selected]="b.isSelected">{{ b.label }}</span>
+        </button>
+      }
+    </div>
+  </div>
+  <div class="small muted">Tap a month to open it. Months marked “No data” can be rolled over from the month before.</div>
+</section>

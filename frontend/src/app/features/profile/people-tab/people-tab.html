@@ -1,0 +1,51 @@
+<section class="card card--clip">
+  <div class="card-head">
+    <h2>People you lend to, borrow from, or run EMIs for</h2>
+    <span class="num small strong owed">{{ owedTotal() | inr }} owed to you right now</span>
+  </div>
+  @for (row of rows(); track row.p.id) {
+    <div class="list-row person">
+      <app-avatar [name]="row.p.name" />
+      <div class="info">
+        <div class="row-flex">
+          <span class="strong">{{ row.p.name }}</span>
+          @if (row.p.relation) { <span class="tag">{{ row.p.relation }}</span> }
+        </div>
+        <div class="small muted">{{ row.contact }}</div>
+        <div class="small stats">{{ row.stats }}</div>
+        @if (message()?.id === row.p.id) { <div role="alert" class="err err--sm">{{ message()!.text }}</div> }
+      </div>
+      <div class="num text-right">
+        <div class="heavy" [class.owes-you]="!row.youOwe && row.amount" [class.you-owe]="row.youOwe">{{ row.amount | inr }}</div>
+        <div class="tiny muted">{{ row.amountLabel }}</div>
+      </div>
+      <div class="row-flex">
+        <button class="btn btn--sm" (click)="edit(row.p)">Edit</button>
+        <button class="btn btn--ghost btn--sm btn--icon-sm" (click)="remove(row.p)" [attr.aria-label]="'Delete ' + row.p.name"><app-icon name="trash" [stroke]="1.8" /></button>
+      </div>
+    </div>
+  } @empty {
+    <div class="list-empty">No people yet. Add someone below.</div>
+  }
+</section>
+
+<form id="person-form" class="card card--pad form" [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="card__title">{{ editingId() ? 'Edit person' : 'Add a person' }}</h2>
+  <div class="form-grid">
+    <label><span class="field-label">Name</span><input id="pfName" class="field" formControlName="name" placeholder="e.g. Sathish Rajan"></label>
+    <label><span class="field-label">Relationship</span>
+      <select class="field" formControlName="relation">
+        <option value="">Not set</option>
+        @for (r of relations; track r) { <option [value]="r">{{ r }}</option> }
+      </select>
+    </label>
+    <label><span class="field-label">Phone (optional)</span><input type="tel" class="field num" inputmode="numeric" formControlName="phone" (input)="digitsOnly()" placeholder="10-digit mobile"></label>
+    <label><span class="field-label">UPI ID (optional)</span><input class="field" formControlName="upi" placeholder="name@bank"></label>
+    <label class="span-all"><span class="field-label">Note (optional)</span><input class="field" formControlName="note" placeholder="e.g. Pays on the 10th after salary"></label>
+  </div>
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+  <div class="row-flex">
+    <button type="submit" class="btn btn--primary">{{ editingId() ? 'Save changes' : 'Add person' }}</button>
+    @if (editingId()) { <button type="button" class="btn" (click)="cancel()">Cancel</button> }
+  </div>
+</form>

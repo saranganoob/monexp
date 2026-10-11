@@ -1,0 +1,24 @@
+<section class="card card--pad">
+  <div class="top">
+    <div>
+      <div class="label">To pay this month</div>
+      <div class="num total">{{ totals().toPay | inr }}</div>
+    </div>
+    <div class="parts">
+      <div>
+        <div class="key key--paid"><span class="dot"></span>Paid · {{ totals().paidCount }}</div>
+        <div class="num value">{{ totals().paid | inr }}</div>
+      </div>
+      <div>
+        <div class="key key--unpaid"><span class="dot"></span>Unpaid · {{ totals().unpaidCount }}</div>
+        <div class="num value">{{ totals().unpaid | inr }}</div>
+      </div>
+      <div>
+        <div class="key key--skipped"><span class="dot"></span>Skipped · {{ totals().skippedCount }}</div>
+        <div class="num value">—</div>
+      </div>
+    </div>
+  </div>
+  <app-progress-bar [value]="totals().paidPct" tone="green" track="amber" size="lg" label="Share of this month's bills paid" />
+  <div class="small muted">{{ totals().paidPct }}% of this month's bills are paid</div>
+</section>

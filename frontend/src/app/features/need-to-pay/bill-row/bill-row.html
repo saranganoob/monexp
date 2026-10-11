@@ -1,0 +1,58 @@
+@let b = bill();
+<div class="row">
+  <div class="main">
+    <button class="tick" [class.is-paid]="b.status === 'paid'" [class.is-skipped]="b.status === 'skipped'" (click)="toggle()"
+      [attr.aria-label]="(b.status === 'paid' ? 'Mark ' + b.name + ' unpaid' : 'Mark ' + b.name + ' paid')">
+      @if (b.status === 'paid') { <app-icon name="check" [stroke]="3" /> }
+    </button>
+    <div class="info">
+      <div class="name" [class.is-skipped]="b.status === 'skipped'">{{ b.name }}</div>
+      <div class="sub" [class]="'sub sub--' + (card() || b.status === 'skipped' ? 'normal' : due().tone)">{{ sub() }}</div>
+    </div>
+    @if (b.inst) { <span class="inst-pill">{{ b.inst.n }} of {{ b.inst.total }} · {{ b.inst.total - b.inst.n }} left</span> }
+    <span class="chip" [class]="'chip chip--' + status()">{{ statusLabel() }}</span>
+    <div class="num amount" [class.is-skipped]="b.status === 'skipped'">{{ b.status === 'skipped' ? '—' : (b.amount | inr) }}</div>
+    <div class="actions">
+      @if (card(); as c) {
+        <button class="btn btn--ghost btn--sm" (click)="showSplit.set(!showSplit())" [attr.aria-expanded]="showSplit()">{{ showSplit() ? 'Hide split' : 'Bill split' }}</button>
+        @if (!isEditing()) {
+          <button class="btn btn--sm" (click)="edit()" [attr.aria-label]="'Edit ' + c.name + ' bill amount'"><app-icon name="edit" [size]="16" />Edit amount</button>
+        }
+      } @else {
+        <button class="btn btn--ghost btn--sm" (click)="skip()">{{ b.status === 'skipped' ? 'Resume' : 'Skip month' }}</button>
+        @if (!isEditing()) {
+          <button class="btn btn--ghost btn--sm" (click)="edit()" [attr.aria-label]="'Edit ' + b.name"><app-icon name="edit" [size]="16" />Edit</button>
+        }
+        @if (!b.planId) {
+          <button class="btn btn--ghost btn--sm btn--icon-sm" (click)="remove()" [attr.aria-label]="'Remove ' + b.name"><app-icon name="trash" [stroke]="1.8" /></button>
+        }
+      }
+    </div>
+  </div>
+
+  @if (isEditing()) {
+    <div class="split">
+      @if (card(); as c) {
+        <app-card-bill-editor [card]="c" (done)="stopEditing()" />
+      } @else {
+        <app-bill-editor [bill]="b" (done)="stopEditing()" />
+      }
+    </div>
+  }
+
+  @if (card(); as c) {
+    @if (showSplit()) {
+      <div class="split breakdown">
+        @for (e of c.emis; track e.id) {
+          <div class="kv" [class.kv--friend]="e.forWho === 'friend'">
+            <span>{{ e.item }} EMI · {{ e.forWho === 'friend' ? e.personName + '’s' : 'mine' }} · {{ e.n }} of {{ e.total }}</span>
+            <span class="num">{{ e.amount ? (e.amount | inr) : 'amount not set' }}</span>
+          </div>
+        }
+        <div class="kv"><span>My spends</span><span class="num">{{ c.spends | inr }}</span></div>
+        <div class="kv kv--total"><span>Bill total</span><span class="num">{{ c.total | inr }}</span></div>
+        <div><a class="btn btn--sm" routerLink="/cards">Manage this card's EMIs</a></div>
+      </div>
+    }
+  }
+</div>

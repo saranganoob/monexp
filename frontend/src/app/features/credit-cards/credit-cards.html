@@ -1,0 +1,23 @@
+@if (month(); as m) {
+  <div class="page">
+    <p class="lead">Each card's bill is built from your own spends plus every running EMI on it — yours and the ones you took for friends. Change anything here and the card's row in Need to Pay updates instantly; friends' EMIs also show up under People so you can track their repayments.</p>
+
+    <section class="grid-200">
+      <div class="card tile"><div class="label">Card dues this month</div><div class="num tile__value">{{ sums().total | inr }}</div></div>
+      <div class="card tile"><div class="label">My spends</div><div class="num tile__value">{{ sums().spends | inr }}</div></div>
+      <div class="card tile"><div class="label">My EMIs</div><div class="num tile__value">{{ sums().mine | inr }}</div></div>
+      <div class="card card--warm tile"><div class="label warm">Friends' EMIs · to recover</div><div class="num tile__value warm">{{ sums().friend | inr }}</div></div>
+    </section>
+
+    <section class="grid-340">
+      @for (c of cards(); track c.id) {
+        <app-card-tile [card]="c" (addEmi)="presetCard.set({ cardId: $event })" />
+      } @empty {
+        <div class="card list-empty">No card bills this month. Add your cards under <a routerLink="/profile" [queryParams]="{ tab: 'cards' }">Profile → Credit cards</a>.</div>
+      }
+    </section>
+
+    <app-add-emi-form [preset]="presetCard()" />
+    <app-friend-emis />
+  </div>
+}

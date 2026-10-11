@@ -1,0 +1,6 @@
+:host { display: block; border-bottom: 1px solid var(--line-soft); }
+.line { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 20px; }
+.info { flex: 1 1 200px; min-width: 0; }
+.amount { min-width: 80px; text-align: right; }
+.actions { gap: 4px; }
+.editor { margin: 0 20px 16px; }

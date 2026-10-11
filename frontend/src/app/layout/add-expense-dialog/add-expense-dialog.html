@@ -1,0 +1,82 @@
+<div class="backdrop" (click)="backdrop($event)">
+  <form role="dialog" aria-modal="true" aria-labelledby="dlgTitle" class="card dialog" [formGroup]="form" (ngSubmit)="save()">
+    <div class="between top">
+      <div>
+        <h2 id="dlgTitle">Add to {{ months[form.controls.month.value] }} {{ form.controls.year.value }}</h2>
+        <p class="hint">{{ hint() }}</p>
+      </div>
+      <button type="button" class="btn btn--ghost btn--icon" (click)="close()" aria-label="Close"><app-icon name="close" [size]="20" /></button>
+    </div>
+
+    <div class="two">
+      <label><span class="field-label">Month</span>
+        <select class="field" formControlName="month">
+          @for (mn of months; track $index) { <option [ngValue]="$index">{{ mn }}</option> }
+        </select>
+      </label>
+      <label><span class="field-label">Year</span>
+        <select class="field" formControlName="year">
+          @for (y of years(); track y) { <option [ngValue]="y">{{ y }}</option> }
+        </select>
+      </label>
+    </div>
+
+    <div class="types" role="radiogroup" aria-label="What are you adding">
+      @for (t of types; track t.key) {
+        <label class="type" [class.is-on]="type() === t.key">
+          <input type="radio" class="sr" formControlName="type" [value]="t.key">
+          <span class="heavy">{{ t.label }}</span><span class="tiny sub">{{ t.sub }}</span>
+        </label>
+      }
+    </div>
+
+    <div class="form-grid form-grid--wide">
+      @if (isPerson()) {
+        <label><span class="field-label">Person</span>
+          <select id="dPerson" class="field" formControlName="person">
+            <option value="">Choose a person…</option>
+            @for (p of store.people(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+            <option value="__new">+ Someone new</option>
+          </select>
+        </label>
+        @if (form.controls.person.value === '__new') {
+          <label><span class="field-label">New person's name</span><input class="field" formControlName="newPerson" placeholder="Saved to your People list"></label>
+        }
+      }
+      <label><span class="field-label">{{ nameLabel() }}</span><input id="dName" class="field" formControlName="name" [placeholder]="namePlaceholder()"></label>
+      <label><span class="field-label">Amount (₹)</span><input class="field num" inputmode="numeric" formControlName="amount" placeholder="0"></label>
+      @if (type() === 'bill') {
+        <label><span class="field-label">Category</span>
+          <select class="field" formControlName="category">
+            @for (g of groups; track g.key) { <option [value]="g.key">{{ g.label }}</option> }
+          </select>
+        </label>
+        <label><span class="field-label">Due day (optional)</span><input class="field num" inputmode="numeric" formControlName="dueDay" placeholder="1–31"></label>
+        <label><span class="field-label">Status</span>
+          <select class="field" formControlName="status">
+            <option value="unpaid">Not paid yet</option>
+            <option value="paid">Already paid</option>
+          </select>
+        </label>
+      }
+      @if (type() === 'sudden') {
+        <label><span class="field-label">Paid with</span>
+          <select class="field" formControlName="mode">
+            @for (o of modeOptions(); track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+          </select>
+        </label>
+        <label><span class="field-label">Date</span><input type="date" class="field" formControlName="date" [min]="minDate()" [max]="maxDate()"></label>
+      }
+    </div>
+
+    @if (type() === 'sudden' && form.controls.mode.value.startsWith('card:')) {
+      <div class="notice notice--info notice--sm">Paid by credit card, so this will show up in that card's bill. It's logged here but not deducted from your balance twice.</div>
+    }
+    @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+
+    <div class="actions">
+      <button type="button" class="btn" (click)="close()">Cancel</button>
+      <button type="submit" class="btn btn--primary" [disabled]="busy()">{{ saveLabel() }}</button>
+    </div>
+  </form>
+</div>

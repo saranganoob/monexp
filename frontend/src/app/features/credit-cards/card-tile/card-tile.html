@@ -1,0 +1,66 @@
+@let c = card();
+<article class="card card--clip tile">
+  <header class="face">
+    <div class="between">
+      <h3>{{ c.name }}{{ c.closedOn ? ' · closed' : '' }}</h3>
+      <span class="chip" [class.chip--paid]="paid()" [class.chip--unpaid]="!paid()">{{ paid() ? 'Paid' : 'Unpaid' }}</span>
+    </div>
+    <div>
+      <div class="face__label">Bill for {{ store.ym() | ym }}</div>
+      <div class="between wrap">
+        <div class="num face__total">{{ c.total | inr }}</div>
+        <button class="btn btn--sm btn--on-dark" (click)="editingBill.set(true)" [attr.aria-label]="'Edit ' + c.name + ' bill amount'"><app-icon name="edit" [size]="16" />Edit bill</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="body">
+    @if (editingBill()) { <app-card-bill-editor [card]="c" (done)="editingBill.set(false)" /> }
+
+    <label>
+      <span class="field-label">My spends this month (₹)</span>
+      <input class="field num" inputmode="numeric" [formControl]="spendsControl" (change)="saveSpends()" (keydown.enter)="$any($event.target).blur()">
+      <div class="field-hint">Type here to replace the total.</div>
+    </label>
+
+    <app-card-spends [card]="c" />
+
+    <div class="between">
+      <div class="label">Running EMIs · {{ c.emis.length }}</div>
+      <span class="num small strong">{{ c.myEmis + c.friendEmis | inr }}/mo</span>
+    </div>
+    @for (e of c.emis; track e.id) {
+      <app-card-emi [emi]="e" [editing]="editingEmi() === e.id" (edit)="editEmi(e.id)" (remove)="removeEmi(e.id)" (closed)="editingEmi.set(null)" />
+    } @empty {
+      <div class="muted">No EMIs running on this card.</div>
+    }
+
+    @for (u of upcoming(); track u.e.id) {
+      <div class="upcoming">
+        <div class="between wrap">
+          <div class="grow">
+            <div class="strong">{{ u.e.item }} <span class="tiny muted">· {{ u.who }}</span></div>
+            <div class="num small muted">Starts {{ u.e.startYm | ym: 'short' }} · {{ u.e.monthly ? (u.e.monthly | inr) + '/mo' : 'amount not set' }} · {{ u.e.totalMonths }} months</div>
+          </div>
+          <div class="row-flex">
+            <button class="btn btn--ghost btn--sm" (click)="editEmi(u.e.id)" [attr.aria-label]="'Edit ' + u.e.item + ' EMI details'">Edit</button>
+            <button class="btn btn--ghost btn--sm" (click)="removeEmi(u.e.id)" [attr.aria-label]="'Remove ' + u.e.item + ' EMI'">Remove</button>
+          </div>
+        </div>
+        @if (editingEmi() === u.e.id) { <app-emi-editor [emi]="u.e" (done)="editingEmi.set(null)" /> }
+      </div>
+    }
+
+    <div class="totals">
+      <div class="kv"><span>My spends</span><span class="num">{{ c.spends | inr }}</span></div>
+      <div class="kv"><span>My EMIs</span><span class="num">{{ c.myEmis | inr }}</span></div>
+      <div class="kv kv--friend"><span>Friends' EMIs</span><span class="num">{{ c.friendEmis | inr }}</span></div>
+      <div class="kv heavy"><span>Bill total</span><span class="num">{{ c.total | inr }}</span></div>
+    </div>
+
+    <div class="row-flex">
+      @if (!c.closedOn) { <button class="btn btn--sm" (click)="addEmi.emit(c.id)">Add EMI to this card</button> }
+      @if (c.billId) { <button class="btn btn--sm" (click)="togglePaid()">{{ paid() ? 'Mark bill unpaid' : 'Mark bill paid' }}</button> }
+    </div>
+  </div>
+</article>

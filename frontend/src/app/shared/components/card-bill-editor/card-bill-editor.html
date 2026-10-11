@@ -1,0 +1,13 @@
+<form class="edit-box" [formGroup]="form" (ngSubmit)="save()" (keydown.escape)="done.emit()">
+  <label class="edit-box__title" [for]="'bill-' + card().id">{{ card().name }} bill for {{ ym() | ym }}</label>
+  <div class="row-flex">
+    <div class="money-input">
+      <span class="heavy">₹</span>
+      <input [id]="'bill-' + card().id" class="num" inputmode="numeric" formControlName="total">
+    </div>
+    <button type="submit" class="btn btn--primary">Save</button>
+    <button type="button" class="btn" (click)="done.emit()">Cancel</button>
+  </div>
+  <div class="num small">{{ preview() }}</div>
+  @if (error()) { <div role="alert" class="err err--sm">{{ error() }}</div> }
+</form>

@@ -2,7 +2,7 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessC
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
-import { sessionInterceptor } from './core/auth';
+import { sessionInterceptor } from './core/auth/session.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [

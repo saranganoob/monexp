@@ -1,0 +1,57 @@
+// Design tokens – values from design/web-app/Main.dc.html.
+:root {
+  --font: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+
+  // text
+  --ink: #111827;
+  --ink-2: #374151;
+  --muted: #4B5563;
+  --muted-2: #5B6474;
+  --faint: #6B7280;
+
+  // surfaces & lines
+  --bg: #F4F5F7;
+  --surface: #fff;
+  --surface-alt: #F8F9FB;
+  --line: #E3E6EB;
+  --line-soft: #EEF0F3;
+  --line-input: #CDD3DB;
+  --line-btn: #D5DAE1;
+  --line-dashed: #B6BDC7;
+  --hover: #F1F3F6;
+
+  // brand
+  --primary: #1D4ED8;
+  --primary-dark: #1E40AF;
+  --primary-soft: #E8EEFC;
+  --primary-tint: #F3F6FD;
+  --primary-ink: #1E3A8A;
+  --navy: #102A6B;
+  --navy-ink: #C9D6F5;
+  --navy-muted: #9FB2E4;
+  --incoming: #2F5BD3;
+  --bar-budget: #BFD0F7;
+
+  // status
+  --green: #0B7A55;
+  --green-ink: #0B6B4B;
+  --green-soft: #E3F4EC;
+  --amber: #F2B544;
+  --amber-ink: #7A4100;
+  --amber-soft: #FDF1DC;
+  --amber-track: #F6E3BC;
+  --red: #A3201A;
+  --red-soft: #FDE8E6;
+  --orange: #9A3412;
+  --orange-strong: #C2410C;
+  --orange-ink: #7C2D12;
+  --orange-soft: #FFF7ED;
+  --orange-pill: #FFEDD5;
+  --orange-avatar: #FDEDE3;
+  --orange-line: #FBD9B5;
+
+  --radius-sm: 10px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-pop: 0 24px 60px rgba(17, 24, 39, 0.3);
+}

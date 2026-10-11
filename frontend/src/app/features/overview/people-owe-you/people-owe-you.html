@@ -1,0 +1,20 @@
+<div class="card card--pad box">
+  <div class="between">
+    <h2 class="card__title">People owe you</h2>
+    <span class="num strong pending">{{ pending() | inr }} pending</span>
+  </div>
+  @for (row of view(); track row.r.id) {
+    <div class="list-row list-row--tight">
+      <div class="info">
+        <div class="strong" [class.muted]="row.done || row.moved">{{ row.r.name }}</div>
+        <div class="small muted">{{ row.shortSub }}</div>
+      </div>
+      <div class="num strong">{{ row.r.amount | inr }}</div>
+      @if (row.canToggle) {
+        <button class="btn btn--sm" [class.btn--primary]="row.btnPrimary" (click)="toggle(row.r)">{{ row.btnLabel }}</button>
+      }
+    </div>
+  } @empty {
+    <p class="muted empty">Nobody owes you anything this month.</p>
+  }
+</div>

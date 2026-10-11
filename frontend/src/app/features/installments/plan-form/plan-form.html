@@ -1,0 +1,53 @@
+<form class="stack stack--lg" [formGroup]="form" (ngSubmit)="save()" (keydown.escape)="cancel.emit()">
+  @if (!plan()) {
+    <div class="seg-group" role="radiogroup" aria-label="Which way does the money go">
+      <label class="seg" [class.is-on]="!isIn()"><input type="radio" class="sr" formControlName="direction" value="out">I pay every month</label>
+      <label class="seg" [class.is-on]="isIn()"><input type="radio" class="sr" formControlName="direction" value="in">Someone pays me back</label>
+    </div>
+  }
+  <div class="form-grid">
+    @if (isIn()) {
+      <label><span class="field-label">Who pays you</span>
+        <select class="field" formControlName="personId">
+          <option value="">Choose a person…</option>
+          @for (p of store.people(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+      </label>
+    }
+    <label><span class="field-label">{{ isIn() ? 'What for' : 'Name' }}</span>
+      <input class="field" formControlName="name" [placeholder]="isIn() ? 'e.g. gym money' : 'e.g. Dad, Gold chit'"></label>
+    @if (!isIn()) {
+      <label><span class="field-label">Group in Need to pay</span>
+        <select class="field" formControlName="category">
+          @for (g of groups; track g.key) { <option [value]="g.key">{{ g.label }}</option> }
+        </select>
+      </label>
+    }
+    <label><span class="field-label">Per month (₹)</span><input class="field num" inputmode="numeric" formControlName="monthly" placeholder="0"></label>
+    <label><span class="field-label">Total months</span><input class="field num" inputmode="numeric" formControlName="totalInstallments" placeholder="e.g. 12"></label>
+    @if (plan()) {
+      <label><span class="field-label">1st month</span>
+        <select class="field" formControlName="startMonth">
+          @for (mn of months; track $index) { <option [ngValue]="$index">{{ mn }}</option> }
+        </select>
+      </label>
+      <label><span class="field-label">Year</span>
+        <select class="field" formControlName="startYear">
+          @for (y of years(); track y) { <option [ngValue]="y">{{ y }}</option> }
+        </select>
+      </label>
+    } @else {
+      <label><span class="field-label">Already paid before {{ store.ym() | ym: 'short' }}</span><input class="field num" inputmode="numeric" formControlName="alreadyPaid" placeholder="0"></label>
+    }
+    <label><span class="field-label">Label (optional)</span><input class="field" formControlName="kind" placeholder="e.g. Monthly support"></label>
+  </div>
+  @if (summary()) { <div class="num small">{{ summary() }}</div> }
+  <p class="small muted note">
+    {{ isIn() ? 'It shows under People → They owe me' : 'It shows as a bill in Need to pay' }} from {{ store.ym() | ym }} onwards. Months before {{ store.ym() | ym }} aren't changed.
+  </p>
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+  <div class="row-flex">
+    <button type="submit" class="btn btn--primary">{{ plan() ? 'Save plan' : 'Add plan' }}</button>
+    @if (plan()) { <button type="button" class="btn" (click)="cancel.emit()">Cancel</button> }
+  </div>
+</form>

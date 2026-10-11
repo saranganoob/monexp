@@ -1,0 +1,21 @@
+<div class="page">
+  <p class="lead">Every installment in one place, sorted by when it closes — card EMIs (yours and friends'), money you send on a schedule, and people paying you back.</p>
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+
+  <section class="grid-fill-300">
+    @for (c of cards(); track c.i.type + c.i.id) {
+      <app-installment-card [item]="c.i" [plan]="c.plan" [editing]="editing() === c.i.id"
+        (edit)="editing.set(c.i.id)" (closed)="editing.set(null)" (remove)="c.plan && remove(c.plan)" />
+    } @empty {
+      <div class="card list-empty span-all">No running EMIs or installment plans.</div>
+    }
+  </section>
+
+  <section class="card card--pad">
+    <div>
+      <h2 class="card__title">Add a plan</h2>
+      <p class="card__lead">For money you send every month for a set time (like Dad or a gold chit), or someone paying you back in parts. Card EMIs are added on the Credit cards page.</p>
+    </div>
+    <app-plan-form />
+  </section>
+</div>

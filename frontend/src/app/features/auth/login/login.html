@@ -1,0 +1,78 @@
+<div class="wrap">
+  <section class="brand-side">
+    <div class="ring"></div>
+    <div class="blob"></div>
+    <div class="brand"><div class="logo">₹</div><span class="brand-name">MonEXP</span></div>
+    <div class="pitch">
+      <h1>Every rupee for the month, in one place.</h1>
+      <p>Bills, credit cards, EMIs for you and your friends, and who owes you what — without rebuilding a spreadsheet tab every month.</p>
+      <ul class="features">
+        @for (f of features; track f) {
+          <li><span class="tick-box"><app-icon name="check" [size]="16" [stroke]="2.4" /></span>{{ f }}</li>
+        }
+      </ul>
+    </div>
+    <div class="private">Your data stays private to your account.</div>
+  </section>
+
+  <main class="form-side">
+    <form class="card panel" [formGroup]="form" (ngSubmit)="submit()">
+      <div>
+        <h2>Sign in</h2>
+        <p class="welcome">Welcome back. Pick up where you left off.</p>
+      </div>
+
+      @if (otpEnabled()) {
+        <div class="tabs" role="tablist" aria-label="Sign-in method">
+          <button type="button" role="tab" class="tab" [class.is-on]="mode() === 'pw'" [attr.aria-selected]="mode() === 'pw'" (click)="setMode('pw')">Password</button>
+          <button type="button" role="tab" class="tab" [class.is-on]="mode() === 'otp'" [attr.aria-selected]="mode() === 'otp'" (click)="setMode('otp')">OTP</button>
+        </div>
+      }
+
+      <div class="stack">
+        <label>
+          <span class="field-label">Email or mobile number</span>
+          <input class="field" formControlName="identifier" autocomplete="username" placeholder="you@example.com or 98xxxxxxxx">
+        </label>
+
+        @if (mode() === 'pw') {
+          <div>
+            <div class="between pw-head">
+              <label for="lPw" class="label">Password</label>
+              <button type="button" class="link-btn" (click)="showHelp.set(!showHelp())">Forgot password?</button>
+            </div>
+            <div class="pw">
+              <input id="lPw" [type]="showPw() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" placeholder="At least 8 characters">
+              <button type="button" class="toggle" (click)="showPw.set(!showPw())" [attr.aria-pressed]="showPw()">{{ showPw() ? 'Hide' : 'Show' }}</button>
+            </div>
+          </div>
+        }
+
+        @if (mode() === 'otp' && otpSent()) {
+          <div>
+            <label for="lOtp" class="field-label">6-digit OTP</label>
+            <input id="lOtp" class="field field--otp num" inputmode="numeric" autocomplete="one-time-code" maxlength="6" formControlName="otp" (input)="onlyDigits()" placeholder="••••••">
+            <div class="between otp-meta">
+              <span>Sent to {{ sentTo() }}</span>
+              <button type="button" class="link-btn" (click)="sendOtp()">Resend OTP</button>
+            </div>
+          </div>
+        }
+
+        <label class="check"><input type="checkbox" formControlName="remember">Keep me signed in on this device</label>
+      </div>
+
+      @if (showHelp() && mode() === 'pw') {
+        <div role="status" class="notice notice--info">To set a new password, run <strong>npm run create-user</strong> in the MonEXP folder and enter the same email.</div>
+      }
+      @if (info()) { <div role="status" class="notice notice--info">{{ info() }}</div> }
+      @if (error()) { <div role="alert" class="notice notice--error">{{ error() }}</div> }
+
+      <button type="submit" class="btn btn--primary btn--block btn--tall" [disabled]="busy()">{{ submitLabel() }}</button>
+
+      @if (mode() === 'otp') {
+        <p class="demo">Demo mode: no SMS or email is sent yet. Use the OTP set in <strong>backend/.env</strong> (DEV_OTP).</p>
+      }
+    </form>
+  </main>
+</div>

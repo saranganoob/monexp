@@ -1,0 +1,31 @@
+@let i = item();
+<article class="card box">
+  <div class="head">
+    <app-progress-ring [value]="pct()" [tone]="tone()" [text]="n() + '/' + i.total" />
+    <div class="grow">
+      <div class="kind" [class]="'kind kind--' + tone()">{{ i.kind }}</div>
+      <h3>{{ i.name }}</h3>
+      <div class="small muted">{{ i.source }}</div>
+    </div>
+  </div>
+  <dl>
+    <div><dt>Per month</dt><dd class="num">{{ i.monthly ? (i.monthly | inr) : 'Not entered yet' }}</dd></div>
+    <div><dt>Months left</dt><dd class="num">{{ i.monthsLeft === 1 ? 'This is the last' : i.monthsLeft + ' incl. this month' }}</dd></div>
+    <div><dt>Amount left</dt><dd class="num">{{ i.monthly ? (i.amountLeft | inr) : '—' }}</dd></div>
+    <div><dt>Closes</dt><dd>{{ i.endYm | ym }}</dd></div>
+  </dl>
+  <div class="foot">
+    @if (plan(); as p) {
+      @if (editing()) {
+        <app-plan-form [plan]="p" (saved)="closed.emit()" (cancel)="closed.emit()" />
+      } @else {
+        <div class="row-flex">
+          <button class="btn btn--sm" (click)="edit.emit()">Edit plan</button>
+          <button class="btn btn--ghost btn--sm" (click)="remove.emit()" [attr.aria-label]="'Remove ' + p.name + ' plan'">Remove</button>
+        </div>
+      }
+    } @else {
+      <a class="btn btn--ghost btn--sm" routerLink="/cards">Edit on Credit cards</a>
+    }
+  </div>
+</article>

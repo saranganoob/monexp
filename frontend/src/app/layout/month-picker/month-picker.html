@@ -1,0 +1,16 @@
+<div class="card picker">
+  @if (mode() === 'month') {
+    <button class="btn btn--ghost btn--icon" (click)="shift(-1)" aria-label="Previous month"><app-icon name="chevron-left" /></button>
+    <label for="mp-month" class="sr">Month</label>
+    <select id="mp-month" class="field field--bare" #m (change)="pickMonth(m.value)">
+      @for (name of months; track $index) { <option [value]="$index" [selected]="$index === m0()">{{ name }}</option> }
+    </select>
+  }
+  <label for="mp-year" class="sr">Year</label>
+  <select id="mp-year" class="field field--bare" #y (change)="pickYear(y.value)">
+    @for (yy of years(); track yy) { <option [value]="yy" [selected]="yy === year()">{{ yy }}</option> }
+  </select>
+  @if (mode() === 'month') {
+    <button class="btn btn--ghost btn--icon" (click)="shift(1)" aria-label="Next month"><app-icon name="chevron-right" /></button>
+  }
+</div>

@@ -1,0 +1,11 @@
+:host { display: block; }
+.card { gap: 14px; }
+.row { display: grid; grid-template-columns: minmax(110px, 200px) minmax(60px, 1fr) minmax(80px, auto); gap: 12px; align-items: center; font-size: 14px; }
+.track { height: 12px; background: var(--line-soft); border-radius: 999px; overflow: hidden; }
+.fill { height: 100%; border-radius: 999px; }
+.fill--cc { background: var(--navy); }
+.fill--fam { background: var(--incoming); }
+.fill--house { background: #5B7FE0; }
+.fill--sub { background: #8EA8EC; }
+.fill--inv { background: var(--bar-budget); }
+.fill--sudden { background: var(--orange); }

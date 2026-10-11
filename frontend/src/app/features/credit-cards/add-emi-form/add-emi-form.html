@@ -1,0 +1,32 @@
+<form id="add-emi" class="card card--pad" [formGroup]="form" (ngSubmit)="add()">
+  <div>
+    <h2 class="card__title">Add an EMI</h2>
+    <p class="card__lead">For a friend's purchase on your card (e.g. Sathish's iPhone), pick “A friend” — it's added to the card bill and to People as money owed to you, every month until it closes.</p>
+  </div>
+  <div class="seg-group" role="radiogroup" aria-label="Who is this EMI for">
+    <label class="seg" [class.is-on]="!isFriend()"><input type="radio" class="sr" formControlName="forWho" value="me">Me</label>
+    <label class="seg" [class.is-on]="isFriend()"><input type="radio" class="sr" formControlName="forWho" value="friend">A friend</label>
+  </div>
+  <div class="form-grid">
+    <label><span class="field-label">Card</span>
+      <select class="field" formControlName="cardId">
+        @for (c of openCards(); track c.id) { <option [value]="c.id">{{ c.name }}</option> }
+      </select>
+    </label>
+    @if (isFriend()) {
+      <label><span class="field-label">Friend</span>
+        <select class="field" formControlName="personId">
+          <option value="">Choose a person…</option>
+          @for (p of store.people(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+      </label>
+      <div><a class="btn btn--ghost btn--sm" routerLink="/profile" [queryParams]="{ tab: 'persons' }">+ Add a new person</a></div>
+    }
+    <label><span class="field-label">What was bought</span><input id="eItem" class="field" formControlName="item" placeholder="e.g. iPhone"></label>
+    <label><span class="field-label">EMI per month (₹)</span><input class="field num" inputmode="numeric" formControlName="monthly" placeholder="0"></label>
+    <label><span class="field-label">Total months</span><input class="field num" inputmode="numeric" formControlName="totalMonths" placeholder="e.g. 12"></label>
+    <label><span class="field-label">Already paid before {{ store.ym() | ym: 'short' }}</span><input class="field num" inputmode="numeric" formControlName="alreadyPaid" placeholder="0"></label>
+    <button type="submit" class="btn btn--primary">Add EMI</button>
+  </div>
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+</form>

@@ -1,0 +1,35 @@
+@if (month(); as m) {
+  <div class="page">
+    <section class="grid-220">
+      <div class="card stat">
+        <div class="label">They owe you · pending</div>
+        <div class="stat__value in">{{ m.totals.recvPending | inr }}</div>
+        <div class="stat__note">{{ m.totals.recvDone | inr }} already received this month</div>
+      </div>
+      <div class="card stat">
+        <div class="label">You owe them · pending</div>
+        <div class="stat__value out">{{ m.totals.payPending | inr }}</div>
+        <div class="stat__note">{{ m.totals.payDone | inr }} already paid back</div>
+      </div>
+    </section>
+
+    <div class="seg-group" role="tablist" aria-label="Direction">
+      <button role="tab" class="seg" [class.is-on]="dir() === 'in'" [attr.aria-selected]="dir() === 'in'" (click)="pick('in')">They owe me</button>
+      <button role="tab" class="seg" [class.is-on]="dir() === 'out'" [attr.aria-selected]="dir() === 'out'" (click)="pick('out')">I owe them</button>
+    </div>
+
+    <section class="card card--clip">
+      @for (row of rows(); track row.r.id) {
+        <app-person-entry-row [row]="row" [editing]="editing() === row.r.id" (edit)="editing.set(row.r.id)" (closed)="editing.set(null)" />
+      } @empty {
+        <div class="list-empty">{{ dir() === 'in' ? 'Nobody owes you anything this month.' : 'You don’t owe anyone right now. Add money you borrowed below.' }}</div>
+      }
+      <form class="add" [formGroup]="addForm" (ngSubmit)="add()">
+        <label class="who"><span class="field-label">Person · reason</span><input class="field" formControlName="name" placeholder="e.g. Ravi · movie tickets"></label>
+        <label class="amt"><span class="field-label">Amount (₹)</span><input class="field num" inputmode="numeric" formControlName="amount" placeholder="0"></label>
+        <button type="submit" class="btn btn--primary">{{ dir() === 'in' ? 'Add — they owe me' : 'Add — I owe them' }}</button>
+        @if (addError()) { <div role="alert" class="err span-row">{{ addError() }}</div> }
+      </form>
+    </section>
+  </div>
+}

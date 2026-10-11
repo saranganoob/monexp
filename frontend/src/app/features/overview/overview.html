@@ -1,0 +1,27 @@
+@if (month(); as m) {
+  <div class="page">
+    <section class="grid-240">
+      <app-budget-card [ym]="m.ym" [budget]="m.budget" />
+      <div class="card stat">
+        <div class="label">Balance left</div>
+        <div class="stat__value stat__value--xl" [class.neg]="m.totals.balance < 0" [class.pos]="m.totals.balance >= 0">{{ m.totals.balance | inr }}</div>
+        <div class="stat__note">Budget − your share of bills − sudden spends (friends’ card EMIs are left out, since they pay those)</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Balance incl. people</div>
+        <div class="stat__value stat__value--xl" [class.neg]="m.totals.balanceInclPeople < 0" [class.pos]="m.totals.balanceInclPeople >= 0">{{ m.totals.balanceInclPeople | inr }}</div>
+        <div class="stat__note">Adds other money people owe you, minus what you owe</div>
+      </div>
+    </section>
+
+    <app-pay-summary [totals]="m.totals" />
+
+    <section class="grid-320">
+      <app-still-to-pay [month]="m" />
+      <div class="stack stack--lg">
+        <app-people-owe-you [rows]="m.receivables" [pending]="m.totals.recvPending" />
+        <app-closing-next [items]="installments()" />
+      </div>
+    </section>
+  </div>
+}

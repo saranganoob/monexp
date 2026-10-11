@@ -1,0 +1,9 @@
+<div class="card card--navy budget">
+  <label for="budget" class="title">Monthly budget · {{ ym() | ym }}</label>
+  <div class="input-wrap">
+    <span class="rupee">₹</span>
+    <input id="budget" class="num" inputmode="numeric" [formControl]="control" (change)="save()" (keydown.enter)="$any($event.target).blur()">
+    <app-icon name="edit" [stroke]="1.8" />
+  </div>
+  <div class="note">Edit anytime — every total recalculates.</div>
+</div>

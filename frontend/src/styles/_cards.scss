@@ -1,0 +1,33 @@
+@use 'breakpoints' as bp;
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  &--pad { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+  &--pad-sm { padding: 20px; }
+  &--clip { overflow: hidden; }
+  &--navy { background: var(--navy); border-color: var(--navy); color: #fff; }
+  &--warm { background: var(--orange-soft); border-color: var(--orange-line); }
+  &__title { font-size: 17px; font-weight: 800; }
+  &__lead { margin: 4px 0 0; font-size: 14px; color: var(--muted); line-height: 1.5; }
+}
+
+// grey header strip at the top of a list card
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 20px;
+  background: var(--surface-alt); border-bottom: 1px solid var(--line);
+  h2 { font-size: 15px; font-weight: 800; }
+  &__meta { font-size: 13px; font-weight: 600; color: var(--muted); } }
+
+// list rows
+.list-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 20px; border-top: 1px solid var(--line-soft); }
+.list-row--tight { padding: 10px 0; gap: 8px 12px; }
+.list-empty { padding: 32px; text-align: center; color: var(--muted); }
+
+// small stat tile: label + big number + note
+.stat { padding: 20px; display: flex; flex-direction: column; gap: 6px;
+  &__value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  &__value--xl { font-size: 32px; }
+  &__note { font-size: 13px; color: var(--muted); } }
+
+// key/value lines (bill breakdown, card totals)
+.kv { display: flex; justify-content: space-between; gap: 16px; font-size: 14px;
+  &--total { font-weight: 800; border-top: 1px solid var(--line); padding-top: 8px; }
+  &--friend { color: var(--orange); } }

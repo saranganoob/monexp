@@ -1,0 +1,5 @@
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.today { font-size: 13px; color: var(--muted); font-weight: 600; }
+.profile-btn { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 12px 4px 4px; border-radius: 999px; color: var(--ink); border: 1px solid var(--line-btn); background: var(--surface); text-decoration: none; font-size: 14px;
+  &:hover { color: var(--ink); background: var(--hover); }
+  &.is-on { border-color: var(--primary); background: var(--primary-soft); } }

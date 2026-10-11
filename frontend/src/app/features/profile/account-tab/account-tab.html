@@ -1,0 +1,17 @@
+<form class="card panel" [formGroup]="form" (ngSubmit)="save()">
+  <div>
+    <h2 class="card__title">Account details</h2>
+    <p class="card__lead">You can sign in with either of these.</p>
+  </div>
+  <label><span class="field-label">Email</span><input type="email" class="field" formControlName="email" placeholder="you@example.com" autocomplete="email"></label>
+  <label><span class="field-label">Phone number</span>
+    <span class="prefix-input"><span class="prefix">+91</span><input type="tel" class="field num" inputmode="numeric" formControlName="phone" placeholder="10-digit mobile number" autocomplete="tel-national"></span>
+  </label>
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+  <div class="row-flex">
+    <button type="submit" class="btn btn--primary">Save changes</button>
+    <button type="button" class="btn" (click)="signOut()">Sign out</button>
+    @if (status()) { <span class="ok-text">{{ status() }}</span> }
+  </div>
+  <p class="small muted note">To change your password, run <strong>npm run create-user</strong> in the MonEXP folder with the same email.</p>
+</form>

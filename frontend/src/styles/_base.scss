@@ -1,0 +1,41 @@
+@use 'breakpoints' as bp;
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); }
+a { color: var(--primary); }
+a:hover { color: var(--primary-dark); }
+h1, h2, h3 { margin: 0; }
+
+.num { font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.tiny { font-size: 12px; }
+.strong { font-weight: 700; }
+.heavy { font-weight: 800; }
+.text-right { text-align: right; }
+.err { color: var(--red); font-size: 14px; font-weight: 600; }
+.err--sm { font-size: 13px; }
+.ok-text { color: var(--green-ink); font-size: 14px; font-weight: 600; }
+.lead { margin: 0; color: var(--muted); line-height: 1.6; max-width: 760px; }
+
+// page = vertical stack of sections
+.page { display: flex; flex-direction: column; gap: 24px; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.stack--sm { gap: 8px; }
+.stack--lg { gap: 16px; }
+.row-flex { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.between { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.grow { flex: 1; min-width: 0; }
+
+// responsive grids: .grid-200 = columns at least 200px wide
+@each $w in 170, 200, 220, 240, 280, 300, 320, 340 {
+  .grid-#{$w} { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, #{$w}px), 1fr)); gap: 16px; align-items: start; }
+}
+.grid-fill-300 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+// the indented box under a list row (editors, breakdowns)
+.split { margin: 0 20px 16px 76px; }
+@media (max-width: bp.$tablet) { .split { margin: 0 16px 16px 16px; } }
+@media (max-width: bp.$phone) { .hide-xs { display: none; } }

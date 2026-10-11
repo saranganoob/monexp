@@ -1,0 +1,10 @@
+@use 'styles/breakpoints' as bp;
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 45; max-width: calc(100% - 32px);
+  background: var(--ink); color: #fff; border-radius: var(--radius); padding: 8px 8px 8px 18px; font-size: 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 10px 30px rgba(17,24,39,.25);
+  &.is-error { background: var(--red); } }
+.action { background: #1F2937; border-color: #374151; color: #fff;
+  &:hover { background: #374151; color: #fff; } }
+.is-error .action { background: #8A1B16; border-color: #C2453F; }
+@media (max-width: bp.$tablet) { .toast { width: calc(100% - 32px); } }

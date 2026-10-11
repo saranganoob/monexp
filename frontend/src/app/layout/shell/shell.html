@@ -1,0 +1,25 @@
+<div class="shell">
+  <app-sidebar />
+  <main class="main">
+    <div class="inner">
+      <app-top-bar />
+      <app-page-header [meta]="meta()" />
+
+      @if (store.loadError()) {
+        <div role="alert" class="card load-error">
+          {{ store.loadError() }}
+          <button class="btn btn--sm" (click)="store.reload()">Try again</button>
+        </div>
+      }
+
+      @if (showEmpty()) {
+        <app-empty-month />
+      } @else {
+        <router-outlet />
+      }
+    </div>
+  </main>
+
+  @if (store.dialog()) { <app-add-expense-dialog /> }
+  <app-undo-toast />
+</div>

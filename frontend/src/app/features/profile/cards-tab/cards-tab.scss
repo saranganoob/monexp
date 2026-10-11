@@ -1,0 +1,15 @@
+:host { display: flex; flex-direction: column; gap: 24px; }
+.grid-fill-280 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+.face { padding: 18px; color: #fff; display: flex; flex-direction: column; gap: 22px; --face: #3F4654; background: linear-gradient(135deg, var(--face), var(--ink));
+  &.is-closed { opacity: .6; } }
+.face--visa { --face: #1A2B6D; }
+.face--rupay { --face: #0F5C4A; }
+.face--maestro { --face: #0E4A86; }
+.face--mastercard { --face: #2B2F38; }
+.face__name { font-size: 16px; }
+.network { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; background: rgba(255,255,255,.18); border-radius: 6px; padding: 3px 8px; }
+.digits { font-size: 18px; letter-spacing: .18em; font-weight: 700; }
+.body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.stats { color: var(--ink-2); }
+.form { max-width: 760px; gap: 14px; }
+.privacy { display: flex; gap: 10px; align-items: flex-start; }

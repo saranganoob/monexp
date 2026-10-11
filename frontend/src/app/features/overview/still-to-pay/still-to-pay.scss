@@ -1,0 +1,7 @@
+.box { gap: 12px; }
+.list-row { padding-left: 0; padding-right: 0; }
+.info { flex: 1 1 160px; min-width: 0; }
+.due { font-size: 13px; font-weight: 600; color: var(--muted); }
+.due--soon { color: var(--orange); }
+.due--overdue { color: var(--red); }
+.empty { margin: 0; }

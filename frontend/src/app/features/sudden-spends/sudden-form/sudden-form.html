@@ -1,0 +1,18 @@
+<form class="card card--pad" [formGroup]="form" (ngSubmit)="add()">
+  <h2 class="card__title">Log an unplanned spend</h2>
+  <div class="form-grid">
+    <label><span class="field-label">What was it?</span><input class="field" formControlName="name" placeholder="e.g. Bike service"></label>
+    <label><span class="field-label">Amount (₹)</span><input class="field num" inputmode="numeric" formControlName="amount" placeholder="0"></label>
+    <label><span class="field-label">Paid with</span>
+      <select class="field" formControlName="mode">
+        @for (o of modeOptions(); track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+      </select>
+    </label>
+    <label><span class="field-label">Date</span><input type="date" class="field" formControlName="date" [min]="minDate()" [max]="maxDate()"></label>
+    <button type="submit" class="btn btn--primary">Add spend</button>
+  </div>
+  @if (byCard()) {
+    <div class="notice notice--info notice--sm">Paid by credit card, so this will show up in that card's bill. It's logged here but not deducted from your balance twice.</div>
+  }
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+</form>

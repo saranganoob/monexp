@@ -1,0 +1,35 @@
+<form class="edit-box" [formGroup]="form" (ngSubmit)="save()" (keydown.escape)="done.emit()">
+  <div class="seg-group" role="radiogroup" aria-label="Who is this EMI for">
+    <label class="seg seg--sm" [class.is-on]="!isFriend()"><input type="radio" class="sr" formControlName="forWho" value="me">Me</label>
+    <label class="seg seg--sm" [class.is-on]="isFriend()"><input type="radio" class="sr" formControlName="forWho" value="friend">A friend</label>
+  </div>
+  <div class="grid-2">
+    <label class="span-all"><span class="lbl">What was bought</span><input class="field field--sm" formControlName="item"></label>
+    @if (isFriend()) {
+      <label class="span-all"><span class="lbl">Friend</span>
+        <select class="field field--sm" formControlName="personId">
+          <option value="">Choose a person…</option>
+          @for (p of store.people(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+      </label>
+    }
+    <label><span class="lbl">EMI per month (₹)</span><input class="field field--sm num" inputmode="numeric" formControlName="monthly"></label>
+    <label><span class="lbl">Total months</span><input class="field field--sm num" inputmode="numeric" formControlName="totalMonths"></label>
+    <label><span class="lbl">1st EMI month</span>
+      <select class="field field--sm" formControlName="startMonth">
+        @for (mn of months; track $index) { <option [ngValue]="$index">{{ mn }}</option> }
+      </select>
+    </label>
+    <label><span class="lbl">Year</span>
+      <select class="field field--sm" formControlName="startYear">
+        @for (y of years(); track y) { <option [ngValue]="y">{{ y }}</option> }
+      </select>
+    </label>
+  </div>
+  @if (summary()) { <div class="num small">{{ summary() }}</div> }
+  @if (error()) { <div role="alert" class="err err--sm">{{ error() }}</div> }
+  <div class="row-flex">
+    <button type="submit" class="btn btn--primary btn--sm">Save</button>
+    <button type="button" class="btn btn--sm" (click)="done.emit()">Cancel</button>
+  </div>
+</form>

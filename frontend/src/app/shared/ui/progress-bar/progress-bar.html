@@ -1,0 +1,4 @@
+<div class="track" [class.track--amber]="track() === 'amber'" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+  [attr.aria-valuenow]="pct()" [attr.aria-label]="label() || null">
+  <div class="fill" [class]="'fill fill--' + tone()" [style.width.%]="pct()"></div>
+</div>

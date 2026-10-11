@@ -1,0 +1,33 @@
+@if (month(); as m) {
+  <div class="page">
+    <section class="toolbar">
+      <div class="row-flex" role="group" aria-label="Filter bills">
+        @for (f of filters(); track f.key) {
+          <button class="pill" [class.is-on]="filter() === f.key" [attr.aria-pressed]="filter() === f.key" (click)="filter.set(f.key)">
+            {{ f.label }} <span class="num count">{{ f.count }}</span>
+          </button>
+        }
+      </div>
+      <div class="row-flex">
+        <div class="num small totals">Paid <strong>{{ m.totals.paid | inr }}</strong> · Unpaid <strong>{{ m.totals.unpaid | inr }}</strong> · Total <strong>{{ m.totals.toPay | inr }}</strong></div>
+        <button class="btn btn--sm" (click)="store.openAdd('bill')"><app-icon name="plus" [stroke]="2.2" />Add bill to {{ m.ym | ym: 'short' }}</button>
+      </div>
+    </section>
+
+    @for (g of groups(); track g.key) {
+      <section class="card card--clip">
+        <div class="card-head">
+          <h2>{{ g.label }}</h2>
+          <span class="card-head__meta num">
+            @if (g.liveCount) { {{ g.total | inr }} · {{ g.paidCount }}/{{ g.liveCount }} paid } @else { {{ g.allCount }} skipped this month }
+          </span>
+        </div>
+        @for (b of g.bills; track b.id) {
+          <app-bill-row [bill]="b" [card]="cardOf(b.cardId)" [ym]="m.ym" [editing]="editing()" (editingChange)="editing.set($event)" />
+        }
+      </section>
+    } @empty {
+      <div class="card list-empty">{{ m.bills.length ? 'No bills match this filter.' : 'No bills in this month yet. Use “Add bill” to start.' }}</div>
+    }
+  </div>
+}

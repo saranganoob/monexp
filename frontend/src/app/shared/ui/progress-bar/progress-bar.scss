@@ -1,0 +1,10 @@
+:host { display: block; }
+.track { background: var(--line-soft); border-radius: 999px; overflow: hidden; height: 8px; }
+.track--amber { background: var(--amber-track); }
+:host(.size-sm) .track { height: 6px; }
+:host(.size-lg) .track { height: 12px; }
+.fill { height: 100%; border-radius: 999px; }
+.fill--green { background: var(--green); }
+.fill--navy { background: var(--navy); }
+.fill--friend { background: var(--orange-strong); }
+.fill--incoming { background: var(--incoming); }

@@ -1,0 +1,55 @@
+.btn {
+  font: inherit; font-weight: 600; font-size: 14px; min-height: 44px; padding: 0 16px;
+  border-radius: var(--radius-sm); border: 1px solid var(--line-btn); background: var(--surface); color: var(--ink);
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; text-decoration: none;
+  &:hover { background: var(--hover); color: var(--ink); }
+  &:disabled { opacity: .6; cursor: default; }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+.btn--primary { background: var(--primary); border-color: var(--primary); color: #fff;
+  &:hover { background: var(--primary-dark); color: #fff; } }
+.btn--ghost { border-color: transparent; background: transparent; color: var(--ink-2);
+  &:hover { background: var(--line-soft); } }
+.btn--sm { min-height: 36px; font-size: 13px; padding: 0 12px; }
+.btn--icon { width: 44px; padding: 0; }
+.btn--icon-sm { width: 36px; padding: 0; }
+.btn--block { width: 100%; }
+.btn--tall { min-height: 48px; font-size: 15px; }
+.btn--on-dark { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); color: #fff;
+  &:hover { background: rgba(255,255,255,.2); color: #fff; } }
+
+// round filter pills (All / Unpaid / Paid …)
+.pill {
+  font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line-btn); background: var(--surface); color: var(--ink-2);
+  &.is-on { border-color: var(--primary); background: var(--primary); color: #fff; }
+  .count { opacity: .8; }
+}
+
+// dark segmented buttons (They owe me / I owe them, Me / A friend)
+.seg {
+  font: inherit; font-size: 14px; font-weight: 700; min-height: 44px; padding: 0 18px; border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid var(--line-btn); background: var(--surface); color: var(--ink-2);
+  &.is-on { border-color: var(--ink); background: var(--ink); color: #fff; }
+  &--sm { min-height: 36px; padding: 0 14px; }
+}
+.seg-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+// grey tab strip (Password / OTP)
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--line-soft); border-radius: var(--radius); padding: 4px; }
+.tab {
+  font: inherit; font-size: 14px; font-weight: 700; min-height: 40px; border-radius: 9px; border: none; cursor: pointer;
+  background: transparent; color: var(--muted);
+  &.is-on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(17,24,39,.12); }
+}
+
+// text-looking button
+.link-btn { font: inherit; font-size: 13px; font-weight: 600; color: var(--primary); background: none; border: none; cursor: pointer; padding: 4px 0; }
+
+// big round "mark paid" tick
+.tick {
+  width: 44px; height: 44px; flex: none; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: #fff; background: var(--surface); border: 2px solid var(--line-dashed);
+  &.is-paid { background: var(--green); border-color: var(--green); }
+  &.is-skipped { border-style: dashed; }
+}

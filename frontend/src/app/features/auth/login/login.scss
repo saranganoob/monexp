@@ -1,0 +1,35 @@
+@use 'styles/breakpoints' as bp;
+
+.wrap { min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--bg); }
+
+.brand-side { flex: 1 1 420px; background: var(--navy); color: #fff; padding: 48px clamp(24px, 5vw, 64px); display: flex; flex-direction: column; justify-content: space-between; gap: 40px; position: relative; overflow: hidden; }
+.ring { position: absolute; right: -120px; top: -120px; width: 360px; height: 360px; border-radius: 50%; border: 56px solid rgba(255,255,255,.06); }
+.blob { position: absolute; left: -80px; bottom: -140px; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,.05); }
+.brand { display: flex; align-items: center; gap: 12px; position: relative; }
+.logo { width: 40px; height: 40px; border-radius: var(--radius); background: #fff; color: var(--navy); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; }
+.brand-name { font-weight: 800; font-size: 20px; }
+.pitch { position: relative; max-width: 460px;
+  h1 { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+  p { margin: 16px 0 0; font-size: 16px; line-height: 1.6; color: var(--navy-ink); } }
+.features { list-style: none; padding: 0; margin: 28px 0 0; display: flex; flex-direction: column; gap: 12px; font-size: 15px;
+  li { display: flex; gap: 12px; align-items: center; } }
+.tick-box { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; flex: none; }
+.private { font-size: 13px; color: var(--navy-muted); position: relative; }
+
+.form-side { flex: 1 1 420px; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.panel { width: 100%; max-width: 440px; padding: clamp(24px, 4vw, 36px); display: flex; flex-direction: column; gap: 20px; box-shadow: 0 12px 40px rgba(17,24,39,.08);
+  h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; } }
+.welcome { margin: 6px 0 0; color: var(--muted); font-size: 15px; }
+.pw-head { align-items: baseline; margin-bottom: 6px; }
+.pw { display: flex; align-items: center; border: 1px solid var(--line-input); border-radius: var(--radius-sm); background: var(--surface); padding-right: 4px;
+  &:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+  input { font: inherit; font-size: 14px; flex: 1; min-width: 0; min-height: 44px; border: none; outline: none; padding: 0 12px; background: transparent; color: var(--ink); } }
+.toggle { font: inherit; font-size: 13px; font-weight: 700; color: var(--ink-2); background: none; border: none; cursor: pointer; min-height: 36px; padding: 0 10px; border-radius: 8px; }
+.otp-meta { margin-top: 8px; font-size: 13px; color: var(--muted); flex-wrap: wrap; .link-btn { padding: 0; } }
+.demo { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--line-soft); padding-top: 14px; }
+
+@media (max-width: bp.$tablet) {
+  .brand-side { flex-basis: 100%; padding: 28px 20px; gap: 20px; }
+  .pitch h1 { font-size: 24px; }
+  .features { display: none; }
+}

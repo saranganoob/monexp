@@ -1,0 +1,12 @@
+<header class="head">
+  <div class="grow">
+    <div class="label">{{ meta().kicker }}</div>
+    <h1>{{ meta().title }}</h1>
+  </div>
+  @if (meta().picker !== 'none') {
+    <div class="row-flex">
+      <app-month-picker [mode]="meta().picker === 'year' ? 'year' : 'month'" />
+      <button class="btn btn--primary" (click)="store.openAdd()"><app-icon name="plus" [stroke]="2.2" />Add expense</button>
+    </div>
+  }
+</header>

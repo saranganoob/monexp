@@ -1,0 +1,33 @@
+<form class="box" [formGroup]="form" (ngSubmit)="add()">
+  <div class="label title">Add a new spend</div>
+  <div class="fields">
+    <label><span class="sr">What was it</span><input class="field" formControlName="name" placeholder="What? e.g. Supermarket"></label>
+    <label><span class="sr">Amount (₹)</span><input class="field num" inputmode="numeric" formControlName="amount" placeholder="₹ e.g. 321"></label>
+    <label><span class="sr">Date</span><input type="date" class="field" formControlName="date" [min]="minDate()" [max]="maxDate()"></label>
+    <button type="submit" class="btn btn--primary"><app-icon name="plus" [size]="16" [stroke]="2.2" />Add</button>
+  </div>
+  @if (preview()) {
+    <div class="num small preview">{{ preview() }}</div>
+  } @else {
+    <div class="tiny muted">Adds on top of your spends so far.</div>
+  }
+  @if (error()) { <div role="alert" class="err err--sm">{{ error() }}</div> }
+
+  @if (card().items.length) {
+    <div class="items">
+      @for (it of card().items; track it.id) {
+        <div class="item">
+          <span class="grow strong">{{ it.name }}</span>
+          <span class="tiny muted">{{ it.date | ym: 'day' }}</span>
+          <span class="num strong amount">{{ it.amount | inr }}</span>
+          <button type="button" class="btn btn--ghost btn--sm remove" (click)="remove(it)" [attr.aria-label]="'Remove ' + it.name + ' ' + (it.amount | inr)">
+            <app-icon name="trash" [size]="16" [stroke]="1.8" />
+          </button>
+        </div>
+      }
+      @if (card().notItemised > 0) {
+        <div class="item not-itemised"><span class="grow">Not itemised</span><span class="num">{{ card().notItemised | inr }}</span></div>
+      }
+    </div>
+  }
+</form>

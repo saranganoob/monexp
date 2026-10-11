@@ -1,0 +1,25 @@
+<section class="card card--clip">
+  <div class="card-head">
+    <h2>Friends' EMIs on your cards</h2>
+    <span class="num strong small warm">{{ outstanding() | inr }} still to come back overall</span>
+  </div>
+  @for (f of rows(); track f.id) {
+    <div class="list-row">
+      <app-avatar [name]="f.who" tone="orange" />
+      <div class="info">
+        <div class="strong">{{ f.who }} · {{ f.item }}</div>
+        <div class="small muted">
+          On {{ f.card }} ·
+          @if (f.n >= 1) { installment {{ f.n }} of {{ f.total }} } @else { starts {{ f.startYm | ym: 'short' }} }
+          · {{ f.monthly ? (f.monthly | inr) + '/mo' : 'amount not set' }}
+        </div>
+      </div>
+      <div class="num text-right">
+        <div class="heavy">{{ f.monthly ? (f.left | inr) : '—' }}</div>
+        <div class="tiny muted">left · closes {{ f.endYm | ym: 'short' }}</div>
+      </div>
+    </div>
+  } @empty {
+    <div class="list-empty">No friend EMIs running. Use “Add an EMI” → “A friend” to start tracking one.</div>
+  }
+</section>

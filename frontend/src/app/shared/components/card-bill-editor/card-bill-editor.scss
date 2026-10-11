@@ -1,0 +1,4 @@
+:host { display: block; }
+.money-input { display: flex; align-items: center; gap: 6px; flex: 1 1 160px; background: var(--surface); border: 1px solid var(--line-input); border-radius: var(--radius-sm); padding: 0 12px;
+  &:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+  input { font: inherit; font-size: 18px; font-weight: 800; border: none; outline: none; min-height: 44px; width: 100%; min-width: 0; background: transparent; color: var(--ink); } }

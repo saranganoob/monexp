@@ -1,0 +1,33 @@
+<section class="card wrap">
+  <div class="icon-tile"><app-icon name="calendar" [size]="28" [stroke]="1.8" /></div>
+  <h2 class="title">Nothing planned for {{ ym() | ym }} yet</h2>
+  <p class="intro">
+    @if (from()) {
+      Roll over copies your recurring bills and keeps pending money people owe you. Card EMIs and installment counters move forward automatically. Everything starts as unpaid.
+    } @else {
+      There is no earlier month to copy from. Start blank, or add a bill with “Add expense”.
+    }
+  </p>
+
+  @if (from() && view().carryCandidates.length) {
+    <fieldset class="carry">
+      <legend>Still pending from {{ from() | ym: 'short' }} — carry any over?</legend>
+      <p class="small muted">Only tick what’s actually expected in {{ ym() | ym }}. Unticked items stay in {{ from() | ym: 'short' }}. Installments and friends’ card EMIs carry over on their own.</p>
+      @for (r of view().carryCandidates; track r.id) {
+        <label class="carry-row">
+          <input type="checkbox" [checked]="picked().has(r.id)" (change)="toggle(r.id)">
+          <span class="grow strong">{{ r.name }}</span>
+          <span class="dir" [class.dir--out]="r.direction === 'out'">{{ r.direction === 'in' ? 'owes you' : 'you owe' }}</span>
+          <span class="num heavy amount">{{ r.amount | inr }}</span>
+        </label>
+      }
+    </fieldset>
+  }
+
+  <div class="actions">
+    @if (from(); as f) {
+      <button class="btn btn--primary" [disabled]="busy()" (click)="create('rollover')">Roll over from {{ f | ym: 'short' }}</button>
+    }
+    <button class="btn" [disabled]="busy()" (click)="create('blank')">Start a blank month</button>
+  </div>
+</section>

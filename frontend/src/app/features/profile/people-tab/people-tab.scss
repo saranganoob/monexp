@@ -1,0 +1,8 @@
+:host { display: flex; flex-direction: column; gap: 24px; }
+.owed { color: var(--primary); }
+.person { padding: 14px 20px; }
+.info { flex: 1 1 220px; min-width: 0; }
+.stats { color: var(--ink-2); margin-top: 2px; }
+.owes-you { color: var(--primary); }
+.you-owe { color: var(--orange); }
+.form { gap: 14px; }

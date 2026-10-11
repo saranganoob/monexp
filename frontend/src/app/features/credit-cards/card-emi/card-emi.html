@@ -1,0 +1,38 @@
+@let e = emi();
+<div class="emi">
+  <div class="between top">
+    <div class="grow">
+      <div class="strong">{{ e.item }}</div>
+      <div class="row-flex tags">
+        <span class="tag" [class.tag--friend]="isFriend()">{{ isFriend() ? 'For ' + e.personName : 'Mine' }}</span>
+        <span class="inst-pill">{{ e.n }} of {{ e.total }}</span>
+      </div>
+    </div>
+    <div class="row-flex actions">
+      <button class="btn btn--ghost btn--sm" (click)="edit.emit()" [attr.aria-expanded]="editing()" [attr.aria-label]="'Edit ' + e.item + ' EMI details'">Edit</button>
+      <button class="btn btn--ghost btn--sm" (click)="remove.emit()" [attr.aria-label]="'Remove ' + e.item + ' EMI'">Remove</button>
+    </div>
+  </div>
+
+  @if (editing() && raw(); as r) { <app-emi-editor [emi]="r" (done)="closed.emit()" /> }
+
+  <app-progress-bar [value]="(e.n / e.total) * 100" [tone]="isFriend() ? 'friend' : 'navy'" size="sm" />
+
+  <div class="grid-2 bottom">
+    <label>
+      <span class="lbl">EMI per month (₹)</span>
+      <input class="field field--sm num" inputmode="numeric" [formControl]="monthly" (change)="saveMonthly()" (keydown.enter)="$any($event.target).blur()" placeholder="Enter amount">
+    </label>
+    <div class="small left">
+      <div>Left: <strong class="num">{{ e.monthly ? (amountLeft() | inr) : '—' }}</strong></div>
+      <div>Closes: <strong>{{ e.endYm | ym: 'short' }}</strong></div>
+    </div>
+  </div>
+
+  @if (isFriend()) {
+    <div class="friend between">
+      <span>{{ e.received === 'done' ? e.personName + ' paid you this month' : e.personName + ' owes you ' + (e.amount ? (e.amount | inr) : 'this month’s EMI') }}</span>
+      <button class="btn btn--sm" (click)="toggleReceived()">{{ e.received === 'done' ? 'Undo' : 'Mark received' }}</button>
+    </div>
+  }
+</div>

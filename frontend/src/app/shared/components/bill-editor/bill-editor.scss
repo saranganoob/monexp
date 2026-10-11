@@ -1,0 +1,5 @@
+:host { display: block; }
+.edit-box { gap: 12px; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; align-items: end; }
+.name { grid-column: span 2; min-width: 0; }
+.hint { margin: 0; color: var(--ink-2); }

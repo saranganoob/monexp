@@ -1,0 +1,4 @@
+// Breakpoints – use in component styles with:  @use 'styles/breakpoints' as bp;
+$tablet: 860px;  // sidebar turns into a top bar
+$small: 1180px;  // narrower sidebar
+$phone: 520px;   // hide button labels

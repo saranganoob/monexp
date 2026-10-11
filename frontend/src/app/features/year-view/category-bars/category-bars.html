@@ -1,0 +1,10 @@
+<section class="card card--pad">
+  <h2 class="card__title">Where {{ data().year }}'s money went</h2>
+  @for (c of rows(); track c.key) {
+    <div class="row">
+      <span class="strong">{{ c.label }}</span>
+      <div class="track"><div class="fill" [class]="'fill fill--' + c.key" [style.width.%]="c.pct"></div></div>
+      <span class="num strong text-right">{{ c.total | inr }}</span>
+    </div>
+  }
+</section>

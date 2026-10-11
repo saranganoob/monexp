@@ -6,5 +6,6 @@ export { Plan } from './Plan.js';
 export { Person, RELATIONS } from './Person.js';
 export { PeopleEntry } from './PeopleEntry.js';
 export { SuddenSpend } from './SuddenSpend.js';
+export { CardSpend } from './CardSpend.js';
 export { User } from './User.js';
 export { Undo } from './Undo.js';

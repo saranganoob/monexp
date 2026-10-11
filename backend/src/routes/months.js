@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { Month, BillItem, Card, CardEmi, Person, PeopleEntry, SuddenSpend } from '../models/index.js';
+import { Month, BillItem, Card, CardEmi, Person, PeopleEntry, SuddenSpend, CardSpend } from '../models/index.js';
 import { getMonthView, createMonth, ensureMonth, findPrevMonth, nextSortOrder, computeMonths } from '../services/monthService.js';
 import { withUndo } from '../services/undo.js';
 import { CATEGORY_KEYS } from '../lib/categories.js';
@@ -86,11 +86,38 @@ router.put('/:ym/cards/:cardId/bill', async (req, res) => {
   } else {
     spends = toAmount(req.body?.spends, 'My spends');
   }
+  if (spends < cv.itemised) {
+    throw badRequest(`Your itemised spends on this card already add up to ${inr(cv.itemised)}, so “my spends” can’t be less than that. Remove some items first.`);
+  }
   const out = await withUndo({ yms: [req.ym] }, async () => {
     await Month.updateOne({ ym: req.ym }, { $set: { [`cardSpends.${cardId}`]: spends } });
     return {};
   }, message ?? `${card.name} bill for ${ymLabel(req.ym)} set to ${inr(spends + emiTotal)}`);
   res.json(out);
+});
+
+// POST /api/months/:ym/cards/:cardId/spends  { name, amount, date }
+// Logs one purchase on the card and adds it to that card's "my spends".
+router.post('/:ym/cards/:cardId/spends', async (req, res) => {
+  const cardId = toId(req.params.cardId, 'card');
+  const card = await Card.findById(cardId).lean();
+  if (!card) throw notFound('Card not found.');
+  await requireMonth(req.ym);
+  const b = req.body || {};
+  const name = toText(b.name, 'What was it', { max: 120 }) || 'Spend';
+  const amount = toAmount(b.amount, 'Amount');
+  if (!amount) throw badRequest('Enter an amount above ₹0 to add.');
+  const date = toText(b.date, 'Date', { required: true });
+  const first = `${req.ym}-01`;
+  const last = `${req.ym}-${String(lastDayOfMonth(req.ym)).padStart(2, '0')}`;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < first || date > last) throw badRequest(`Pick a date inside ${ymLabel(req.ym)}.`);
+
+  const out = await withUndo({ yms: [req.ym] }, async () => {
+    const doc = await CardSpend.create({ ym: req.ym, card: cardId, name, amount, date });
+    await Month.updateOne({ ym: req.ym }, { $inc: { [`cardSpends.${cardId}`]: amount } });
+    return { id: String(doc._id) };
+  }, `${name} ${inr(amount)} added to ${card.name}`);
+  res.status(201).json(out);
 });
 
 // PATCH /api/months/:ym/emis/:emiId  { amount?: number|null, received?: "pending"|"done" }

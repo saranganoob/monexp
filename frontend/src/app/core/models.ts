@@ -18,8 +18,11 @@ export interface EmiView {
 export interface CardView {
   id: string; name: string; network: string; last4: string; closedOn: string;
   spends: number; myEmis: number; friendEmis: number; total: number; emis: EmiView[];
+  items: CardSpendItem[]; itemised: number; notItemised: number;
   billId: string | null; billStatus: BillStatus | null;
 }
+
+export interface CardSpendItem { id: string; cardId: string; name: string; amount: number; date: string; }
 
 export interface Entry {
   id: string; direction: 'in' | 'out'; personId: string | null; name: string; amount: number; status: EntryStatus;
@@ -49,6 +52,10 @@ export type MonthView = MonthData | MissingMonth;
 
 export interface Card { id: string; name: string; last4: string; network: string; closedOn: string; }
 export interface CardEmi { id: string; cardId: string; item: string; forWho: 'me' | 'friend'; personId: string | null; monthly: number; totalMonths: number; startYm: string; }
+export interface Plan {
+  id: string; name: string; kind: string; source: string; direction: 'out' | 'in'; category: CategoryKey;
+  personId: string | null; monthly: number; totalInstallments: number; startYm: string;
+}
 export interface Person { id: string; name: string; relation: string; phone: string; upi: string; note: string; }
 export interface PersonStats extends Person { owed: number; iOwe: number; runningEmis: number; leftToRecover: number; receivedSoFar: number; }
 

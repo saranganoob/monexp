@@ -44,7 +44,11 @@ router.post('/logout', (_req, res) => {
 
 router.get('/me', requireAuth, async (req, res) => {
   const user = await User.findById(req.userId).lean();
-  if (!user) throw notFound('Account not found.');
+  if (!user) {
+    // The session belongs to an account that no longer exists – treat it as signed out.
+    res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: 'lax', secure: config.isProd });
+    throw new HttpError(401, 'Please sign in again.');
+  }
   res.json(publicUser(user));
 });
 

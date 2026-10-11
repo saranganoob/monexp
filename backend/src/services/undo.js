@@ -1,9 +1,9 @@
 // "Undo" support: before a change we snapshot the records it can touch, and the
 // Undo button restores that snapshot. Snapshots expire after an hour.
-import { Month, BillItem, PeopleEntry, SuddenSpend, Card, CardEmi, Plan, Person, Undo } from '../models/index.js';
+import { Month, BillItem, PeopleEntry, SuddenSpend, CardSpend, Card, CardEmi, Plan, Person, Undo } from '../models/index.js';
 import { notFound } from '../lib/http.js';
 
-const MONTH_SCOPED = { Month, BillItem, PeopleEntry, SuddenSpend };
+const MONTH_SCOPED = { Month, BillItem, PeopleEntry, SuddenSpend, CardSpend };
 const GLOBAL = { Card, CardEmi, Plan, Person };
 
 // scope: { yms: ['2026-10'], global: ['CardEmi'] }

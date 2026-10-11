@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
-import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, Undo } from '../src/models/index.js';
+import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, Undo } from '../src/models/index.js';
 import * as data from './seed-data.js';
 
-export const DATA_MODELS = [Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, Undo];
+export const DATA_MODELS = [Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, Undo];
 
 export async function hasData() {
   return Boolean(await Month.exists({}));

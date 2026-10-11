@@ -36,9 +36,14 @@
               <div style="font-size: 12px; color: #4B5563; margin-top: 4px">Type here to replace the total.</div>
             </div>
             <div style="background: #F3F6FD; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
-              <label [for]="'add-' + t.c.id" class="label" style="color: #1E3A8A">Add a new spend (₹)</label>
-              <div style="display: flex; gap: 8px">
-                <input [id]="'add-' + t.c.id" class="field num" inputmode="numeric" [value]="addText()[t.c.id] ?? ''" (input)="setAddText(t.c, $event)" (keydown.enter)="addSpend(t.c)" placeholder="e.g. 321">
+              <div class="label" style="color: #1E3A8A">Add a new spend</div>
+              <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 8px">
+                <div><label [for]="'sn-' + t.c.id" class="sr">What was it</label>
+                  <input [id]="'sn-' + t.c.id" class="field" [value]="spendName()[t.c.id] ?? ''" (input)="setSpend('name', t.c, $event)" (keydown.enter)="addSpend(t.c)" placeholder="What? e.g. Supermarket"></div>
+                <div><label [for]="'sa-' + t.c.id" class="sr">Amount (₹)</label>
+                  <input [id]="'sa-' + t.c.id" class="field num" inputmode="numeric" [value]="spendAmt()[t.c.id] ?? ''" (input)="setSpend('amt', t.c, $event)" (keydown.enter)="addSpend(t.c)" placeholder="₹ e.g. 321"></div>
+                <div><label [for]="'sd-' + t.c.id" class="sr">Date</label>
+                  <input [id]="'sd-' + t.c.id" type="date" class="field" [min]="minDate()" [max]="maxDate()" [value]="spendDate()[t.c.id] || todayDefault()" (change)="setSpend('date', t.c, $event)"></div>
                 <button class="btn btn-primary" (click)="addSpend(t.c)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add
                 </button>
@@ -48,7 +53,24 @@
               } @else {
                 <div style="font-size: 12px; color: #4B5563">Adds on top of your spends so far.</div>
               }
-              @if (addErr()[t.c.id]) { <div role="alert" style="font-size: 13px; color: #A3201A; font-weight: 600">{{ addErr()[t.c.id] }}</div> }
+              @if (spendErr()[t.c.id]) { <div role="alert" style="font-size: 13px; color: #A3201A; font-weight: 600">{{ spendErr()[t.c.id] }}</div> }
+              @if (t.c.items.length) {
+                <div style="border-top: 1px solid #D6DFF5; margin-top: 2px">
+                  @for (it of t.c.items; track it.id) {
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #E3E9F7; font-size: 14px">
+                      <span style="flex: 1; min-width: 0; font-weight: 600">{{ it.name }}</span>
+                      <span style="font-size: 12px; color: #4B5563">{{ spendDay(it) }}</span>
+                      <span class="num" style="font-weight: 700; min-width: 64px; text-align: right">{{ inr(it.amount) }}</span>
+                      <button class="btn btn-ghost btn-sm" style="width: 32px; min-height: 32px; padding: 0" (click)="removeSpend(it)" [attr.aria-label]="'Remove ' + it.name + ' ' + inr(it.amount)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>
+                      </button>
+                    </div>
+                  }
+                  @if (t.c.notItemised > 0) {
+                    <div style="display: flex; gap: 8px; padding: 6px 40px 0 0; font-size: 13px; color: #4B5563"><span style="flex: 1">Not itemised</span><span class="num">{{ inr(t.c.notItemised) }}</span></div>
+                  }
+                </div>
+              }
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center">
               <div class="label">Running EMIs · {{ t.c.emis.length }}</div>
@@ -64,8 +86,14 @@
                       <span class="num" style="font-size: 12px; font-weight: 700; color: #1E3A8A; background: #E8EEFC; border-radius: 999px; padding: 3px 9px">{{ e.n }} of {{ e.total }}</span>
                     </div>
                   </div>
-                  <button class="btn btn-ghost btn-sm" (click)="removeEmi(e)" [attr.aria-label]="'Remove ' + e.item + ' EMI'">Remove</button>
+                  <div style="display: flex; gap: 2px">
+                    <button class="btn btn-ghost btn-sm" (click)="editingEmi.set(editingEmi() === e.id ? null : e.id)" [attr.aria-expanded]="editingEmi() === e.id" [attr.aria-label]="'Edit ' + e.item + ' EMI details'">Edit</button>
+                    <button class="btn btn-ghost btn-sm" (click)="removeEmi(e)" [attr.aria-label]="'Remove ' + e.item + ' EMI'">Remove</button>
+                  </div>
                 </div>
+                @if (editingEmi() === e.id && emiOf(e.id); as raw) {
+                  <app-emi-editor [emi]="raw" (done)="editingEmi.set(null)" />
+                }
                 <div style="height: 6px; background: #EEF0F3; border-radius: 999px; overflow: hidden"><div [style]="emiBar(e)"></div></div>
                 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: end">
                   <div>
@@ -86,6 +114,21 @@
               </div>
             } @empty {
               <div style="font-size: 14px; color: #4B5563">No EMIs running on this card.</div>
+            }
+            @for (u of upcoming(t.c); track u.e.id) {
+              <div style="border: 1px dashed #B6BDC7; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap">
+                  <div style="min-width: 0">
+                    <div style="font-weight: 700">{{ u.e.item }} <span style="font-size: 12px; font-weight: 700; color: #4B5563">· {{ u.who }}</span></div>
+                    <div class="num" style="font-size: 13px; color: #4B5563">Starts {{ u.starts }} · {{ u.e.monthly ? inr(u.e.monthly) + '/mo' : 'amount not set' }} · {{ u.e.totalMonths }} months</div>
+                  </div>
+                  <div style="display: flex; gap: 2px">
+                    <button class="btn btn-ghost btn-sm" (click)="editingEmi.set(editingEmi() === u.e.id ? null : u.e.id)" [attr.aria-label]="'Edit ' + u.e.item + ' EMI details'">Edit</button>
+                    <button class="btn btn-ghost btn-sm" (click)="removeUpcoming(u.e)" [attr.aria-label]="'Remove ' + u.e.item + ' EMI'">Remove</button>
+                  </div>
+                </div>
+                @if (editingEmi() === u.e.id) { <app-emi-editor [emi]="u.e" (done)="editingEmi.set(null)" /> }
+              </div>
             }
             <div style="border-top: 1px solid #EEF0F3; padding-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 14px">
               <div style="display: flex; justify-content: space-between"><span>My spends</span><span class="num">{{ inr(t.c.spends) }}</span></div>

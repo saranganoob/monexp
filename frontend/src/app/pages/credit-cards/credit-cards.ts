@@ -2,13 +2,14 @@ import { Component, ElementRef, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Store } from '../../core/store';
 import { Api } from '../../core/api.service';
-import { CardView, EmiView } from '../../core/models';
-import { STAT, addMonths, chipStyle, fmtInput, inr, parseNum, segStyle, val, ymIndex, ymShort } from '../../core/format';
+import { CardEmi, CardSpendItem, CardView, EmiView } from '../../core/models';
+import { MONTHS, STAT, addMonths, chipStyle, defaultDate, fmtInput, inr, lastDay, parseNum, segStyle, val, ymIndex, ymLabel, ymShort } from '../../core/format';
 import { CardBillEditor } from '../../shared/card-bill-editor';
+import { EmiEditor } from '../../shared/emi-editor';
 
 @Component({
   selector: 'app-credit-cards',
-  imports: [RouterLink, CardBillEditor],
+  imports: [RouterLink, CardBillEditor, EmiEditor],
   templateUrl: './credit-cards.html',
 })
 export class CreditCardsPage {
@@ -77,24 +78,48 @@ export class CreditCardsPage {
     const v = parseNum(val(e));
     if (v !== c.spends) this.store.run(this.api.setCardBill(this.store.ym(), c.id, { spends: v }));
   }
-  // ---- "Add a new spend" box on each card: existing + new = updated ----
-  protected addText = signal<Partial<Record<string, string>>>({});
-  protected addErr = signal<Record<string, string>>({});
-  setAddText(c: CardView, e: Event) {
-    this.addText.update((m) => ({ ...m, [c.id]: val(e) }));
-    this.addErr.update((m) => ({ ...m, [c.id]: '' }));
+  // ---- itemised spends: "Supermarket ₹321 · 10 Oct" ----
+  protected spendName = signal<Partial<Record<string, string>>>({});
+  protected spendAmt = signal<Partial<Record<string, string>>>({});
+  protected spendDate = signal<Partial<Record<string, string>>>({});
+  protected spendErr = signal<Partial<Record<string, string>>>({});
+  protected readonly todayDefault = computed(() => defaultDate(this.store.ym()));
+  protected readonly minDate = computed(() => `${this.store.ym()}-01`);
+  protected readonly maxDate = computed(() => `${this.store.ym()}-${String(lastDay(this.store.ym())).padStart(2, '0')}`);
+  private setIn(sig: typeof this.spendName, id: string, v: string) { sig.update((m) => ({ ...m, [id]: v })); }
+  setSpend(field: 'name' | 'amt' | 'date', c: CardView, e: Event) {
+    this.setIn(field === 'name' ? this.spendName : field === 'amt' ? this.spendAmt : this.spendDate, c.id, val(e));
+    this.setIn(this.spendErr, c.id, '');
   }
   addPreview(c: CardView) {
-    const add = parseNum(this.addText()[c.id] ?? '');
+    const add = parseNum(this.spendAmt()[c.id] ?? '');
     return add ? `${inr(c.spends)} + ${inr(add)} = ${inr(c.spends + add)}` : '';
   }
   async addSpend(c: CardView) {
-    const add = parseNum(this.addText()[c.id] ?? '');
-    if (!add) return this.addErr.update((m) => ({ ...m, [c.id]: 'Enter an amount above ₹0 to add.' }));
-    const error = await this.store.run(this.api.setCardBill(this.store.ym(), c.id, { add }), { quiet: true });
-    if (error) return this.addErr.update((m) => ({ ...m, [c.id]: error }));
-    this.addText.update((m) => ({ ...m, [c.id]: '' }));
+    const amount = parseNum(this.spendAmt()[c.id] ?? '');
+    const date = this.spendDate()[c.id] || this.todayDefault();
+    if (!amount) return this.setIn(this.spendErr, c.id, 'Enter an amount above ₹0 to add.');
+    if (date < this.minDate() || date > this.maxDate()) return this.setIn(this.spendErr, c.id, `Pick a date inside ${ymLabel(this.store.ym())}.`);
+    const name = (this.spendName()[c.id] ?? '').trim() || 'Spend';
+    const error = await this.store.run(this.api.addCardSpend(this.store.ym(), c.id, { name, amount, date }), { quiet: true });
+    if (error) return this.setIn(this.spendErr, c.id, error);
+    this.setIn(this.spendName, c.id, '');
+    this.setIn(this.spendAmt, c.id, '');
   }
+  removeSpend(item: CardSpendItem) { this.store.run(this.api.deleteCardSpend(item.id)); }
+  spendDay(item: CardSpendItem) { return `${Number(item.date.slice(8, 10))} ${MONTHS[Number(item.date.slice(5, 7)) - 1]}`; }
+
+  // ---- editing EMI details ----
+  protected editingEmi = signal<string | null>(null);
+  emiOf(id: string) { return this.store.emis().find((e) => e.id === id) ?? null; }
+  /** EMIs on this card whose 1st installment is after the month being viewed. */
+  upcoming(c: CardView) {
+    return this.store.emis().filter((e) => e.cardId === c.id && e.startYm > this.store.ym()).map((e) => ({
+      e, who: e.forWho === 'friend' ? 'For ' + (this.store.people().find((p) => p.id === e.personId)?.name ?? 'a friend') : 'Mine',
+      starts: ymShort(e.startYm),
+    }));
+  }
+  removeUpcoming(e: CardEmi) { this.store.run(this.api.deleteEmi(e.id)); }
 
   setMonthly(e: EmiView, ev: Event) {
     const v = parseNum(val(ev));

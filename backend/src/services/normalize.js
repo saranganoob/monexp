@@ -9,7 +9,7 @@ export const normEmi = (e) => ({
 });
 
 export const normPlan = (p) => ({
-  id: sid(p._id), name: p.name, kind: p.kind || '', source: p.source || '', direction: p.direction,
+  id: sid(p._id), name: p.name, kind: p.kind || '', source: p.source || '', direction: p.direction, category: p.category || 'fam',
   personId: sid(p.person), monthly: p.monthly || 0, totalInstallments: p.totalInstallments, startYm: p.startYm,
 });
 
@@ -35,4 +35,8 @@ export const normEntry = (r) => ({
 export const normSudden = (s) => ({
   id: sid(s._id), ym: s.ym, name: s.name, amount: s.amount || 0, mode: s.mode, cardId: sid(s.card),
   date: s.date, dateUnknown: !!s.dateUnknown, note: s.note || '',
+});
+
+export const normCardSpend = (s) => ({
+  id: sid(s._id), ym: s.ym, cardId: sid(s.card), name: s.name, amount: s.amount || 0, date: s.date,
 });

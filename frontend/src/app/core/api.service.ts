@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
-  Account, Card, CardEmi, ChangeResult, Installment, MonthView, Person, PersonStats, YearView,
+  Account, Card, CardEmi, ChangeResult, Installment, MonthView, Person, PersonStats, Plan, YearView,
 } from './models';
 
 /** Turns an HTTP error into the backend's plain-English message. */
@@ -35,6 +35,8 @@ export class Api {
   createMonth(ym: string, mode: 'rollover' | 'blank', carryIds: string[] = []) { return this.post<ChangeResult>(`/months/${ym}`, { mode, carryIds }); }
   setBudget(ym: string, budget: number) { return this.patch<ChangeResult>(`/months/${ym}`, { budget }); }
   setCardBill(ym: string, cardId: string, body: { total: number } | { spends: number } | { add: number }) { return this.put<ChangeResult>(`/months/${ym}/cards/${cardId}/bill`, body); }
+  addCardSpend(ym: string, cardId: string, body: { name: string; amount: number; date: string }) { return this.post<ChangeResult>(`/months/${ym}/cards/${cardId}/spends`, body); }
+  deleteCardSpend(id: string) { return this.del<ChangeResult>(`/card-spends/${id}`); }
   setEmiMonth(ym: string, emiId: string, body: { amount?: number | null; received?: 'pending' | 'done' }) { return this.patch<ChangeResult>(`/months/${ym}/emis/${emiId}`, body); }
 
   // bills
@@ -63,6 +65,11 @@ export class Api {
   addEmi(body: Record<string, unknown>) { return this.post<ChangeResult>('/emis', body); }
   updateEmi(id: string, body: Record<string, unknown>) { return this.patch<ChangeResult>(`/emis/${id}`, body); }
   deleteEmi(id: string) { return this.del<ChangeResult>(`/emis/${id}`); }
+
+  plans() { return this.get<Plan[]>('/plans'); }
+  addPlan(body: Record<string, unknown>) { return this.post<ChangeResult>('/plans', body); }
+  updatePlan(id: string, body: Record<string, unknown>) { return this.patch<ChangeResult>(`/plans/${id}`, body); }
+  deletePlan(id: string, at: string) { return this.del<ChangeResult>(`/plans/${id}?at=${at}`); }
 
   people(at: string) { return this.get<PersonStats[]>(`/people?at=${at}`); }
   addPerson(body: Partial<Person>) { return this.post<ChangeResult>('/people', body); }

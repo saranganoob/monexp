@@ -1,6 +1,6 @@
 // Changing or removing a single bill, people entry or sudden spend.
 import { Router } from 'express';
-import { BillItem, PeopleEntry, SuddenSpend } from '../models/index.js';
+import { BillItem, Card, CardSpend, Month, PeopleEntry, SuddenSpend } from '../models/index.js';
 import { withUndo } from '../services/undo.js';
 import { CATEGORY_KEYS } from '../lib/categories.js';
 import { badRequest, notFound } from '../lib/http.js';
@@ -88,6 +88,24 @@ router.delete('/people-entries/:id', async (req, res) => {
 router.delete('/sudden/:id', async (req, res) => {
   const s = await findOr404(SuddenSpend, req.params.id, 'Sudden spend');
   res.json(await withUndo({ yms: [s.ym] }, () => SuddenSpend.deleteOne({ _id: s._id }).then(() => ({})), `${s.name} removed`));
+});
+
+// ---- itemised card spends ----
+
+// Removing an item also takes its amount off the card's "my spends".
+router.delete('/card-spends/:id', async (req, res) => {
+  const s = await findOr404(CardSpend, req.params.id, 'Spend');
+  const card = await Card.findById(s.card).lean();
+  res.json(await withUndo({ yms: [s.ym] }, async () => {
+    await CardSpend.deleteOne({ _id: s._id });
+    const month = await Month.findOne({ ym: s.ym });
+    if (month) {
+      const key = String(s.card);
+      month.cardSpends.set(key, Math.max(0, (month.cardSpends.get(key) || 0) - s.amount));
+      await month.save();
+    }
+    return {};
+  }, `${s.name} removed from ${card?.name ?? 'the card'}`));
 });
 
 export default router;

@@ -158,6 +158,91 @@ test('cards in use cannot be deleted; year and installments endpoints work', asy
   assert.equal(inst[0].endYm <= inst.at(-1).endYm, true);
 });
 
+test('edit every field of a bill', async () => {
+  const oct = (await agent.get('/api/months/2026-10')).body;
+  const yt = oct.bills.find((b) => b.name === 'YouTube');
+  const res = await agent.patch(`/api/bills/${yt.id}`).send({ name: 'YouTube Premium', amount: '149', category: 'sub', dueDay: 20, note: 'Family plan' });
+  assert.equal(res.status, 200);
+  const b = (await agent.get('/api/months/2026-10')).body.bills.find((x) => x.id === yt.id);
+  assert.deepEqual([b.name, b.amount, b.dueDay, b.note], ['YouTube Premium', 149, 20, 'Family plan']);
+  assert.equal((await agent.patch(`/api/bills/${yt.id}`).send({ dueDay: 40 })).status, 400);
+  await agent.post(`/api/undo/${res.body.undoToken}`);
+});
+
+test('itemised card spends add to and come off “my spends”', async () => {
+  const card = (await agent.get('/api/cards')).body.find((c) => c.name === 'Amazon Pay ICICI');
+  const cardOf = async () => (await agent.get('/api/months/2026-10')).body.cards.find((c) => c.id === card.id);
+  const before = await cardOf();
+  assert.deepEqual([before.itemised, before.notItemised], [0, before.spends]);
+
+  const add = await agent.post(`/api/months/2026-10/cards/${card.id}/spends`).send({ name: 'Supermarket', amount: 321, date: '2026-10-10' });
+  assert.equal(add.status, 201);
+  assert.equal(add.body.message, 'Supermarket ₹321 added to Amazon Pay ICICI');
+  const after = await cardOf();
+  assert.equal(after.spends, before.spends + 321);
+  assert.deepEqual(after.items.map((i) => [i.name, i.amount, i.date]), [['Supermarket', 321, '2026-10-10']]);
+  assert.deepEqual([after.itemised, after.notItemised], [321, before.spends]);
+
+  // "My spends" can't be set below what's itemised.
+  assert.equal((await agent.put(`/api/months/2026-10/cards/${card.id}/bill`).send({ spends: 100 })).status, 400);
+  assert.equal((await agent.post(`/api/months/2026-10/cards/${card.id}/spends`).send({ name: 'x', amount: 5, date: '2026-09-30' })).status, 400);
+
+  assert.equal((await agent.delete(`/api/card-spends/${after.items[0].id}`)).status, 200);
+  const removed = await cardOf();
+  assert.deepEqual([removed.spends, removed.items.length], [before.spends, 0]);
+});
+
+test('edit EMI details, including switching it from a friend to me', async () => {
+  const card = (await agent.get('/api/cards')).body.find((c) => c.name === 'HDFC Swiggy');
+  const balaji = (await agent.get('/api/people')).body.find((p) => p.name === 'Balaji');
+  const add = await agent.post('/api/emis').send({ cardId: card.id, item: 'Laptop', forWho: 'friend', personId: balaji.id, monthly: 4000, totalMonths: 6, startYm: '2026-11' });
+  const res = await agent.patch(`/api/emis/${add.body.id}`).send({ item: 'MacBook', forWho: 'me', totalMonths: 12, startYm: '2026-12' });
+  assert.equal(res.status, 200);
+  assert.deepEqual([res.body.item, res.body.forWho, res.body.personId, res.body.totalMonths, res.body.startYm], ['MacBook', 'me', null, 12, '2026-12']);
+  assert.equal((await agent.patch(`/api/emis/${add.body.id}`).send({ forWho: 'friend' })).status, 400);
+  await agent.delete(`/api/emis/${add.body.id}`);
+});
+
+test('installment plans add, change and remove their monthly rows from the viewed month on', async () => {
+  const people = (await agent.get('/api/people')).body;
+  const mohan = people.find((p) => p.name === 'Mohan');
+  // An "out" plan started in October: a bill appears in October and in the later months that exist.
+  const add = await agent.post('/api/plans').send({ name: 'Sister · college fees', direction: 'out', category: 'fam', monthly: 5000, totalInstallments: 3, alreadyPaid: 0, atYm: '2026-10' });
+  assert.equal(add.status, 201);
+  assert.equal(add.body.startYm, '2026-10');
+  const billIn = async (ym) => (await agent.get(`/api/months/${ym}`)).body.bills.find((b) => b.planId === add.body.id);
+  assert.deepEqual((await billIn('2026-10')).inst, { n: 1, total: 3 });
+  assert.equal((await billIn('2026-10')).amount, 5000);
+  assert.equal(await billIn('2026-09'), undefined, 'earlier months untouched');
+
+  // Pay October, then raise the amount from October: October stays (paid), later unpaid ones change.
+  await agent.patch(`/api/bills/${(await billIn('2026-10')).id}`).send({ status: 'paid' });
+  assert.equal((await agent.patch(`/api/plans/${add.body.id}`).send({ monthly: 6000, atYm: '2026-10' })).status, 200);
+  assert.equal((await billIn('2026-10')).amount, 5000);
+
+  // An "in" plan needs a person and shows up as money owed to me.
+  assert.equal((await agent.post('/api/plans').send({ name: 'bike loan', direction: 'in', monthly: 1000, totalInstallments: 4, atYm: '2026-10' })).status, 400);
+  const inPlan = await agent.post('/api/plans').send({ name: 'bike loan', direction: 'in', personId: mohan.id, monthly: 1000, totalInstallments: 4, atYm: '2026-10' });
+  const recv = (await agent.get('/api/months/2026-10')).body.receivables.find((r) => r.planId === inPlan.body.id);
+  assert.deepEqual([recv.name, recv.amount, recv.status], ['Mohan · bike loan', 1000, 'pending']);
+
+  // Removing: unpaid rows go, the paid October bill stays as a plain bill.
+  assert.equal((await agent.delete(`/api/plans/${add.body.id}?at=2026-10`)).status, 200);
+  const octBills = (await agent.get('/api/months/2026-10')).body.bills;
+  const kept = octBills.find((b) => b.name === 'Sister · college fees');
+  assert.deepEqual([kept.planId, kept.status], [null, 'paid']);
+  assert.equal((await agent.delete(`/api/plans/${inPlan.body.id}?at=2026-10`)).status, 200);
+  assert.ok(!(await agent.get('/api/months/2026-10')).body.receivables.some((r) => r.name === 'Mohan · bike loan'));
+});
+
+test('rolling over adds plans that start in the new month', async () => {
+  await agent.post('/api/plans').send({ name: 'Insurance', direction: 'out', category: 'inv', monthly: 2500, totalInstallments: 12, startYm: '2027-01', atYm: '2026-10' });
+  const jan = await agent.post('/api/months/2027-01').send({ mode: 'rollover' });
+  assert.equal(jan.status, 201);
+  const ins = jan.body.month.bills.find((b) => b.name === 'Insurance');
+  assert.deepEqual([ins.amount, ins.category, ins.inst], [2500, 'inv', { n: 1, total: 12 }]);
+});
+
 test('logout clears the session', async () => {
   await agent.post('/api/auth/logout');
   assert.equal((await agent.get('/api/months/2026-10')).status, 401);

@@ -16,7 +16,7 @@ export function installmentAt(startYm, total, ym) {
   return { n, total, endYm: indexToYm(start + total - 1), active: n >= 1 && n <= total };
 }
 
-export function computeMonth({ ym, month, bills, entries, sudden, cards, emis, plans, people }) {
+export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: spendItems = [], cards, emis, plans, people }) {
   const personName = new Map(people.map((p) => [p.id, p.name]));
   const planById = new Map(plans.map((p) => [p.id, p]));
   const overrides = new Map((month.emiOverrides || []).map((o) => [o.emiId, o]));
@@ -44,9 +44,13 @@ export function computeMonth({ ym, month, bills, entries, sudden, cards, emis, p
     const myEmis = sum(em.filter((e) => e.forWho !== 'friend'));
     const friendEmis = sum(em.filter((e) => e.forWho === 'friend'));
     const spends = cardSpends[c.id] || 0;
+    const items = spendItems.filter((s) => s.cardId === c.id);
+    const itemised = sum(items);
     return {
       id: c.id, name: c.name, network: c.network, last4: c.last4, closedOn: c.closedOn,
       spends, myEmis, friendEmis, total: spends + myEmis + friendEmis,
+      // Itemised purchases, plus whatever part of "my spends" wasn't itemised.
+      items, itemised, notItemised: spends - itemised,
       emis: em, billId: null, billStatus: null,
     };
   });

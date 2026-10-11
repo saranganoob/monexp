@@ -8,7 +8,19 @@ See `PLAN.md` for the agreed plan and decisions, and `CLAUDE.md` for the origina
 | `backend/` | Node + Express API, MongoDB (Mongoose) models, money calculations |
 | `frontend/` | Angular 21 app – the screens |
 | `design/` | Design reference only – not part of the app |
-| `sample-data.xlsx` | Sample of the Google Sheet (Jan–Oct 2026) |
+| `sample-data.xlsx` | The old Google Sheet sample (reference only – data is now entered in the app) |
+
+## Where to do what
+
+| I want to… | Go to |
+|---|---|
+| Tick a bill paid, skip it, or **edit its name / amount / due day** | Need to pay → **Edit** on the bill |
+| Log a card purchase ("Supermarket ₹321") | Credit cards → **Add a new spend** on that card |
+| Add or change a card EMI (also before its 1st month) | Credit cards → **Add an EMI**, or **Edit** on the EMI |
+| Add or change a plan like Dad or a gold chit, or someone paying you back | Installments → **Add a plan**, or **Edit plan** |
+| Start a new month | Pick the month at the top → **Roll over** |
+
+Plan changes apply from the month you're viewing onwards; earlier months keep their history.
 
 ## Requirements
 
@@ -75,7 +87,7 @@ Months are written as `2026-10`. Money is always whole rupees.
 | Sign in | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /auth/me` |
 | A month | `GET /months/:ym` (everything + totals), `GET /months?year=`, `POST /months/:ym` (roll over / blank), `PATCH /months/:ym` (budget) |
 | Bills | `POST /months/:ym/bills`, `PATCH /bills/:id`, `DELETE /bills/:id` |
-| Card bills | `PUT /months/:ym/cards/:cardId/bill`, `PATCH /months/:ym/emis/:emiId` |
+| Card bills | `PUT /months/:ym/cards/:cardId/bill`, `PATCH /months/:ym/emis/:emiId`, `POST /months/:ym/cards/:cardId/spends`, `DELETE /card-spends/:id` |
 | People money | `POST /months/:ym/people-entries`, `PATCH/DELETE /people-entries/:id` |
 | Sudden spends | `POST /months/:ym/sudden`, `DELETE /sudden/:id` |
 | Setup | `/cards`, `/emis`, `/plans`, `/people` (GET, POST, PATCH /:id, DELETE /:id) |

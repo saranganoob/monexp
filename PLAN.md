@@ -32,5 +32,12 @@ Approved by the owner on 8 Oct 2026. Where this file and CLAUDE.md disagree, thi
 
 1. Backend: Express, MongoDB models, calculations, REST APIs, seed data, tests.
 2. Frontend: Angular screens matching the design, using the backend.
-3. Import of `sample-data.xlsx` (all monthly tabs) with a preview step.
+3. Ready for real data (changed 11 Oct 2026 – **the Google Sheet / Excel import was dropped**;
+   the owner enters data in the app):
+   - Edit any bill: name, amount, category, due day, note.
+   - Manage installment plans (Dad, gold chit, someone paying back) on the Installments page.
+   - Edit card EMI details: item, who it's for, total months, start month (also before it starts).
+   - Itemised card spends: each spend (what, amount, date) listed under its card.
+   - Tests, git commit, instructions.
+   Not in v1: "start fresh" button, backup/restore.
 4. AI: Ask MonEXP chat (streaming) + monthly summary, via the Claude API from the backend.

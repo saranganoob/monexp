@@ -1,6 +1,7 @@
-import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend } from '../models/index.js';
+import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend } from '../models/index.js';
 import * as N from './normalize.js';
 import { computeMonth, installmentAt } from './compute.js';
+import { addPlanRow } from './planService.js';
 import { ymLabel } from '../lib/ym.js';
 import { badRequest, conflict } from '../lib/http.js';
 
@@ -31,11 +32,12 @@ export async function findPrevMonth(ym) {
 export async function computeMonths(yms, setup) {
   setup ??= await loadSetup();
   const filter = yms ? { ym: { $in: yms } } : {};
-  const [months, bills, entries, sudden] = await Promise.all([
+  const [months, bills, entries, sudden, spends] = await Promise.all([
     Month.find(filter).sort({ ym: 1 }).lean(),
     BillItem.find(filter).sort(byOrder).lean(),
     PeopleEntry.find(filter).sort(byOrder).lean(),
     SuddenSpend.find(filter).sort(suddenOrder).lean(),
+    CardSpend.find(filter).sort(suddenOrder).lean(),
   ]);
   const group = (rows, norm) => {
     const map = new Map();
@@ -48,6 +50,7 @@ export async function computeMonths(yms, setup) {
   const billsBy = group(bills, N.normBill);
   const entriesBy = group(entries, N.normEntry);
   const suddenBy = group(sudden, N.normSudden);
+  const spendsBy = group(spends, N.normCardSpend);
 
   return months.map((m) => {
     const month = N.normMonth(m);
@@ -58,6 +61,7 @@ export async function computeMonths(yms, setup) {
         bills: billsBy.get(m.ym) || [],
         entries: entriesBy.get(m.ym) || [],
         sudden: suddenBy.get(m.ym) || [],
+        cardSpends: spendsBy.get(m.ym) || [],
       }),
     };
   });
@@ -126,6 +130,12 @@ export async function createMonth(ym, { mode, carryIds = [] }) {
   await PeopleEntry.insertMany(entries);
   if (carried.length) {
     await PeopleEntry.updateMany({ _id: { $in: carried.map((r) => r._id) } }, { status: 'moved', movedTo: ym });
+  }
+  // Plans that start this month (or weren't in the last one) get their row too.
+  for (const p of plans) {
+    if (!installmentAt(p.startYm, p.totalInstallments, ym).active) continue;
+    const Model = p.direction === 'in' ? PeopleEntry : BillItem;
+    if (!(await Model.exists({ ym, plan: p._id }))) await addPlanRow(p, ym);
   }
   return month;
 }

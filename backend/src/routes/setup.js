@@ -4,6 +4,9 @@ import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend,
 import { withUndo } from '../services/undo.js';
 import { loadSetup, computeMonths, nextSortOrder } from '../services/monthService.js';
 import { installmentAt } from '../services/compute.js';
+import { syncPlanRows, detachPlanRows, planYms } from '../services/planService.js';
+import { CATEGORY_KEYS } from '../lib/categories.js';
+import { inr } from '../lib/format.js';
 import * as N from '../services/normalize.js';
 import { badRequest, conflict, notFound } from '../lib/http.js';
 import { toAmount, toText, toYm, toId, toEnum, toInt, toOptionalId } from '../lib/validate.js';
@@ -121,7 +124,9 @@ router.patch('/emis/:id', async (req, res) => {
   if (!Object.keys(set).length) throw badRequest('Nothing to change.');
   res.json(await withUndo({ global: ['CardEmi'] }, async () => {
     emi.set(set);
-    if (emi.forWho === 'friend' && !emi.person) throw badRequest('A friend’s EMI needs a person.');
+    if (emi.forWho === 'me') emi.person = null;
+    if (emi.forWho === 'friend' && !emi.person) throw badRequest('Choose who this EMI is for.');
+    if (emi.forWho === 'friend' && !(await Person.exists({ _id: emi.person }))) throw notFound('Person not found.');
     await emi.save();
     return N.normEmi(emi.toObject());
   }, `${emi.item} EMI updated`));
@@ -133,45 +138,84 @@ router.delete('/emis/:id', async (req, res) => {
 });
 
 // ---------------- installment plans ----------------
+// Changes apply from the month you're viewing (`atYm`) onwards; earlier months keep their history.
 
 function planFields(b, { partial }) {
   const out = {};
-  if (!partial || b.name !== undefined) out.name = toText(b.name, 'Name', { required: true });
-  if (b.kind !== undefined) out.kind = toText(b.kind, 'Kind');
-  if (b.source !== undefined) out.source = toText(b.source, 'Description');
-  if (!partial || b.direction !== undefined) out.direction = toEnum(b.direction ?? 'out', ['out', 'in'], 'direction');
+  if (!partial || b.name !== undefined) out.name = toText(b.name, 'Name', { required: true, max: 80 });
+  if (b.kind !== undefined) out.kind = toText(b.kind, 'Type label', { max: 40 });
+  if (b.source !== undefined) out.source = toText(b.source, 'Description', { max: 120 });
+  if (!partial) out.direction = toEnum(b.direction ?? 'out', ['out', 'in'], 'direction');
+  if (b.category !== undefined) out.category = toEnum(b.category, CATEGORY_KEYS.filter((k) => k !== 'cc'), 'Group');
   if (b.personId !== undefined) out.person = toOptionalId(b.personId, 'person');
-  if (!partial || b.monthly !== undefined) out.monthly = toAmount(b.monthly, 'Per month');
-  if (!partial || b.totalInstallments !== undefined) out.totalInstallments = toInt(b.totalInstallments, 'Total installments', { min: 1, max: 600 });
-  if (!partial || b.startYm !== undefined) out.startYm = toYm(b.startYm, 'startYm');
+  if (!partial || b.monthly !== undefined) {
+    out.monthly = toAmount(b.monthly, 'Per month');
+    if (!out.monthly) throw badRequest('Add the amount per month.');
+  }
+  if (!partial || b.totalInstallments !== undefined) out.totalInstallments = toInt(b.totalInstallments, 'Total months', { min: 1, max: 600 });
+  if (b.startYm !== undefined) out.startYm = toYm(b.startYm, 'Start month');
   return out;
 }
+
+const atYmOf = (req) => toYm(req.body?.atYm ?? req.query.at ?? currentYm(), 'atYm');
 
 router.get('/plans', async (_req, res) => {
   res.json((await loadSetup()).plans);
 });
 
+// POST /api/plans { name, direction, monthly, totalInstallments, startYm | alreadyPaid, category?, personId?, kind?, source?, atYm }
 router.post('/plans', async (req, res) => {
-  const fields = planFields(req.body || {}, { partial: false });
-  res.status(201).json(await withUndo({ global: ['Plan'] }, async () => N.normPlan((await Plan.create(fields)).toObject()), `${fields.name} plan added`));
+  const b = req.body || {};
+  const atYm = atYmOf(req);
+  const fields = planFields(b, { partial: false });
+  if (!fields.startYm) {
+    const alreadyPaid = toInt(b.alreadyPaid ?? 0, 'Already paid', { min: 0 });
+    if (alreadyPaid >= fields.totalInstallments) throw badRequest('Already-paid months must be fewer than the total.');
+    fields.startYm = addMonths(atYm, -alreadyPaid);
+  }
+  if (fields.direction === 'in') {
+    if (!fields.person) throw badRequest('Choose who is paying you back.');
+    if (!(await Person.exists({ _id: fields.person }))) throw notFound('Person not found.');
+  }
+  fields.kind ||= fields.direction === 'in' ? 'Paying you back' : 'Monthly payment';
+  fields.source ||= `${inr(fields.monthly)} a month for ${fields.totalInstallments} months`;
+
+  const yms = await Month.distinct('ym', { ym: { $gte: atYm } });
+  res.status(201).json(await withUndo({ yms, global: ['Plan'] }, async () => {
+    const plan = await Plan.create(fields);
+    await syncPlanRows(plan, atYm);
+    return N.normPlan(plan.toObject());
+  }, `${fields.name} plan added`));
 });
 
 router.patch('/plans/:id', async (req, res) => {
   const plan = await findOr404(Plan, req.params.id, 'Plan');
+  const atYm = atYmOf(req);
   const set = planFields(req.body || {}, { partial: true });
   if (!Object.keys(set).length) throw badRequest('Nothing to change.');
-  res.json(await withUndo({ global: ['Plan'] }, async () => {
+  if (plan.direction === 'in' && set.person === null) throw badRequest('Choose who is paying you back.');
+
+  const changed = (k) => set[k] !== undefined && String(set[k]) !== String(plan[k]);
+  const yms = await planYms(plan, atYm);
+  res.json(await withUndo({ yms, global: ['Plan'] }, async () => {
+    const opts = { name: changed('name') || changed('person'), amount: changed('monthly'), category: changed('category') };
     plan.set(set);
     await plan.save();
+    await syncPlanRows(plan, atYm, opts);
     return N.normPlan(plan.toObject());
   }, `${plan.name} plan updated`));
 });
 
+// DELETE /api/plans/:id?at=2026-10 – unpaid rows from that month on go; paid history stays.
 router.delete('/plans/:id', async (req, res) => {
   const plan = await findOr404(Plan, req.params.id, 'Plan');
-  const used = await Promise.all([BillItem.exists({ plan: plan._id }), PeopleEntry.exists({ plan: plan._id })]);
-  if (used.some(Boolean)) throw conflict('Bills or people entries still use this plan, so deleting it would break their “X of Y” counts.');
-  res.json(await withUndo({ global: ['Plan'] }, () => Plan.deleteOne({ _id: plan._id }).then(() => ({})), `${plan.name} plan deleted`));
+  const atYm = atYmOf(req);
+  const yms = await planYms(plan, atYm);
+  res.json(await withUndo({ yms, global: ['Plan'] }, async () => {
+    await detachPlanRows(plan, atYm);
+    await Plan.deleteOne({ _id: plan._id });
+    return {};
+  }, `${plan.name} plan removed`));
 });
 
 // ---------------- people ----------------

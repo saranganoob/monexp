@@ -5,12 +5,13 @@ import { Api } from '../../core/api.service';
 import { Bill, BillStatus } from '../../core/models';
 import { STAT, chipStyle, dueInfo, inr, pillStyle, ymShort } from '../../core/format';
 import { CardBillEditor } from '../../shared/card-bill-editor';
+import { BillEditor } from '../../shared/bill-editor';
 
 type Filter = 'all' | BillStatus;
 
 @Component({
   selector: 'app-need-to-pay',
-  imports: [RouterLink, CardBillEditor],
+  imports: [RouterLink, CardBillEditor, BillEditor],
   templateUrl: './need-to-pay.html',
 })
 export class NeedToPayPage {
@@ -23,6 +24,7 @@ export class NeedToPayPage {
   protected filter = signal<Filter>('all');
   protected open = signal<Record<string, boolean>>({});
   protected editingCard = signal<string | null>(null);
+  protected editingBill = signal<string | null>(null);
   protected monthShort = computed(() => ymShort(this.store.ym()));
 
   protected filters = computed(() => {

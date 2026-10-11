@@ -22,9 +22,9 @@ export const people = [
 ];
 
 export const plans = [
-  { id: 'p2', name: 'Dad', kind: 'Monthly support', source: 'Sent every month', direction: 'out', monthly: 10000, totalInstallments: 40, startYm: '2024-01' },
-  { id: 'p4', name: 'Gold chit', kind: 'Savings (chit)', source: '₹9,000 a month for 11 months', direction: 'out', monthly: 9000, totalInstallments: 11, startYm: '2025-08' },
-  { id: 'p3', name: 'Madhan · gym', kind: 'Paying you back', source: '₹3,500 in 7 parts', direction: 'in', personId: 'pp3', monthly: 500, totalInstallments: 7, startYm: '2026-06' },
+  { id: 'p2', name: 'Dad', kind: 'Monthly support', source: 'Sent every month', direction: 'out', category: 'fam', monthly: 10000, totalInstallments: 40, startYm: '2024-01' },
+  { id: 'p4', name: 'Gold chit', kind: 'Savings (chit)', source: '₹9,000 a month for 11 months', direction: 'out', category: 'inv', monthly: 9000, totalInstallments: 11, startYm: '2025-08' },
+  { id: 'p3', name: 'Madhan · gym', kind: 'Paying you back', source: '₹3,500 in 7 parts', direction: 'in', category: 'fam', personId: 'pp3', monthly: 500, totalInstallments: 7, startYm: '2026-06' },
 ];
 
 export const emis = [

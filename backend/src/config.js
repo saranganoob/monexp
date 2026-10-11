@@ -8,6 +8,9 @@ export const config = {
   // Demo OTP sign-in: no SMS/email is sent, this fixed 6-digit code is accepted instead.
   // Leave it empty to turn OTP sign-in off.
   devOtp: env.DEV_OTP || '',
+  // Claude API (AI features). The key is only ever read here, never logged or sent to the browser.
+  anthropicApiKey: env.ANTHROPIC_API_KEY || '',
+  anthropicModel: env.ANTHROPIC_MODEL || 'claude-opus-5-5',
 };
 
 export function assertConfig() {

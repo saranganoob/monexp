@@ -5,6 +5,7 @@ import monthRoutes from './routes/months.js';
 import itemRoutes from './routes/items.js';
 import setupRoutes from './routes/setup.js';
 import reportRoutes from './routes/reports.js';
+import aiRoutes from './routes/ai.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 
@@ -23,6 +24,7 @@ export function createApp() {
   app.use('/api', itemRoutes);
   app.use('/api', setupRoutes);
   app.use('/api', reportRoutes);
+  app.use('/api/ai', aiRoutes);
 
   app.use('/api', notFoundHandler);
   app.use(errorHandler);

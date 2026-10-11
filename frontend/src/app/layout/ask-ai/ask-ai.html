@@ -1,0 +1,50 @@
+@if (showFab()) {
+  <button class="btn btn--primary fab" (click)="open()" aria-label="Ask MonEXP AI">
+    <app-icon name="sparkles" [size]="20" />
+    <span class="fab__label">Ask AI</span>
+  </button>
+}
+
+@if (store.askAiOpen()) {
+  <aside class="panel" aria-label="MonEXP AI assistant">
+    <header class="head">
+      <div class="logo"><app-icon name="sparkle" [size]="20" /></div>
+      <div class="grow">
+        <div class="heavy">Ask MonEXP</div>
+        <div class="tiny muted">Reads your tracker · viewing {{ store.ym() | ym }}</div>
+      </div>
+      @if (bubbles().length) { <button class="btn btn--ghost btn--sm" (click)="clear()">Clear</button> }
+      <button class="btn btn--ghost btn--icon" (click)="close()" aria-label="Close assistant"><app-icon name="close" [size]="20" /></button>
+    </header>
+
+    <div class="messages" #scroller (scroll)="onScroll(scroller)" aria-live="polite">
+      @if (!bubbles().length) {
+        <p class="intro">Ask about your bills, cards, EMIs, people and sudden spends. Try one of these:</p>
+      }
+      @for (b of bubbles(); track $index) {
+        <div class="msg" [class.msg--user]="b.role === 'user'">
+          @if (b.text) {
+            <div class="bubble" [class.bubble--user]="b.role === 'user'" [class.bubble--error]="b.error">{{ b.text }}</div>
+          }
+          @if (b.status) {
+            <div class="status"><span class="dot"></span>{{ b.status }}</div>
+          }
+        </div>
+      }
+    </div>
+
+    <footer class="foot">
+      <div class="chips">
+        @for (s of suggestions; track s) {
+          <button class="chip-btn" [disabled]="busy()" (click)="ask(s)">{{ s }}</button>
+        }
+      </div>
+      <form class="ask" [formGroup]="form" (ngSubmit)="ask()">
+        <label for="askAiInput" class="sr">Ask a question</label>
+        <input id="askAiInput" class="field" formControlName="question" placeholder="Ask about your money…" autocomplete="off">
+        <button type="submit" class="btn btn--primary btn--icon" [disabled]="busy() || !form.controls.question.value.trim()" aria-label="Send"><app-icon name="send" /></button>
+      </form>
+      <p class="note">Answers are worked out from your MonEXP data by Claude. Not financial advice.</p>
+    </footer>
+  </aside>
+}

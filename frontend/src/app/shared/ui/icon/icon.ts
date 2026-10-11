@@ -19,6 +19,9 @@ const PATHS = {
   'sign-out': 'M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11',
   lock: 'M6 10V7a6 6 0 0 1 12 0v3M5 10h14v11H5z',
   sparkle: 'M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z',
+  sparkles: 'M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8zM19 15l.8 2 2 .8-2 .8L19 21l-.8-2.4-2-.8 2-.8z',
+  send: 'M5 12h14M13 6l6 6-6 6',
+  refresh: 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',
 } as const;
 
 export type IconName = keyof typeof PATHS;

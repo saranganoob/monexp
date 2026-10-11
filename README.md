@@ -60,6 +60,16 @@ npm start
 Open http://localhost:4200 and sign in with the account from `npm run create-user` – with your password, or on the **OTP** tab with the demo code from `DEV_OTP` in `backend/.env` (no SMS/email is actually sent; remove that line to turn OTP sign-in off).
 On a phone on the same Wi-Fi: run `npm start -- --host 0.0.0.0` and open `http://<your Mac's IP>:4200`.
 
+## AI assistant (Ask MonEXP + monthly summary)
+
+1. Get an API key at https://console.anthropic.com → **API Keys** → **Create Key**.
+2. Open `backend/.env` and paste it after `ANTHROPIC_API_KEY=` (no spaces, no quotes).
+3. Restart the backend (`Ctrl + C`, then `npm run dev`).
+
+Then use the **Ask AI** button (bottom-right) or **Summarise this month** on Overview.
+The model is `claude-opus-5-5` by default; add `ANTHROPIC_MODEL=claude-sonnet-5-5` to `.env` for a cheaper one.
+Claude only *reads* your data through a few lookup tools – every total is calculated by the backend, not by the AI.
+
 ## Tests
 
 ```bash
@@ -92,3 +102,4 @@ Months are written as `2026-10`. Money is always whole rupees.
 | Setup | `/cards`, `/emis`, `/plans`, `/people` (GET, POST, PATCH /:id, DELETE /:id) |
 | Reports | `GET /years/:year`, `GET /installments?at=:ym` |
 | Undo | `POST /undo/:token` (every change returns an `undoToken`) |
+| AI | `GET /ai/status`, `POST /ai/chat` (server-sent events), `GET/POST /ai/summary/:ym` |

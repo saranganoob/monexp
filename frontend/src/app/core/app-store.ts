@@ -37,6 +37,7 @@ export class AppStore {
 
   readonly toast = signal<Toast | null>(null);
   readonly dialog = signal<{ type: AddType } | null>(null);
+  readonly askAiOpen = signal(false);
 
   /** The month's data, or null if it isn't set up yet / still loading. */
   readonly month = computed(() => { const v = this.view(); return v && v.exists ? (v as MonthData) : null; });

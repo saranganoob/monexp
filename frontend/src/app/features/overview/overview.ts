@@ -3,6 +3,7 @@ import { AppStore } from '../../core/app-store';
 import { Api } from '../../core/api.service';
 import { Installment } from '../../core/models';
 import { InrPipe } from '../../shared/pipes/inr.pipe';
+import { AiSummary } from './ai-summary/ai-summary';
 import { BudgetCard } from './budget-card/budget-card';
 import { ClosingNext } from './closing-next/closing-next';
 import { PeopleOweYou } from './people-owe-you/people-owe-you';
@@ -11,7 +12,7 @@ import { StillToPay } from './still-to-pay/still-to-pay';
 
 @Component({
   selector: 'app-overview',
-  imports: [InrPipe, BudgetCard, PaySummary, StillToPay, PeopleOweYou, ClosingNext],
+  imports: [InrPipe, AiSummary, BudgetCard, PaySummary, StillToPay, PeopleOweYou, ClosingNext],
   templateUrl: './overview.html',
   styleUrl: './overview.scss',
 })

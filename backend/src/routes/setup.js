@@ -2,15 +2,15 @@
 import { Router } from 'express';
 import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, NETWORKS, RELATIONS } from '../models/index.js';
 import { withUndo } from '../services/undo.js';
-import { loadSetup, computeMonths, nextSortOrder } from '../services/monthService.js';
-import { installmentAt } from '../services/compute.js';
+import { loadSetup, nextSortOrder } from '../services/monthService.js';
 import { syncPlanRows, detachPlanRows, planYms } from '../services/planService.js';
+import { peopleStats } from '../services/peopleService.js';
 import { CATEGORY_KEYS } from '../lib/categories.js';
 import { inr } from '../lib/format.js';
 import * as N from '../services/normalize.js';
 import { badRequest, conflict, notFound } from '../lib/http.js';
 import { toAmount, toText, toYm, toId, toEnum, toInt, toOptionalId } from '../lib/validate.js';
-import { addMonths, currentYm, todayIso, ymToIndex } from '../lib/ym.js';
+import { addMonths, currentYm, todayIso } from '../lib/ym.js';
 
 const router = Router();
 
@@ -220,9 +220,6 @@ router.delete('/plans/:id', async (req, res) => {
 
 // ---------------- people ----------------
 
-const matchesPerson = (p, r) => r.personId === p.id
-  || (!r.personId && r.name.split('·')[0].trim().toLowerCase() === p.name.toLowerCase());
-
 async function personFields(b, { partial, excludeId }) {
   const out = {};
   if (!partial || b.name !== undefined) {
@@ -246,25 +243,7 @@ async function personFields(b, { partial, excludeId }) {
 // GET /api/people?at=2026-10 – everyone, with what they owe / are owed in that month,
 // running EMIs, and everything received from them so far.
 router.get('/people', async (req, res) => {
-  const at = req.query.at ? toYm(req.query.at, 'at') : currentYm();
-  const setup = await loadSetup();
-  const all = await computeMonths(null, setup);
-  const now = all.find((c) => c.ym === at);
-  const I = ymToIndex(at);
-
-  res.json(setup.people.map((p) => {
-    const owed = now ? now.receivables.filter((r) => r.status === 'pending' && matchesPerson(p, r)).reduce((s, r) => s + r.amount, 0) : 0;
-    const iOwe = now ? now.payables.filter((r) => r.status === 'pending' && matchesPerson(p, r)).reduce((s, r) => s + r.amount, 0) : 0;
-    const running = setup.emis.filter((e) => e.personId === p.id && ymToIndex(e.startYm) + e.totalMonths - 1 >= I);
-    const leftToRecover = running.reduce((s, e) => {
-      const at2 = installmentAt(e.startYm, e.totalMonths, at);
-      let left = e.totalMonths - Math.max(at2.n - 1, 0);
-      if (at2.n >= 1 && now?.receivables.some((r) => r.emiId === e.id && r.status === 'done')) left -= 1;
-      return s + (e.monthly || 0) * left;
-    }, 0);
-    const receivedSoFar = all.reduce((s, c) => s + c.receivables.filter((r) => r.status === 'done' && matchesPerson(p, r)).reduce((t, r) => t + r.amount, 0), 0);
-    return { ...p, owed, iOwe, runningEmis: running.length, leftToRecover, receivedSoFar };
-  }));
+  res.json(await peopleStats(req.query.at ? toYm(req.query.at, 'at') : currentYm()));
 });
 
 router.post('/people', async (req, res) => {

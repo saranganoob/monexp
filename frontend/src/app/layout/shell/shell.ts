@@ -5,6 +5,7 @@ import { filter, map, startWith } from 'rxjs';
 import { AppStore } from '../../core/app-store';
 import { EmptyMonth } from '../../shared/components/empty-month/empty-month';
 import { AddExpenseDialog } from '../add-expense-dialog/add-expense-dialog';
+import { AskAi } from '../ask-ai/ask-ai';
 import { PageHeader, PageMeta } from '../page-header/page-header';
 import { Sidebar } from '../sidebar/sidebar';
 import { TopBar } from '../top-bar/top-bar';
@@ -13,7 +14,7 @@ import { UndoToast } from '../undo-toast/undo-toast';
 /** The signed-in app frame. Each route's `data` is a PageMeta (title, picker, …). */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, Sidebar, TopBar, PageHeader, EmptyMonth, AddExpenseDialog, UndoToast],
+  imports: [RouterOutlet, Sidebar, TopBar, PageHeader, EmptyMonth, AddExpenseDialog, AskAi, UndoToast],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })

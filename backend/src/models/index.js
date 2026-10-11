@@ -9,3 +9,4 @@ export { SuddenSpend } from './SuddenSpend.js';
 export { CardSpend } from './CardSpend.js';
 export { User } from './User.js';
 export { Undo } from './Undo.js';
+export { AiSummary } from './AiSummary.js';

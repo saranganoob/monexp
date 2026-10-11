@@ -41,3 +41,7 @@ Approved by the owner on 8 Oct 2026. Where this file and CLAUDE.md disagree, thi
    - Tests, git commit, instructions.
    Not in v1: "start fresh" button, backup/restore.
 4. AI: Ask MonEXP chat (streaming) + monthly summary, via the Claude API from the backend.
+   Model `claude-opus-5-5` by default (set `ANTHROPIC_MODEL` in backend/.env to change it).
+   Read-only tools (get_month, get_year, get_installments, get_people, find_payments) – all maths
+   in compute.js. Chat history isn't stored; summaries are cached per month and marked out of date
+   when the figures change.

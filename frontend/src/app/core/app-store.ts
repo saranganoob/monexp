@@ -5,8 +5,6 @@ import { Card, CardEmi, ChangeResult, MonthData, MonthView, PersonStats } from '
 import { currentYm } from './utils/format';
 
 const YM_KEY = 'monexp.ym';
-/** Other open MonEXP tabs in this browser hear about changes on this channel. */
-const SYNC_CHANNEL = 'monexp-sync';
 /** Coming back to a tab within this many ms of the last refresh doesn't fetch again. */
 const REFRESH_GAP_MS = 2000;
 function savedYm(): string | null {
@@ -23,15 +21,14 @@ export type AddType = 'bill' | 'sudden' | 'in' | 'out';
 
 /**
  * App-wide state: the selected month, its data from the backend, and the
- * cards / EMIs / people lists. Everything reloads after any change – in this tab, in the
- * other open tabs, and whenever you come back to a tab.
+ * cards / EMIs / people lists. Everything reloads after any change – in this tab, on the
+ * account's other tabs and devices (LiveService), and whenever you come back to a tab.
  */
 @Injectable({ providedIn: 'root' })
 export class AppStore {
   private api = inject(Api);
   private auth = inject(AuthService);
   private doc = inject(DOCUMENT);
-  private channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(SYNC_CHANNEL);
   private lastRefresh = 0;
 
   /** Selected month – remembered for this browser tab, so a refresh stays on it. */
@@ -66,8 +63,6 @@ export class AppStore {
       untracked(() => (who ? this.load(ym) : this.clear()));
     });
 
-    // Another tab changed something: show it here too.
-    this.channel?.addEventListener('message', (e) => { if (e.data === 'changed' && this.auth.account()) this.reload(); });
     // Back to this tab or window: fetch fresh data (it may have changed on another device).
     const onReturn = () => {
       if (this.doc.visibilityState !== 'visible' || !this.auth.account() || Date.now() - this.lastRefresh < REFRESH_GAP_MS) return;
@@ -117,7 +112,6 @@ export class AppStore {
       const res = await request;
       this.showToast({ message: res.message, undoToken: res.undoToken });
       this.reload();
-      this.channel?.postMessage('changed');
       return null;
     } catch (err) {
       const msg = errorMessage(err);
@@ -136,7 +130,6 @@ export class AppStore {
       this.showToast({ message: errorMessage(err), error: true });
     }
     this.reload();
-    this.channel?.postMessage('changed');
   }
 
   showToast(t: Toast) {

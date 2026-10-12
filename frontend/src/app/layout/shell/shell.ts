@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { AppStore } from '../../core/app-store';
+import { LiveService } from '../../core/live.service';
 import { EmptyMonth } from '../../shared/components/empty-month/empty-month';
 import { AddExpenseDialog } from '../add-expense-dialog/add-expense-dialog';
 import { AskAi } from '../ask-ai/ask-ai';
@@ -17,9 +18,11 @@ import { UndoToast } from '../undo-toast/undo-toast';
   imports: [RouterOutlet, Sidebar, TopBar, PageHeader, EmptyMonth, AddExpenseDialog, AskAi, UndoToast],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
+  providers: [LiveService], // live updates while signed in
 })
 export class Shell {
   protected store = inject(AppStore);
+  private live = inject(LiveService);
   private router = inject(Router);
 
   protected readonly meta = toSignal(

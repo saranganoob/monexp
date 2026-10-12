@@ -13,6 +13,7 @@ import aiRoutes from './routes/ai.js';
 import { config } from './config.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
+import { notifyOnChange } from './services/live.js';
 
 export function createApp() {
   const app = express();
@@ -52,6 +53,7 @@ export function createApp() {
 
   // Everything below needs a signed-in user.
   app.use('/api', requireAuth);
+  app.use('/api', notifyOnChange); // live updates to the user's other open pages
   app.use('/api/months', monthRoutes);
   app.use('/api', itemRoutes);
   app.use('/api', setupRoutes);

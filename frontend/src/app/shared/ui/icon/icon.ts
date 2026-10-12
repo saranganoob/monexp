@@ -15,6 +15,7 @@ const PATHS = {
   check: 'M5 12l5 5L20 7',
   'chevron-left': 'M15 18l-6-6 6-6',
   'chevron-right': 'M9 18l6-6-6-6',
+  'chevron-down': 'M6 9l6 6 6-6',
   close: 'M6 6l12 12M18 6L6 18',
   'sign-out': 'M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11',
   lock: 'M6 10V7a6 6 0 0 1 12 0v3M5 10h14v11H5z',

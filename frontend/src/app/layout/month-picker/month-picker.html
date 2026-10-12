@@ -1,16 +1,25 @@
-<div class="card picker">
+<div class="card picker" [class.picker--year]="mode() === 'year'">
   @if (mode() === 'month') {
-    <button class="btn btn--ghost btn--icon" (click)="shift(-1)" aria-label="Previous month"><app-icon name="chevron-left" /></button>
-    <label for="mp-month" class="sr">Month</label>
-    <select id="mp-month" class="field field--bare" #m (change)="pickMonth(m.value)">
-      @for (name of months; track $index) { <option [value]="$index" [selected]="$index === m0()">{{ name }}</option> }
-    </select>
+    <button type="button" class="step" (click)="shift(-1)" aria-label="Previous month"><app-icon name="chevron-left" /></button>
+    <span class="divider" aria-hidden="true"></span>
+    <label class="choose choose--month">
+      <span class="sr">Month</span>
+      <select id="mp-month" #m (change)="pickMonth(m.value)">
+        @for (name of months; track $index) { <option [value]="$index" [selected]="$index === m0()">{{ name }}</option> }
+      </select>
+      <app-icon name="chevron-down" [size]="16" />
+    </label>
+    <span class="divider" aria-hidden="true"></span>
   }
-  <label for="mp-year" class="sr">Year</label>
-  <select id="mp-year" class="field field--bare" #y (change)="pickYear(y.value)">
-    @for (yy of years(); track yy) { <option [value]="yy" [selected]="yy === year()">{{ yy }}</option> }
-  </select>
+  <label class="choose">
+    <span class="sr">Year</span>
+    <select id="mp-year" #y (change)="pickYear(y.value)">
+      @for (yy of years(); track yy) { <option [value]="yy" [selected]="yy === year()">{{ yy }}</option> }
+    </select>
+    <app-icon name="chevron-down" [size]="16" />
+  </label>
   @if (mode() === 'month') {
-    <button class="btn btn--ghost btn--icon" (click)="shift(1)" aria-label="Next month"><app-icon name="chevron-right" /></button>
+    <span class="divider" aria-hidden="true"></span>
+    <button type="button" class="step" (click)="shift(1)" aria-label="Next month"><app-icon name="chevron-right" /></button>
   }
 </div>

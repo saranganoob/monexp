@@ -1,10 +1,14 @@
-import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { DOCUMENT, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Api, errorMessage } from './api.service';
 import { AuthService } from './auth/auth.service';
 import { Card, CardEmi, ChangeResult, MonthData, MonthView, PersonStats } from './models';
 import { currentYm } from './utils/format';
 
 const YM_KEY = 'monexp.ym';
+/** Other open MonEXP tabs in this browser hear about changes on this channel. */
+const SYNC_CHANNEL = 'monexp-sync';
+/** Coming back to a tab within this many ms of the last refresh doesn't fetch again. */
+const REFRESH_GAP_MS = 2000;
 function savedYm(): string | null {
   try {
     const v = sessionStorage.getItem(YM_KEY);
@@ -19,12 +23,16 @@ export type AddType = 'bill' | 'sudden' | 'in' | 'out';
 
 /**
  * App-wide state: the selected month, its data from the backend, and the
- * cards / EMIs / people lists. Everything reloads after any change.
+ * cards / EMIs / people lists. Everything reloads after any change – in this tab, in the
+ * other open tabs, and whenever you come back to a tab.
  */
 @Injectable({ providedIn: 'root' })
 export class AppStore {
   private api = inject(Api);
   private auth = inject(AuthService);
+  private doc = inject(DOCUMENT);
+  private channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(SYNC_CHANNEL);
+  private lastRefresh = 0;
 
   /** Selected month – remembered for this browser tab, so a refresh stays on it. */
   readonly ym = signal(savedYm() ?? currentYm());
@@ -57,6 +65,16 @@ export class AppStore {
       try { sessionStorage.setItem(YM_KEY, ym); } catch { /* storage blocked – not important */ }
       untracked(() => (who ? this.load(ym) : this.clear()));
     });
+
+    // Another tab changed something: show it here too.
+    this.channel?.addEventListener('message', (e) => { if (e.data === 'changed' && this.auth.account()) this.reload(); });
+    // Back to this tab or window: fetch fresh data (it may have changed on another device).
+    const onReturn = () => {
+      if (this.doc.visibilityState !== 'visible' || !this.auth.account() || Date.now() - this.lastRefresh < REFRESH_GAP_MS) return;
+      this.reload();
+    };
+    this.doc.addEventListener('visibilitychange', onReturn);
+    this.doc.defaultView?.addEventListener('focus', onReturn);
   }
 
   /** Forgets everything loaded (on sign-out). */
@@ -74,6 +92,7 @@ export class AppStore {
 
   private async load(ym: string) {
     const seq = ++this.loadSeq;
+    this.lastRefresh = Date.now();
     try {
       const [view, cards, emis, people] = await Promise.all([this.api.month(ym), this.api.cards(), this.api.emis(), this.api.people(ym)]);
       if (seq !== this.loadSeq) return; // a newer load started meanwhile
@@ -98,6 +117,7 @@ export class AppStore {
       const res = await request;
       this.showToast({ message: res.message, undoToken: res.undoToken });
       this.reload();
+      this.channel?.postMessage('changed');
       return null;
     } catch (err) {
       const msg = errorMessage(err);
@@ -116,6 +136,7 @@ export class AppStore {
       this.showToast({ message: errorMessage(err), error: true });
     }
     this.reload();
+    this.channel?.postMessage('changed');
   }
 
   showToast(t: Toast) {

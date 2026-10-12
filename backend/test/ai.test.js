@@ -12,11 +12,14 @@ const { createApp } = await import('../src/app.js');
 const { User } = await import('../src/models/index.js');
 const { seedSampleData } = await import('../scripts/seed-lib.js');
 const { setClientForTests } = await import('../src/services/ai/client.js');
-const { runTool } = await import('../src/services/ai/tools.js');
+const { runTool: runToolAs } = await import('../src/services/ai/tools.js');
+const { runAsOwner } = await import('../src/lib/owner.js');
 
 const TEST_DB = (process.env.MONGODB_URI_TEST || 'mongodb://localhost:27017/monexp_test') + '_ai';
 const app = createApp();
 const agent = request.agent(app);
+let owner; // the test user – direct tool calls run as them
+const runTool = (name, input) => runAsOwner(owner, () => runToolAs(name, input));
 
 // ---- fake Anthropic client: replays scripted responses and records every request ----
 const calls = [];
@@ -56,8 +59,8 @@ before(async () => {
   await mongoose.connect(TEST_DB);
   assert.match(mongoose.connection.name, /_test_ai$/);
   await mongoose.connection.dropDatabase();
-  await User.create({ email: 'ai@example.com', passwordHash: await bcrypt.hash('test-password-1', 4) });
-  await seedSampleData();
+  owner = (await User.create({ email: 'ai@example.com', passwordHash: await bcrypt.hash('test-password-1', 4) }))._id;
+  await seedSampleData(owner);
   await agent.post('/api/auth/login').send({ identifier: 'ai@example.com', password: 'test-password-1' });
 });
 

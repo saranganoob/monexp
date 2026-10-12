@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, amountField, ymField } from './common.js';
+import { ownerPlugin } from './ownerPlugin.js';
 
 const emiOverrideSchema = new Schema({
   emi: { type: ObjectId, ref: 'CardEmi', required: true },
@@ -8,12 +9,15 @@ const emiOverrideSchema = new Schema({
 }, { _id: false });
 
 const monthSchema = new Schema({
-  ym: ymField({ required: true, unique: true }),
+  ym: ymField({ required: true }),
   budget: amountField(),
   // "My spends" on each card this month, keyed by card id.
   cardSpends: { type: Map, of: amountField(), default: {} },
   emiOverrides: { type: [emiOverrideSchema], default: [] },
   createdHow: { type: String, enum: ['seed', 'import', 'rollover', 'blank'], default: 'blank' },
 }, { timestamps: true });
+
+monthSchema.plugin(ownerPlugin);
+monthSchema.index({ owner: 1, ym: 1 }, { unique: true }); // one per month, per user
 
 export const Month = mongoose.model('Month', monthSchema);

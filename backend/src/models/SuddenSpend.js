@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, amountField, ymField } from './common.js';
+import { ownerPlugin } from './ownerPlugin.js';
 
 const suddenSpendSchema = new Schema({
   ym: ymField({ required: true, index: true }),
@@ -11,5 +12,7 @@ const suddenSpendSchema = new Schema({
   dateUnknown: { type: Boolean, default: false },
   note: { type: String, default: '' },
 }, { timestamps: true });
+
+suddenSpendSchema.plugin(ownerPlugin);
 
 export const SuddenSpend = mongoose.model('SuddenSpend', suddenSpendSchema);

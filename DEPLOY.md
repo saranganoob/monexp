@@ -70,6 +70,18 @@ MONGODB_URI="mongodb+srv://..." npm run create-user
 Enter your email, mobile and a password. That account is only in the live database – it doesn't touch
 your Mac's local data.
 
+### Giving friends their own login
+
+Each login has its **own, separate** tracker – friends never see your data, and you don't see theirs in the app.
+For each friend, run the same command with their email and a temporary password:
+
+```bash
+MONGODB_URI="mongodb+srv://..." npm run create-user
+```
+
+They sign in, go to **Profile → Account → Change password**, and start with **Start a blank month**.
+(As the owner of the Atlas database you can technically see everyone's data there – tell them.)
+
 ## 4. Open it
 
 `https://monexp.onrender.com` (or whatever name Render shows) → sign in → you'll see

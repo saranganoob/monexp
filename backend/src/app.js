@@ -47,7 +47,7 @@ export function createApp() {
     legacyHeaders: false,
     message: { error: 'Too many sign-in attempts. Please wait 15 minutes and try again.' },
   });
-  app.use(['/api/auth/login', '/api/auth/otp/request', '/api/auth/otp/verify'], signInLimit);
+  app.use(['/api/auth/login', '/api/auth/otp/request', '/api/auth/otp/verify', '/api/auth/password'], signInLimit);
   app.use('/api/auth', authRoutes);
 
   // Everything below needs a signed-in user.

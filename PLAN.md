@@ -7,7 +7,7 @@ Approved by the owner on 8 Oct 2026. Where this file and CLAUDE.md disagree, thi
 
 | # | Topic | Decision |
 |---|---|---|
-| 1 | Login | Single user, email (or mobile) + password. **Update 11 Oct 2026:** also "Sign in with OTP" by email or mobile – demo only: no SMS/email is sent, the fixed code in `DEV_OTP` (backend/.env) is accepted; empty = OTP off. |
+| 1 | Login | Email (or mobile) + password. **Update 12 Oct 2026:** several logins, each with its own separate data (every record has an `owner`; queries are limited to the signed-in user automatically). Data from before that belongs to the first login. Password can be changed in Profile → Account. **Update 11 Oct 2026:** also "Sign in with OTP" by email or mobile – demo only: no SMS/email is sent, the fixed code in `DEV_OTP` (backend/.env) is accepted; empty = OTP off. |
 | 2 | New month | Empty month shows **"Roll over from <previous month>"**: copies all bills as unpaid, drops closed cards, lets you tick pending people-items to carry over. "Start a blank month" also available. |
 | 3 | Installments | "X of Y" is calculated from the plan's start month, not counted by clicks. |
 | 4 | Leftover balance | Not carried into next month. Year view shows total "Left over". |

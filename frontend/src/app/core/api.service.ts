@@ -32,6 +32,7 @@ export class Api {
   logout() { return this.post<{ ok: boolean }>('/auth/logout'); }
   me() { return this.get<Account>('/auth/me'); }
   updateMe(body: Partial<Account>) { return this.patch<Account>('/auth/me', body); }
+  changePassword(current: string, next: string) { return this.post<{ ok: boolean }>('/auth/password', { current, next }); }
 
   // months
   month(ym: string) { return this.get<MonthView>(`/months/${ym}`); }

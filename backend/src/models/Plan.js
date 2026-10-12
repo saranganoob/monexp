@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, amountField, ymField } from './common.js';
+import { ownerPlugin } from './ownerPlugin.js';
 import { CATEGORY_KEYS } from '../lib/categories.js';
 
 // Installment plans that aren't card EMIs: money I send on a schedule (Dad, gold chit)
@@ -15,5 +16,7 @@ const planSchema = new Schema({
   totalInstallments: { type: Number, required: true, min: 1, validate: Number.isInteger },
   startYm: ymField({ required: true }),
 }, { timestamps: true });
+
+planSchema.plugin(ownerPlugin);
 
 export const Plan = mongoose.model('Plan', planSchema);

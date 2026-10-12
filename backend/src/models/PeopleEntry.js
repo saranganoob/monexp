@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, amountField, ymField } from './common.js';
+import { ownerPlugin } from './ownerPlugin.js';
 
 // Money between me and someone else in a given month.
 // direction "in" = they owe me, "out" = I owe them.
@@ -17,5 +18,7 @@ const peopleEntrySchema = new Schema({
   origin: { type: ObjectId, ref: 'PeopleEntry', default: null },
   sortOrder: { type: Number, default: 0 },
 }, { timestamps: true });
+
+peopleEntrySchema.plugin(ownerPlugin);
 
 export const PeopleEntry = mongoose.model('PeopleEntry', peopleEntrySchema);

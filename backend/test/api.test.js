@@ -8,6 +8,7 @@ import request from 'supertest';
 process.env.JWT_SECRET ||= 'test-secret-test-secret-test-secret-123';
 const { config } = await import('../src/config.js');
 config.jwtSecret = process.env.JWT_SECRET;
+config.loginRateLimit = 1000; // these tests sign in many times; the limit itself is tested in web.test.js
 const { createApp } = await import('../src/app.js');
 const { User } = await import('../src/models/index.js');
 const { seedSampleData } = await import('../scripts/seed-lib.js');
@@ -21,8 +22,8 @@ before(async () => {
   await mongoose.connect(TEST_DB);
   assert.match(mongoose.connection.name, /_test$/, 'refusing to run API tests against a non-test database');
   await mongoose.connection.dropDatabase();
-  await User.create({ email: LOGIN.identifier, phone: '9876543210', passwordHash: await bcrypt.hash(LOGIN.password, 4) });
-  await seedSampleData();
+  const user = await User.create({ email: LOGIN.identifier, phone: '9876543210', passwordHash: await bcrypt.hash(LOGIN.password, 4) });
+  await seedSampleData(user._id);
 });
 
 after(async () => {
@@ -275,6 +276,37 @@ test('rolling over adds plans that start in the new month', async () => {
   assert.equal(jan.status, 201);
   const ins = jan.body.month.bills.find((b) => b.name === 'Insurance');
   assert.deepEqual([ins.amount, ins.category, ins.inst], [2500, 'inv', { n: 1, total: 12 }]);
+});
+
+test('each account only sees its own data', async () => {
+  const other = { identifier: 'friend@example.com', password: 'friend-password-1' };
+  await User.create({ email: other.identifier, passwordHash: await bcrypt.hash(other.password, 4) });
+  const friend = request.agent(app);
+  assert.equal((await friend.post('/api/auth/login').send(other)).status, 200);
+
+  // A new account starts empty, even for months the first account has.
+  assert.equal((await friend.get('/api/months/2026-10')).body.exists, false);
+  assert.deepEqual((await friend.get('/api/cards')).body, []);
+  assert.deepEqual((await friend.get('/api/people')).body, []);
+
+  // It can set up the same month without clashing, and the first account doesn't see it.
+  assert.equal((await friend.post('/api/months/2026-10').send({ mode: 'blank' })).status, 201);
+  assert.equal((await friend.patch('/api/months/2026-10').send({ budget: 12345 })).status, 200);
+  assert.notEqual((await agent.get('/api/months/2026-10')).body.budget, 12345);
+
+  // Ids from another account are "not found", never readable or changeable.
+  const myBill = (await agent.get('/api/months/2026-10')).body.bills[0];
+  assert.equal((await friend.patch(`/api/bills/${myBill.id}`).send({ status: 'paid' })).status, 404);
+  assert.equal((await friend.delete(`/api/bills/${myBill.id}`)).status, 404);
+  assert.equal((await agent.get('/api/months/2026-10')).body.bills[0].status, myBill.status);
+});
+
+test('change password: needs the current one, then the new one works', async () => {
+  assert.equal((await agent.post('/api/auth/password').send({ current: 'wrong-password', next: 'new-password-1' })).status, 400);
+  assert.equal((await agent.post('/api/auth/password').send({ current: LOGIN.password, next: 'short' })).status, 400);
+  assert.equal((await agent.post('/api/auth/password').send({ current: LOGIN.password, next: 'new-password-1' })).status, 200);
+  assert.equal((await request(app).post('/api/auth/login').send(LOGIN)).status, 401);
+  assert.equal((await request(app).post('/api/auth/login').send({ ...LOGIN, password: 'new-password-1' })).status, 200);
 });
 
 test('logout clears the session', async () => {

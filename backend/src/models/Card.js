@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema } from './common.js';
+import { ownerPlugin } from './ownerPlugin.js';
 
 export const NETWORKS = ['', 'Visa', 'RuPay', 'Maestro', 'Mastercard'];
 
@@ -11,5 +12,7 @@ const cardSchema = new Schema({
   closedOn: { type: String, match: /^(\d{4}-\d{2}-\d{2})?$/, default: '' }, // '' = open
   sortOrder: { type: Number, default: 0 },
 }, { timestamps: true });
+
+cardSchema.plugin(ownerPlugin);
 
 export const Card = mongoose.model('Card', cardSchema);

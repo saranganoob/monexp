@@ -126,4 +126,16 @@ router.patch('/me', requireAuth, async (req, res) => {
   res.json(publicUser(user));
 });
 
+router.post('/password', requireAuth, async (req, res) => {
+  const current = String(req.body?.current || '');
+  const next = String(req.body?.next || '');
+  if (next.length < 8) throw badRequest('The new password needs at least 8 characters.');
+  const user = await User.findById(req.userId);
+  if (!user) throw notFound('Account not found.');
+  if (!(await bcrypt.compare(current, user.passwordHash))) throw badRequest('Your current password isn’t right.');
+  user.passwordHash = await bcrypt.hash(next, 12);
+  await user.save();
+  res.json({ ok: true });
+});
+
 export default router;

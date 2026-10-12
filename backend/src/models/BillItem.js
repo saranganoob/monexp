@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, amountField, ymField } from './common.js';
+import { ownerPlugin } from './ownerPlugin.js';
 import { CATEGORY_KEYS } from '../lib/categories.js';
 
 // One row in a month's "Need to pay" list.
@@ -15,5 +16,7 @@ const billItemSchema = new Schema({
   plan: { type: ObjectId, ref: 'Plan', default: null },
   sortOrder: { type: Number, default: 0 },
 }, { timestamps: true });
+
+billItemSchema.plugin(ownerPlugin);
 
 export const BillItem = mongoose.model('BillItem', billItemSchema);

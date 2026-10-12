@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema } from './common.js';
+import { ownerPlugin } from './ownerPlugin.js';
 
 export const RELATIONS = ['', 'Friend', 'Family', 'Colleague', 'Roommate', 'Other'];
 
@@ -10,5 +11,7 @@ const personSchema = new Schema({
   upi: { type: String, default: '' },
   note: { type: String, default: '' },
 }, { timestamps: true });
+
+personSchema.plugin(ownerPlugin);
 
 export const Person = mongoose.model('Person', personSchema);

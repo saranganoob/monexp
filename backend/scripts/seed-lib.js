@@ -1,16 +1,19 @@
 import mongoose from 'mongoose';
-import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, Undo, AiSummary } from '../src/models/index.js';
+import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, MONEY_MODELS } from '../src/models/index.js';
+import { runAsOwner } from '../src/lib/owner.js';
 import * as data from './seed-data.js';
 
-export const DATA_MODELS = [Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, Undo, AiSummary];
-
-export async function hasData() {
-  return Boolean(await Month.exists({}));
+export function hasData(ownerId) {
+  return runAsOwner(ownerId, async () => Boolean(await Month.exists({})));
 }
 
-// Wipes all money data (never users) and loads the sample months.
-export async function seedSampleData() {
-  for (const M of DATA_MODELS) await M.deleteMany({});
+// Wipes one user's money data (never the login itself) and loads the sample months for them.
+export function seedSampleData(ownerId) {
+  return runAsOwner(ownerId, () => loadSample());
+}
+
+async function loadSample() {
+  for (const M of MONEY_MODELS) await M.deleteMany({});
 
   const ids = new Map();
   const oid = (key) => {

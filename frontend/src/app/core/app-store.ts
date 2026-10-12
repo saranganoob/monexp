@@ -1,5 +1,6 @@
 import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Api, errorMessage } from './api.service';
+import { AuthService } from './auth/auth.service';
 import { Card, CardEmi, ChangeResult, MonthData, MonthView, PersonStats } from './models';
 import { currentYm } from './utils/format';
 
@@ -23,6 +24,7 @@ export type AddType = 'bill' | 'sudden' | 'in' | 'out';
 @Injectable({ providedIn: 'root' })
 export class AppStore {
   private api = inject(Api);
+  private auth = inject(AuthService);
 
   /** Selected month – remembered for this browser tab, so a refresh stays on it. */
   readonly ym = signal(savedYm() ?? currentYm());
@@ -50,9 +52,24 @@ export class AppStore {
     effect(() => {
       const ym = this.ym();
       this.version();
+      // A different account signing in must never see the previous one's data.
+      const who = this.auth.account();
       try { sessionStorage.setItem(YM_KEY, ym); } catch { /* storage blocked – not important */ }
-      untracked(() => this.load(ym));
+      untracked(() => (who ? this.load(ym) : this.clear()));
     });
+  }
+
+  /** Forgets everything loaded (on sign-out). */
+  private clear() {
+    this.loadSeq++; // drop any load still on its way
+    this.view.set(null);
+    this.cards.set([]);
+    this.emis.set([]);
+    this.people.set([]);
+    this.loadError.set('');
+    this.toast.set(null);
+    this.dialog.set(null);
+    this.askAiOpen.set(false);
   }
 
   private async load(ym: string) {

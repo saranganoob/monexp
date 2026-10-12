@@ -3,13 +3,14 @@ import { AppStore } from '../../core/app-store';
 import { AccountTab } from './account-tab/account-tab';
 import { AppearanceTab } from './appearance-tab/appearance-tab';
 import { CardsTab } from './cards-tab/cards-tab';
+import { PasswordCard } from './password-card/password-card';
 import { PeopleTab } from './people-tab/people-tab';
 
 type Tab = 'account' | 'appearance' | 'cards' | 'persons';
 
 @Component({
   selector: 'app-profile',
-  imports: [AccountTab, AppearanceTab, CardsTab, PeopleTab],
+  imports: [AccountTab, AppearanceTab, CardsTab, PasswordCard, PeopleTab],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })

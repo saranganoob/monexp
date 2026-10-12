@@ -33,8 +33,8 @@ You can run `npm run dev` (backend), `npm run web` (website), `npm test`, `npm r
 cd backend
 npm install
 cp .env.example .env        # then set JWT_SECRET (a long random string)
-npm run seed                # loads the sample months Jan–Oct 2026
 npm run create-user         # creates your login (asks for email + password)
+npm run seed                # loads the sample months Jan–Oct 2026 into the first login
 ```
 
 ## Run the backend
@@ -89,8 +89,8 @@ Tests use a separate `monexp_test` database, so your data is never touched.
 
 | Command (in `backend/`) | What it does |
 |---|---|
-| `npm run seed -- --force` | Wipes all money data and reloads the sample months (your login is kept) |
-| `npm run create-user` | Run again with the same email to change your password |
+| `npm run seed -- --force` | Wipes the first login's money data and reloads the sample months (add `--user email` for another login) |
+| `npm run create-user` | Adds a login (each login has its own separate data). Same email again = reset that password |
 
 ## API overview
 

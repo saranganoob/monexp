@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Schema, ObjectId, amountField, ymField } from './common.js';
+import { ownerPlugin } from './ownerPlugin.js';
 
 // An EMI running on one of my cards – mine, or a purchase made for a friend.
 const cardEmiSchema = new Schema({
@@ -11,5 +12,7 @@ const cardEmiSchema = new Schema({
   totalMonths: { type: Number, required: true, min: 1, validate: Number.isInteger },
   startYm: ymField({ required: true }), // month of installment 1
 }, { timestamps: true });
+
+cardEmiSchema.plugin(ownerPlugin);
 
 export const CardEmi = mongoose.model('CardEmi', cardEmiSchema);

@@ -5,6 +5,16 @@
 import { User, MONEY_MODELS } from '../models/index.js';
 import { runUnscoped } from '../lib/owner.js';
 
+/** If nobody is an admin yet, the first account ever created (the original owner) becomes one. */
+export async function ensureAdmin() {
+  if (await User.exists({ isAdmin: true })) return null;
+  const first = await User.findOne().sort({ createdAt: 1, _id: 1 });
+  if (!first) return null;
+  first.isAdmin = true;
+  await first.save();
+  return first.email || first.phone;
+}
+
 export function assignUnownedData() {
   return runUnscoped(async () => {
     const first = await User.findOne().sort({ createdAt: 1, _id: 1 }).lean();

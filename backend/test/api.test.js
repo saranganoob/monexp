@@ -309,6 +309,50 @@ test('change password: needs the current one, then the new one works', async () 
   assert.equal((await request(app).post('/api/auth/login').send({ ...LOGIN, password: 'new-password-1' })).status, 200);
 });
 
+test('admin: only the admin manages logins, and never sees money data', async () => {
+  // Not an admin yet → refused.
+  assert.equal((await agent.get('/api/admin/users')).status, 403);
+  const { ensureAdmin } = await import('../src/services/ownerMigration.js');
+  assert.equal(await ensureAdmin(), LOGIN.identifier); // the first account becomes the admin
+  assert.equal(await ensureAdmin(), null); // …only once
+  assert.equal((await agent.get('/api/auth/me')).body.isAdmin, true);
+
+  const { users: list, maxUsers } = (await agent.get('/api/admin/users')).body;
+  assert.equal(maxUsers, 25);
+  assert.ok(list.length >= 2);
+  assert.ok(list.every((u) => !('passwordHash' in u) && !('budget' in u)));
+
+  // Add a friend: needs a valid login and an 8+ character password; no duplicates.
+  assert.equal((await agent.post('/api/admin/users').send({ email: 'bad', password: 'long-enough-1' })).status, 400);
+  assert.equal((await agent.post('/api/admin/users').send({ email: 'pal@example.com', password: 'short' })).status, 400);
+  const add = await agent.post('/api/admin/users').send({ email: 'Pal@Example.com', phone: '+91 91234 56789', password: 'temp-pass-1' });
+  assert.equal(add.status, 201);
+  assert.deepEqual([add.body.email, add.body.phone, add.body.isAdmin], ['pal@example.com', '9123456789', false]);
+  assert.equal((await agent.post('/api/admin/users').send({ email: 'pal@example.com', password: 'temp-pass-1' })).status, 409);
+  assert.equal((await request(app).post('/api/auth/login').send({ identifier: '9123456789', password: 'temp-pass-1' })).status, 200);
+
+  // Reset their password.
+  assert.equal((await agent.post(`/api/admin/users/${add.body.id}/password`).send({ password: 'reset-pass-1' })).status, 200);
+  assert.equal((await request(app).post('/api/auth/login').send({ identifier: 'pal@example.com', password: 'temp-pass-1' })).status, 401);
+  const pal = request.agent(app);
+  assert.equal((await pal.post('/api/auth/login').send({ identifier: 'pal@example.com', password: 'reset-pass-1' })).status, 200);
+
+  // The new friend is not an admin.
+  assert.equal((await pal.get('/api/admin/users')).status, 403);
+  assert.equal((await pal.post(`/api/admin/users/${add.body.id}/password`).send({ password: 'hijack-pass-1' })).status, 403);
+
+  // No more than MAX_USERS logins in total.
+  const saved = config.maxUsers;
+  try {
+    config.maxUsers = (await User.countDocuments());
+    const full = await agent.post('/api/admin/users').send({ email: 'one-too-many@example.com', password: 'temp-pass-1' });
+    assert.equal(full.status, 409);
+    assert.match(full.body.error, /most allowed/);
+  } finally {
+    config.maxUsers = saved;
+  }
+});
+
 test('logout clears the session', async () => {
   await agent.post('/api/auth/logout');
   assert.equal((await agent.get('/api/months/2026-10')).status, 401);

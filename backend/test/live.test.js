@@ -73,7 +73,16 @@ test('a change reaches the same user’s other pages – not the page that made 
   await settle();
   assert.equal(laptop.messages.length, 1);
 
-  for (const p of [laptop, phone, friendPage]) p.ws.close();
+  // The admin (first account) sees who has the app open right now.
+  const { ensureAdmin } = await import('../src/services/ownerMigration.js');
+  await ensureAdmin();
+  const online = async () => Object.fromEntries((await request(server).get('/api/admin/users').set('Cookie', me)).body.users.map((u) => [u.email, u.online]));
+  assert.deepEqual(await online(), { 'me@example.com': true, 'friend@example.com': true });
+  friendPage.ws.close();
+  await settle();
+  assert.deepEqual(await online(), { 'me@example.com': true, 'friend@example.com': false });
+
+  for (const p of [laptop, phone]) p.ws.close();
 });
 
 test('live connections need a signed-in page from this site', async () => {

@@ -36,6 +36,9 @@ try {
     await existing.save();
     console.log(`Password updated for ${email}.`);
   } else {
+    if ((await User.countDocuments()) >= config.maxUsers) {
+      throw new Error(`there are already ${config.maxUsers} logins – the most allowed (MAX_USERS).`);
+    }
     await User.create({ email, phone, passwordHash });
     console.log(`Account created for ${email}. You can now sign in.`);
   }

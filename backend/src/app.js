@@ -10,6 +10,7 @@ import itemRoutes from './routes/items.js';
 import setupRoutes from './routes/setup.js';
 import reportRoutes from './routes/reports.js';
 import aiRoutes from './routes/ai.js';
+import adminRoutes from './routes/admin.js';
 import { config } from './config.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
@@ -59,6 +60,7 @@ export function createApp() {
   app.use('/api', setupRoutes);
   app.use('/api', reportRoutes);
   app.use('/api/ai', aiRoutes);
+  app.use('/api/admin', adminRoutes);
 
   app.use('/api', notFoundHandler);
 

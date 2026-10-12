@@ -73,11 +73,9 @@ your Mac's local data.
 ### Giving friends their own login
 
 Each login has its **own, separate** tracker – friends never see your data, and you don't see theirs in the app.
-For each friend, run the same command with their email and a temporary password:
-
-```bash
-MONGODB_URI="mongodb+srv://..." npm run create-user
-```
+The first account ever created is the **admin**. Signed in as the admin, open **Admin** in the sidebar to add a friend
+(email and/or mobile + a temporary password), see who has signed in, and reset a forgotten password.
+(`npm run create-user` with `MONGODB_URI` still works too.)
 
 They sign in, go to **Profile → Account → Change password**, and start with **Start a blank month**.
 (As the owner of the Atlas database you can technically see everyone's data there – tell them.)

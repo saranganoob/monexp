@@ -12,7 +12,7 @@
     </button>
   </div>
   <div class="navlist">
-    @for (n of nav; track n.path) {
+    @for (n of nav(); track n.path) {
       <a class="navbtn" [routerLink]="n.path" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: !!n.exact }"
         #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null" [attr.aria-label]="n.label" [title]="n.label">
         <app-icon [name]="n.icon" [size]="20" [stroke]="1.8" />

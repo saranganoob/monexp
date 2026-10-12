@@ -23,6 +23,8 @@ export const config = {
   // Claude API (AI features). The key is only ever read here, never logged or sent to the browser.
   anthropicApiKey: env.ANTHROPIC_API_KEY || '',
   anthropicModel: env.ANTHROPIC_MODEL || 'claude-opus-5-5',
+  // Most logins allowed in total (the admin included). Change MAX_USERS and restart to raise it.
+  maxUsers: Number(env.MAX_USERS || 25),
 };
 
 export function assertConfig() {

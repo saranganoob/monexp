@@ -70,5 +70,7 @@ export interface YearView {
   categories: { key: string; label: string; total: number }[];
 }
 
-export interface Account { email: string; phone: string; }
+export interface Account { email: string; phone: string; isAdmin?: boolean; }
+/** A login as the Admin page shows it – never any money data. */
+export interface AdminUser { id: string; email: string; phone: string; isAdmin: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }
 export interface ChangeResult { message: string; undoToken: string; id?: string; }

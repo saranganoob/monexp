@@ -15,7 +15,7 @@ const LONG_SESSION_DAYS = 30;
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 
 const lastTenDigits = (s) => s.replace(/\D/g, '').slice(-10);
-const publicUser = (u) => ({ email: u.email || '', phone: u.phone || '' });
+const publicUser = (u) => ({ email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin) });
 
 /** Email, or the last 10 digits of a mobile number. Throws if it's neither. */
 function readIdentifier(body) {
@@ -26,7 +26,8 @@ function readIdentifier(body) {
   return isEmail ? { email: identifier } : { phone };
 }
 
-function startSession(res, user, remember) {
+async function startSession(res, user, remember) {
+  await User.updateOne({ _id: user._id }, { $set: { lastSignInAt: new Date() } });
   const maxAgeMs = remember ? LONG_SESSION_DAYS * 24 * 60 * 60 * 1000 : undefined; // undefined = until the browser closes
   const token = jwt.sign({ sub: String(user._id) }, config.jwtSecret, { expiresIn: remember ? `${LONG_SESSION_DAYS}d` : '12h' });
   res.cookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: config.cookieSecure, maxAge: maxAgeMs });
@@ -42,7 +43,7 @@ router.post('/login', async (req, res) => {
   const user = await User.findOne(who);
   const ok = await bcrypt.compare(password, user?.passwordHash || DUMMY_HASH);
   if (!user || !ok) throw new HttpError(401, 'That email/mobile and password don’t match.');
-  startSession(res, user, remember);
+  await startSession(res, user, remember);
 });
 
 // ---- OTP sign-in (demo) ----
@@ -88,7 +89,7 @@ router.post('/otp/verify', async (req, res) => {
     throw new HttpError(401, 'That OTP isn’t right. Check it and try again.');
   }
   otpRequests.delete(String(user._id));
-  startSession(res, user, req.body?.remember !== false);
+  await startSession(res, user, req.body?.remember !== false);
 });
 
 router.post('/logout', (_req, res) => {

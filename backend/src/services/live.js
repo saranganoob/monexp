@@ -76,6 +76,9 @@ export function attachLive(server) {
   return wss;
 }
 
+/** True while `userId` has MonEXP open somewhere (any tab or device) – the Admin page's green dot. */
+export const isOnline = (userId) => Boolean(pagesByUser.get(String(userId))?.size);
+
 /** Tells every open page of `userId` that their data changed. `from` = the page that made the change. */
 export function notifyChanged(userId, from) {
   const pages = pagesByUser.get(String(userId));

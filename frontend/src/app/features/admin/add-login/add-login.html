@@ -1,0 +1,23 @@
+<form class="card card--pad" [formGroup]="form" (ngSubmit)="add()">
+  <div>
+    <h2 class="card__title">Add a friend</h2>
+    <p class="card__lead">They get their own empty tracker. Give them a temporary password – they can change it in Profile → Account.</p>
+  </div>
+  <div class="form-grid form-grid--wide">
+    <label><span class="field-label">Email</span><input type="email" class="field" formControlName="email" placeholder="friend@example.com" autocomplete="off"></label>
+    <label><span class="field-label">Mobile number</span>
+      <span class="prefix-input"><span class="prefix">+91</span><input type="tel" class="field num" inputmode="numeric" formControlName="phone" placeholder="10-digit mobile number" autocomplete="off"></span>
+    </label>
+    <label><span class="field-label">Temporary password</span><input type="text" class="field" formControlName="password" placeholder="At least 8 characters" autocomplete="new-password"></label>
+    <button type="submit" class="btn btn--primary" [disabled]="busy() || full()">{{ busy() ? 'Adding…' : 'Add login' }}</button>
+  </div>
+  @if (full()) {
+    <div role="status" class="notice notice--muted">You've reached {{ maxUsers() }} logins – the most allowed. To allow more, raise <strong>MAX_USERS</strong> in Render → Environment.</div>
+  }
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+  @if (share(); as s) {
+    <div role="status" class="notice notice--info">
+      Added. Send your friend: <strong>{{ siteUrl }}</strong> · sign in with <strong>{{ s.login }}</strong> · password <strong>{{ s.password }}</strong>
+    </div>
+  }
+</form>

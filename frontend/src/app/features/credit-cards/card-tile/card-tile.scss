@@ -1,10 +1,10 @@
 :host { display: block; }
 .tile { display: flex; flex-direction: column; }
-.face { padding: 18px 20px; background: var(--navy); color: #fff; display: flex; flex-direction: column; gap: 10px;
+.face { padding: 18px 20px; background: var(--accent-grad); color: var(--on-accent); display: flex; flex-direction: column; gap: 10px;
   h3 { font-size: 16px; font-weight: 800; } }
-.face__label { font-size: 12px; color: var(--navy-ink); font-weight: 600; }
+.face__label { font-size: 12px; color: var(--on-accent-2); font-weight: 600; }
 .face__total { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
 .wrap { flex-wrap: wrap; }
 .body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
-.upcoming { border: 1px dashed var(--line-dashed); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-.totals { border-top: 1px solid var(--line-soft); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.upcoming { border: 1px dashed var(--hair-3); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.totals { border-top: 1px solid var(--hair); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }

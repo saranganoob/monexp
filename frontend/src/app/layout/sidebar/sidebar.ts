@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AppStore } from '../../core/app-store';
 import { AuthService } from '../../core/auth/auth.service';
@@ -16,6 +16,8 @@ interface NavItem { path: string; label: string; icon: IconName; exact?: boolean
 export class Sidebar {
   protected store = inject(AppStore);
   protected auth = inject(AuthService);
+  /** Icon-only rail on wide screens (the toggle is hidden on phones). */
+  protected readonly collapsed = signal(false);
   protected readonly nav: NavItem[] = [
     { path: '/', label: 'Overview', icon: 'overview', exact: true },
     { path: '/pay', label: 'Need to pay', icon: 'checklist', badge: true },

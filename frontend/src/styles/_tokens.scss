@@ -1,57 +1,137 @@
-// Design tokens – the colours, radii and shadows of the MonEXP design.
+// Design tokens – the colours, radii and shadows of the MonEXP "glass" design.
+// Light theme on :root; the dark theme overrides it when <html data-theme="dark"> (see ThemeService).
 :root {
-  --font: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI', Roboto, system-ui, sans-serif;
+  color-scheme: light;
 
   // text
-  --ink: #111827;
-  --ink-2: #374151;
-  --muted: #4B5563;
-  --muted-2: #5B6474;
-  --faint: #6B7280;
+  --ink: #0F172A;
+  --ink-2: #32394A;
+  --muted: #5C6272;
 
-  // surfaces & lines
-  --bg: #F4F5F7;
-  --surface: #fff;
-  --surface-alt: #F8F9FB;
-  --line: #E3E6EB;
-  --line-soft: #EEF0F3;
-  --line-input: #CDD3DB;
-  --line-btn: #D5DAE1;
-  --line-dashed: #B6BDC7;
-  --hover: #F1F3F6;
+  // lines
+  --hair: rgba(15, 23, 42, 0.1);
+  --hair-2: rgba(15, 23, 42, 0.16);
+  --hair-3: rgba(15, 23, 42, 0.32);
 
-  // brand
-  --primary: #1D4ED8;
-  --primary-dark: #1E40AF;
-  --primary-soft: #E8EEFC;
-  --primary-tint: #F3F6FD;
-  --primary-ink: #1E3A8A;
-  --navy: #102A6B;
-  --navy-ink: #C9D6F5;
-  --navy-muted: #9FB2E4;
-  --incoming: #2F5BD3;
-  --bar-budget: #BFD0F7;
+  // glass surfaces
+  --surface: rgba(255, 255, 255, 0.55);
+  --surface-strong: rgba(255, 255, 255, 0.67);
+  --surface-solid: #F1F3FD;
+  --sub: rgba(255, 255, 255, 0.32);
+  --field: rgba(255, 255, 255, 0.5);
+  --sel: rgba(255, 255, 255, 0.82);
+  --stroke: rgba(255, 255, 255, 0.65);
+  --blur: blur(28px) saturate(180%);
+  --blur-sm: blur(14px) saturate(170%);
+  --blur-lg: blur(39px) saturate(190%);
+  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 40%);
+  --spec: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --lift: 0 1px 1px rgba(15, 23, 42, .04), 0 14px 40px -14px rgba(30, 41, 99, .22);
+  --lift-lg: 0 30px 80px -20px rgba(30, 41, 99, .4);
+
+  // accent (blue)
+  --accent: #235EDF;
+  --accent-grad: linear-gradient(180deg, #356BE2, #1E51C0);
+  --accent-shadow: 0 8px 20px -8px rgba(35, 94, 223, 0.6), inset 0 1px 0 rgba(255, 255, 255, .3);
+  --accent-ring: rgba(35, 94, 223, 0.28);
+  --accent-ink: #2157CD;
+  --on-accent: #FFFFFF;
+  --on-accent-2: #CED9F1;
 
   // status
-  --green: #0B7A55;
-  --green-ink: #0B6B4B;
-  --green-soft: #E3F4EC;
+  --ok: #0B7A55;
+  --ok-bg: #DCF3E8;
+  --ok-fg: #0B6B4B;
   --amber: #F2B544;
-  --amber-ink: #7A4100;
-  --amber-soft: #FDF1DC;
-  --amber-track: #F6E3BC;
-  --red: #A3201A;
-  --red-soft: #FDE8E6;
-  --orange: #9A3412;
-  --orange-strong: #C2410C;
-  --orange-ink: #7C2D12;
-  --orange-soft: #FFF7ED;
-  --orange-pill: #FFEDD5;
-  --orange-avatar: #FDEDE3;
-  --orange-line: #FBD9B5;
+  --warn-bg: #FDEFD3;
+  --warn-fg: #7A4100;
+  --warn-track: #F6E3BC;
+  --bad-bg: #FDE3E0;
+  --bad-fg: #A3201A;
+  --orange: #C2410C;
+  --orange-bg: #FFE9DA;
+  --orange-fg: #9A3412;
+  --orange-border: #FBD9B5;
+  --info-bg: #E3EAFD;
+  --info-fg: #1E3A8A;
+  --info-border: #C7D4F4;
+
+  // charts
+  --data-1: #1E3A8A;
+  --data-2: #2F5BD3;
+  --data-3: #5B7FE0;
+  --data-4: #8EA8EC;
+  --data-5: #BFD0F7;
+
+  // page background
+  --mesh:
+    radial-gradient(1000px 700px at 72% 28%, rgba(35, 94, 223, 0.26), rgba(255, 255, 255, 0) 60%),
+    radial-gradient(1100px 760px at -5% -10%, #C9D8FF 0%, rgba(201, 216, 255, 0) 60%),
+    radial-gradient(900px 700px at 105% -5%, #EBD9FF 0%, rgba(235, 217, 255, 0) 58%),
+    radial-gradient(950px 900px at 105% 105%, #C2EBFF 0%, rgba(194, 235, 255, 0) 58%),
+    radial-gradient(800px 700px at -5% 105%, #FFE3E8 0%, rgba(255, 227, 232, 0) 58%),
+    #EEF2FA;
 
   --radius-sm: 10px;
   --radius: 12px;
-  --radius-lg: 16px;
-  --shadow-pop: 0 24px 60px rgba(17, 24, 39, 0.3);
+  --radius-field: 14px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --ink: #F8FAFC;
+  --ink-2: #CED0D7;
+  --muted: #9A9DAB;
+
+  --hair: rgba(248, 250, 252, 0.1);
+  --hair-2: rgba(248, 250, 252, 0.16);
+  --hair-3: rgba(248, 250, 252, 0.32);
+
+  --surface: rgba(22, 28, 46, 0.55);
+  --surface-strong: rgba(22, 28, 46, 0.67);
+  --surface-solid: #181E3A;
+  --sub: rgba(255, 255, 255, 0.07);
+  --field: rgba(255, 255, 255, 0.08);
+  --sel: rgba(255, 255, 255, 0.16);
+  --stroke: rgba(255, 255, 255, 0.14);
+  --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 40%);
+  --spec: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --lift: 0 1px 1px rgba(0, 0, 0, .3), 0 18px 44px -16px rgba(0, 0, 0, .65);
+  --lift-lg: 0 30px 80px -20px rgba(0, 0, 0, .75);
+
+  --accent-shadow: 0 8px 20px -8px rgba(35, 94, 223, 0.6), inset 0 1px 0 rgba(255, 255, 255, .3);
+  --accent-ink: #6C94E9;
+
+  --ok: #10B981;
+  --ok-bg: #0E3B2C;
+  --ok-fg: #6EE7B7;
+  --warn-bg: #3D2E0B;
+  --warn-fg: #FCD34D;
+  --warn-track: #4A3A14;
+  --bad-bg: #4A1515;
+  --bad-fg: #FCA5A5;
+  --orange: #F97316;
+  --orange-bg: #43230F;
+  --orange-fg: #FDBA74;
+  --orange-border: #7C3A12;
+  --info-bg: #1B2A55;
+  --info-fg: #BFD3FE;
+  --info-border: #2C3F78;
+
+  --data-1: #93B4FF;
+  --data-2: #6D8FF0;
+  --data-3: #4F6FD6;
+  --data-4: #3A55B0;
+  --data-5: #2A3F80;
+
+  --mesh:
+    radial-gradient(1000px 700px at 72% 28%, rgba(35, 94, 223, 0.32), rgba(0, 0, 0, 0) 60%),
+    radial-gradient(900px 700px at -5% -10%, rgba(79, 70, 229, .42), rgba(0, 0, 0, 0) 60%),
+    radial-gradient(900px 800px at 105% 105%, rgba(14, 116, 144, .38), rgba(0, 0, 0, 0) 58%),
+    radial-gradient(800px 700px at -5% 105%, rgba(157, 23, 77, .28), rgba(0, 0, 0, 0) 58%),
+    #0A0F24;
 }

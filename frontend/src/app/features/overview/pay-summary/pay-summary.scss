@@ -3,7 +3,7 @@
 .parts { display: flex; flex-wrap: wrap; gap: 20px 32px; }
 .key { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
 .dot { width: 10px; height: 10px; border-radius: 3px; }
-.key--paid { color: var(--green-ink); .dot { background: var(--green); } }
-.key--unpaid { color: var(--amber-ink); .dot { background: var(--amber); } }
-.key--skipped { color: var(--muted); .dot { border: 2px dashed #9CA3AF; } }
+.key--paid { color: var(--ok-fg); .dot { background: var(--ok); } }
+.key--unpaid { color: var(--warn-fg); .dot { background: var(--amber); } }
+.key--skipped { color: var(--muted); .dot { border: 2px dashed var(--hair-3); } }
 .value { font-size: 18px; font-weight: 700; margin-top: 2px; }

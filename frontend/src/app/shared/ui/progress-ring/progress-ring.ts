@@ -1,7 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { BarTone } from '../progress-bar/progress-bar';
 
-const COLORS: Record<BarTone, string> = { green: '#0B7A55', navy: '#102A6B', friend: '#C2410C', incoming: '#2F5BD3' };
+const COLORS: Record<BarTone, string> = { green: 'var(--ok)', navy: 'var(--data-1)', friend: 'var(--orange)', incoming: 'var(--data-2)' };
 
 /** Circular progress with a label in the middle, e.g. "34/40". */
 @Component({
@@ -15,6 +15,6 @@ export class ProgressRing {
   readonly text = input('');
   protected readonly background = computed(() => {
     const pct = Math.max(0, Math.min(100, Math.round(this.value())));
-    return `conic-gradient(${COLORS[this.tone()]} 0 ${pct}%, #E3E6EB ${pct}% 100%)`;
+    return `conic-gradient(${COLORS[this.tone()]} 0 ${pct}%, var(--hair) ${pct}% 100%)`;
   });
 }

@@ -3,11 +3,11 @@
 .shell { display: flex; min-height: 100vh; }
 .main { flex: 1; min-width: 0; padding: 28px 32px 120px; }
 .inner { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
-.load-error { padding: 16px 20px; color: var(--red); font-weight: 600; background: var(--red-soft); border-color: #F5C2BD; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.load-error { padding: 16px 20px; color: var(--bad-fg); font-weight: 600; background: var(--bad-bg); border-color: transparent; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 @media (max-width: bp.$small) { .main { padding: 24px 24px 120px; } }
 @media (max-width: bp.$tablet) {
   .shell { flex-direction: column; }
-  .main { padding: 16px 16px 120px; }
-  app-sidebar { position: sticky; top: 0; z-index: 15; }
+  .main { padding: 16px 14px 120px; }
+  app-sidebar { position: sticky; top: 10px; z-index: 15; }
 }

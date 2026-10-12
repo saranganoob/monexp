@@ -1,18 +1,23 @@
-<nav class="side" aria-label="Main">
+<nav class="side" [class.collapsed]="collapsed()" aria-label="Main">
   <div class="brand">
     <div class="logo">₹</div>
     <div class="brand-text">
       <div class="brand-name">MonEXP</div>
       <div class="brand-tag">Monthly money, sorted</div>
     </div>
+    <button type="button" class="btn btn--ghost side-toggle" (click)="collapsed.set(!collapsed())"
+      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!collapsed()"
+      [title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+      <app-icon [name]="collapsed() ? 'expand-right' : 'collapse-left'" />
+    </button>
   </div>
   <div class="navlist">
     @for (n of nav; track n.path) {
       <a class="navbtn" [routerLink]="n.path" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: !!n.exact }"
-        #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null">
+        #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null" [attr.aria-label]="n.label" [title]="n.label">
         <app-icon [name]="n.icon" [size]="20" [stroke]="1.8" />
-        <span class="grow">{{ n.label }}</span>
-        @if (n.badge && store.unpaidCount()) { <span class="count-badge num">{{ store.unpaidCount() }}</span> }
+        <span class="grow nav-label">{{ n.label }}</span>
+        @if (n.badge && store.unpaidCount()) { <span class="count-badge nav-badge num">{{ store.unpaidCount() }}</span> }
       </a>
     }
   </div>

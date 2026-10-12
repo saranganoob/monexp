@@ -1,6 +1,6 @@
-.in { color: var(--primary); }
-.out { color: var(--orange); }
-.add { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; padding: 16px 20px; background: var(--surface-alt); border-top: 1px solid var(--line-soft); }
+.in { color: var(--accent-ink); }
+.out { color: var(--orange-fg); }
+.add { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; padding: 16px 20px; background: var(--sub); border-top: 1px solid var(--hair); }
 .who { flex: 2 1 200px; }
 .amt { flex: 1 1 120px; }
 .span-row { flex-basis: 100%; }

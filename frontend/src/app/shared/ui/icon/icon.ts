@@ -22,6 +22,10 @@ const PATHS = {
   sparkles: 'M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8zM19 15l.8 2 2 .8-2 .8L19 21l-.8-2.4-2-.8 2-.8z',
   send: 'M5 12h14M13 6l6 6-6 6',
   refresh: 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',
+  sun: 'M12 4V2M12 22v-2M4.9 4.9 3.5 3.5M20.5 20.5l-1.4-1.4M4 12H2M22 12h-2M4.9 19.1l-1.4 1.4M20.5 3.5l-1.4 1.4M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z',
+  moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z',
+  'collapse-left': 'M11 6l-6 6 6 6M19 6l-6 6 6 6',
+  'expand-right': 'M13 6l6 6-6 6M5 6l6 6-6 6',
 } as const;
 
 export type IconName = keyof typeof PATHS;

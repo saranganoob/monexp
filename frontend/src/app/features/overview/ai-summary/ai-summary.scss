@@ -1,8 +1,8 @@
 :host { display: block; }
-.box { padding: 18px 24px; display: flex; flex-direction: column; gap: 10px; border-color: #C7D4F4; background: linear-gradient(180deg, var(--primary-tint), var(--surface)); }
+.box { padding: 18px 24px; display: flex; flex-direction: column; gap: 10px; border-color: var(--info-border); background: linear-gradient(180deg, var(--info-bg), var(--surface)); }
 .title { display: flex; align-items: center; gap: 10px; }
-.logo { width: 30px; height: 30px; border-radius: 9px; background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; }
+.logo { width: 30px; height: 30px; border-radius: 9px; background: var(--info-bg); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; }
 .text { margin: 0; line-height: 1.6; font-size: 15px; white-space: pre-line;
   &.is-busy { opacity: .5; } }
 .meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-.stale { color: var(--orange); font-weight: 600; }
+.stale { color: var(--orange-fg); font-weight: 600; }

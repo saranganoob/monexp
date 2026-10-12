@@ -1,0 +1,14 @@
+<section class="card panel">
+  <div>
+    <h2 id="themeLbl" class="card__title">Theme</h2>
+    <p class="card__lead">Choose how MonEXP looks. The change applies instantly.</p>
+  </div>
+  <div role="radiogroup" aria-labelledby="themeLbl" class="seg-group">
+    @for (o of options; track o.mode) {
+      <button type="button" role="radio" class="seg option" [class.is-on]="theme.mode() === o.mode" [attr.aria-checked]="theme.mode() === o.mode"
+        (click)="theme.mode.set(o.mode)">
+        <app-icon [name]="o.icon" />{{ o.label }}
+      </button>
+    }
+  </div>
+</section>

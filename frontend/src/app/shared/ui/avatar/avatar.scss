@@ -2,7 +2,7 @@
 .avatar { border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
 .avatar--md { width: 40px; height: 40px; }
 .avatar--sm { width: 32px; height: 32px; font-size: 13px; }
-.avatar--blue { background: var(--primary-soft); color: var(--primary); }
-.avatar--orange { background: var(--orange-avatar); color: var(--orange); }
-.avatar--grey { background: var(--line-soft); color: var(--muted); }
-.avatar--navy { background: var(--navy); color: #fff; }
+.avatar--blue { background: var(--info-bg); color: var(--accent-ink); }
+.avatar--orange { background: var(--orange-bg); color: var(--orange-fg); }
+.avatar--grey { background: var(--hair); color: var(--muted); }
+.avatar--navy { background: var(--accent-grad); color: var(--on-accent); box-shadow: inset 0 1px 0 var(--sub); }

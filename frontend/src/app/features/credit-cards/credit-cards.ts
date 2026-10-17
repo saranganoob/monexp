@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AppStore } from '../../core/app-store';
+import { isInstalledApp } from '../../core/utils/platform';
 import { InrPipe } from '../../shared/pipes/inr.pipe';
 import { AddEmiForm } from './add-emi-form/add-emi-form';
 import { CardTile } from './card-tile/card-tile';
@@ -14,6 +15,7 @@ import { FriendEmis } from './friend-emis/friend-emis';
 })
 export class CreditCardsPage {
   private store = inject(AppStore);
+  protected readonly inApp = isInstalledApp();
   protected readonly month = this.store.month;
   /** Card picked with "Add EMI to this card" – the form below pre-selects it. */
   protected readonly presetCard = signal<{ cardId: string } | null>(null);

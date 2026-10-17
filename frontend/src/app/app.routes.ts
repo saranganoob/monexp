@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard, authGuard, loginGuard } from './core/auth/auth.guards';
+import { adminGuard, authGuard, loginGuard, webOnlyGuard } from './core/auth/auth.guards';
 import { PageMeta } from './layout/page-header/page-header';
 
 /** Route data for pages inside the shell – drives the page header. */
@@ -47,11 +47,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/year-view/year-view').then((m) => m.YearViewPage),
       },
       {
-        path: 'profile', title: 'Profile · MonEXP', ...page('Profile', 'Account, cards & people', 'none', false),
+        path: 'profile', title: 'Profile · MonEXP', canActivate: [webOnlyGuard], ...page('Profile', 'Account, cards & people', 'none', false),
         loadComponent: () => import('./features/profile/profile').then((m) => m.ProfilePage),
       },
       {
-        path: 'admin', title: 'Admin · MonEXP', canActivate: [adminGuard], ...page('Admin', 'Logins for you and your friends', 'none', false),
+        path: 'admin', title: 'Admin · MonEXP', canActivate: [webOnlyGuard, adminGuard], ...page('Admin', 'Logins for you and your friends', 'none', false),
         loadComponent: () => import('./features/admin/admin').then((m) => m.AdminPage),
       },
     ],

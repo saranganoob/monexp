@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
+import { isInstalledApp } from '../utils/platform';
 
 /** Pages that need you to be signed in. */
 export const authGuard: CanActivateFn = async () => {
@@ -14,6 +15,9 @@ export const adminGuard: CanActivateFn = async () => {
   await auth.check();
   return auth.account()?.isAdmin || inject(Router).createUrlTree(['/']);
 };
+
+/** Pages kept to the website (Profile, Admin) – the installed phone app goes to Overview instead. */
+export const webOnlyGuard: CanActivateFn = () => !isInstalledApp() || inject(Router).createUrlTree(['/']);
 
 /** The sign-in page – skip it if you're already signed in. */
 export const loginGuard: CanActivateFn = async () => {

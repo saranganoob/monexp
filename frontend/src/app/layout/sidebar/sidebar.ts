@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AppStore } from '../../core/app-store';
 import { AuthService } from '../../core/auth/auth.service';
 import { Icon, IconName } from '../../shared/ui/icon/icon';
+import { isInstalledApp } from '../../core/utils/platform';
 
 interface NavItem { path: string; label: string; icon: IconName; exact?: boolean; badge?: boolean; admin?: boolean; }
 
@@ -28,6 +29,7 @@ export class Sidebar {
     { path: '/year', label: 'Year view', icon: 'chart' },
     { path: '/admin', label: 'Admin', icon: 'shield', admin: true },
   ];
-  /** Admin-only items are hidden from everyone else. */
-  protected readonly nav = computed(() => this.allNav.filter((n) => !n.admin || this.auth.account()?.isAdmin));
+  private readonly inApp = isInstalledApp();
+  /** Admin-only items are hidden from everyone else, and from the installed phone app (web-only). */
+  protected readonly nav = computed(() => this.allNav.filter((n) => !n.admin || (this.auth.account()?.isAdmin && !this.inApp)));
 }

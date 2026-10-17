@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AppStore } from '../../../core/app-store';
 import { Api } from '../../../core/api.service';
 import { parseNum } from '../../../core/utils/format';
+import { isInstalledApp } from '../../../core/utils/platform';
 import { firstError, notBlank, rupees, wholeNumber } from '../../../core/forms/validators';
 import { YmPipe } from '../../../shared/pipes/ym.pipe';
 
@@ -16,6 +17,7 @@ import { YmPipe } from '../../../shared/pipes/ym.pipe';
   styleUrl: './add-emi-form.scss',
 })
 export class AddEmiForm {
+  protected readonly inApp = isInstalledApp();
   protected store = inject(AppStore);
   private api = inject(Api);
   private fb = inject(NonNullableFormBuilder);

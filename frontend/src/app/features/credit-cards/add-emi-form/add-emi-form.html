@@ -20,7 +20,11 @@
           @for (p of store.people(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
         </select>
       </label>
-      <div><a class="btn btn--ghost btn--sm" routerLink="/profile" [queryParams]="{ tab: 'persons' }">+ Add a new person</a></div>
+      @if (inApp) {
+        <div class="field-hint">To add someone new, use the MonEXP website (Profile → People).</div>
+      } @else {
+        <div><a class="btn btn--ghost btn--sm" routerLink="/profile" [queryParams]="{ tab: 'persons' }">+ Add a new person</a></div>
+      }
     }
     <label><span class="field-label">What was bought</span><input id="eItem" class="field" formControlName="item" placeholder="e.g. iPhone"></label>
     <label><span class="field-label">EMI per month (₹)</span><input class="field num" inputmode="numeric" formControlName="monthly" placeholder="0"></label>

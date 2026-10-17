@@ -6,7 +6,9 @@
   background: var(--surface); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
   border: 1px solid var(--stroke); border-radius: var(--radius-xl); box-shadow: var(--lift), var(--spec);
   padding: 18px 12px; display: flex; flex-direction: column; gap: 22px; overflow-y: auto; overflow-x: hidden;
-  transition: width .28s ease, padding .28s ease; }
+  transition: width .28s ease, padding .28s ease;
+  scrollbar-width: none; // still scrolls if it must, but without a visible bar
+  &::-webkit-scrollbar { display: none; } }
 .brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; flex: none; }
 .logo { width: 36px; height: 36px; flex: none; border-radius: 11px; background: var(--accent-grad); box-shadow: var(--accent-shadow); color: var(--on-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
 .brand-name { font-weight: 800; font-size: 18px; letter-spacing: -0.01em; }
@@ -33,6 +35,13 @@
 @media (prefers-reduced-transparency: reduce) { .side { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
 @media (max-width: bp.$small) { .side { width: 212px; } }
+// Short screens (e.g. Windows laptops with display scaling): a tighter menu so it fits without scrolling.
+@media (max-height: 760px) and (min-width: bp.$tablet + 1) {
+  .side { gap: 14px; padding-top: 14px; padding-bottom: 14px; }
+  .navlist { gap: 2px; }
+  .navbtn { min-height: 40px; }
+  .foot { padding: 10px 14px; }
+}
 @media (max-width: bp.$tablet) {
   .side, .side.collapsed { width: auto; height: auto; margin: 10px 10px 0; flex-direction: row; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 22px; z-index: 15; overflow: visible; }
   .side.collapsed .brand { flex-direction: row; }

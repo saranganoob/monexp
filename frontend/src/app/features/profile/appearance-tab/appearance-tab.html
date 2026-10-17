@@ -12,3 +12,31 @@
     }
   </div>
 </section>
+
+<section class="card panel">
+  <div>
+    <h2 id="accentLbl" class="card__title">Accent colour</h2>
+    <p class="card__lead">Used for buttons, the selected menu item, links and the budget card. Text on it adjusts so it stays readable.</p>
+  </div>
+  <div role="radiogroup" aria-labelledby="accentLbl" class="swatches">
+    @for (p of presets; track p.hex) {
+      <button type="button" role="radio" class="swatch" [style.--swatch]="p.hex" [class.is-on]="theme.accent() === p.hex"
+        [attr.aria-checked]="theme.accent() === p.hex" [attr.aria-label]="p.name" [title]="p.name" (click)="theme.accent.set(p.hex)">
+        @if (theme.accent() === p.hex) { <app-icon name="check" [stroke]="3" /> }
+      </button>
+    }
+    <!-- Any colour: the browser's own colour palette. -->
+    <label class="swatch swatch--custom" [class.is-on]="isCustom()" [style.--swatch]="isCustom() ? theme.accent() : null" title="Custom colour">
+      <input type="color" class="sr" [value]="theme.accent()" (input)="pickCustom($any($event.target).value)" aria-label="Custom colour">
+      @if (isCustom()) { <app-icon name="check" [stroke]="3" /> } @else { <app-icon name="plus" [stroke]="2.4" /> }
+    </label>
+  </div>
+  <div class="preview">
+    <span class="small muted">Preview</span>
+    <button type="button" class="btn btn--primary btn--sm" tabindex="-1">Mark paid</button>
+    <span class="link-like">See all bills</span>
+    @if (theme.accent() !== defaultAccent) {
+      <button type="button" class="btn btn--ghost btn--sm reset" (click)="theme.accent.set(defaultAccent)">Back to blue</button>
+    }
+  </div>
+</section>

@@ -30,7 +30,7 @@
   --lift: 0 1px 1px rgba(15, 23, 42, .04), 0 14px 40px -14px rgba(30, 41, 99, .22);
   --lift-lg: 0 30px 80px -20px rgba(30, 41, 99, .4);
 
-  // accent (blue)
+  // accent (blue by default – Profile → Appearance can change it; see ThemeService)
   --accent: #235EDF;
   --accent-grad: linear-gradient(180deg, #356BE2, #1E51C0);
   --accent-shadow: 0 8px 20px -8px rgba(35, 94, 223, 0.6), inset 0 1px 0 rgba(255, 255, 255, .3);
@@ -38,6 +38,7 @@
   --accent-ink: #2157CD;
   --on-accent: #FFFFFF;
   --on-accent-2: #CED9F1;
+  --accent-glow: rgba(35, 94, 223, 0.26); // the coloured light in the page background
 
   // status
   --ok: #0B7A55;
@@ -66,7 +67,7 @@
 
   // page background
   --mesh:
-    radial-gradient(1000px 700px at 72% 28%, rgba(35, 94, 223, 0.26), rgba(255, 255, 255, 0) 60%),
+    radial-gradient(1000px 700px at 72% 28%, var(--accent-glow), rgba(255, 255, 255, 0) 60%),
     radial-gradient(1100px 760px at -5% -10%, #C9D8FF 0%, rgba(201, 216, 255, 0) 60%),
     radial-gradient(900px 700px at 105% -5%, #EBD9FF 0%, rgba(235, 217, 255, 0) 58%),
     radial-gradient(950px 900px at 105% 105%, #C2EBFF 0%, rgba(194, 235, 255, 0) 58%),
@@ -127,6 +128,7 @@
 
   --accent-shadow: 0 8px 20px -8px rgba(35, 94, 223, 0.6), inset 0 1px 0 rgba(255, 255, 255, .3);
   --accent-ink: #6C94E9;
+  --accent-glow: rgba(35, 94, 223, 0.32);
 
   --ok: #10B981;
   --ok-bg: #0E3B2C;
@@ -151,7 +153,7 @@
   --data-5: #2A3F80;
 
   --mesh:
-    radial-gradient(1000px 700px at 72% 28%, rgba(35, 94, 223, 0.32), rgba(0, 0, 0, 0) 60%),
+    radial-gradient(1000px 700px at 72% 28%, var(--accent-glow), rgba(0, 0, 0, 0) 60%),
     radial-gradient(900px 700px at -5% -10%, rgba(79, 70, 229, .42), rgba(0, 0, 0, 0) 60%),
     radial-gradient(900px 800px at 105% 105%, rgba(14, 116, 144, .38), rgba(0, 0, 0, 0) 58%),
     radial-gradient(800px 700px at -5% 105%, rgba(157, 23, 77, .28), rgba(0, 0, 0, 0) 58%),

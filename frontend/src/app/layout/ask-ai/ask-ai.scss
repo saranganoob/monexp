@@ -40,5 +40,8 @@
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .panel { background: var(--surface-solid); } }
 @media (prefers-reduced-transparency: reduce) { .panel { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
-@media (max-width: bp.$tablet) { .fab { right: 16px; bottom: 16px; } .panel { inset: 0; width: 100%; max-width: 100%; border-radius: 0; } }
+@media (max-width: bp.$tablet) {
+  .fab { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .panel { inset: 0; width: 100%; max-width: 100%; border-radius: 0; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+}
 @media (max-width: bp.$phone) { .fab__label { display: none; } .fab { width: 56px; padding: 0; } }

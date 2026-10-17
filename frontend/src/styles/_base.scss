@@ -3,7 +3,9 @@
 * { box-sizing: border-box; }
 html { background: #EEF2FA; }
 html[data-theme='dark'] { background: #0A0F24; }
-body { margin: 0; min-height: 100vh; background: var(--mesh); background-attachment: fixed; color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+// Installed as a phone app, the page runs under the notch / status bar: keep content out of those areas.
+// (env(safe-area-inset-*) is 0 in a normal browser tab.)
+body { padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); margin: 0; min-height: 100vh; background: var(--mesh); background-attachment: fixed; color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
 a { color: var(--accent-ink); }
 a:hover { color: var(--accent-ink); }
 h1, h2, h3 { margin: 0; letter-spacing: -.02em; }

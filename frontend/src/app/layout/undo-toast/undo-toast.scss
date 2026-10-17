@@ -15,4 +15,4 @@
 @media (prefers-reduced-motion: reduce) {
   .toast, .toast.is-leaving { transform: translateX(-50%) !important; transition: opacity .15s ease !important; }
 }
-@media (max-width: bp.$tablet) { .toast { width: calc(100% - 32px); bottom: 84px; } }
+@media (max-width: bp.$tablet) { .toast { width: calc(100% - 32px); bottom: calc(84px + env(safe-area-inset-bottom)); } }

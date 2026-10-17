@@ -9,5 +9,5 @@
 @media (max-width: bp.$tablet) {
   .shell { flex-direction: column; }
   .main { padding: 16px 14px 120px; }
-  app-sidebar { position: sticky; top: 10px; z-index: 15; }
+  app-sidebar { position: sticky; top: calc(10px + env(safe-area-inset-top)); z-index: 15; }
 }

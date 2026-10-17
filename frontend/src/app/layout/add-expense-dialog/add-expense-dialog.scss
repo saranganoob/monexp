@@ -2,7 +2,8 @@
 // The host fades too – Angular waits for that before removing the dialog.
 :host { display: block; transition: opacity var(--exit-dur) ease-in; }
 :host(.is-leaving) { opacity: 0; }
-.backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.28); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); z-index: 40; display: flex; align-items: flex-start; justify-content: center; padding: 5vh 12px; overflow-y: auto; }
+.backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.28); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); z-index: 40; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto;
+  padding: max(5vh, calc(env(safe-area-inset-top) + 12px)) 12px calc(12px + env(safe-area-inset-bottom)); }
 .dialog { width: 100%; max-width: 580px; padding: 26px; border-radius: var(--radius-xl); display: flex; flex-direction: column; gap: 16px;
   background: var(--surface-strong); box-shadow: 0 40px 90px -24px rgba(30, 41, 99, 0.5), var(--spec); }
 .top { align-items: flex-start; }

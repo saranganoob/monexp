@@ -1,12 +1,12 @@
 <section class="card panel">
   <div>
     <h2 id="themeLbl" class="card__title">Theme</h2>
-    <p class="card__lead">Choose how MonEXP looks. The change applies instantly.</p>
+    <p class="card__lead">Choose how MonEXP looks. Saved to your account.</p>
   </div>
   <div role="radiogroup" aria-labelledby="themeLbl" class="seg-group">
     @for (o of options; track o.mode) {
       <button type="button" role="radio" class="seg option" [class.is-on]="theme.mode() === o.mode" [attr.aria-checked]="theme.mode() === o.mode"
-        (click)="theme.mode.set(o.mode)">
+        (click)="theme.setMode(o.mode)">
         <app-icon [name]="o.icon" />{{ o.label }}
       </button>
     }
@@ -16,12 +16,12 @@
 <section class="card panel">
   <div>
     <h2 id="accentLbl" class="card__title">Accent colour</h2>
-    <p class="card__lead">Used for buttons, the selected menu item, links and the budget card. Text on it adjusts so it stays readable.</p>
+    <p class="card__lead">Used for buttons, the selected menu item, links and the budget card. Saved to your account, so it follows you to every device.</p>
   </div>
   <div role="radiogroup" aria-labelledby="accentLbl" class="swatches">
     @for (p of presets; track p.hex) {
       <button type="button" role="radio" class="swatch" [style.--swatch]="p.hex" [class.is-on]="theme.accent() === p.hex"
-        [attr.aria-checked]="theme.accent() === p.hex" [attr.aria-label]="p.name" [title]="p.name" (click)="theme.accent.set(p.hex)">
+        [attr.aria-checked]="theme.accent() === p.hex" [attr.aria-label]="p.name" [title]="p.name" (click)="theme.setAccent(p.hex)">
         @if (theme.accent() === p.hex) { <app-icon name="check" [stroke]="3" /> }
       </button>
     }
@@ -36,7 +36,7 @@
     <button type="button" class="btn btn--primary btn--sm" tabindex="-1">Mark paid</button>
     <span class="link-like">See all bills</span>
     @if (theme.accent() !== defaultAccent) {
-      <button type="button" class="btn btn--ghost btn--sm reset" (click)="theme.accent.set(defaultAccent)">Back to blue</button>
+      <button type="button" class="btn btn--ghost btn--sm reset" (click)="theme.setAccent(defaultAccent)">Back to blue</button>
     }
   </div>
 </section>

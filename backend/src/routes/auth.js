@@ -15,7 +15,10 @@ const LONG_SESSION_DAYS = 30;
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 
 const lastTenDigits = (s) => s.replace(/\D/g, '').slice(-10);
-const publicUser = (u) => ({ email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin) });
+const publicUser = (u) => ({
+  email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin),
+  prefs: { theme: u.prefs?.theme ?? null, accent: u.prefs?.accent ?? null },
+});
 
 /** Email, or the last 10 digits of a mobile number. Throws if it's neither. */
 function readIdentifier(body) {
@@ -124,6 +127,23 @@ router.patch('/me', requireAuth, async (req, res) => {
   user.set(update);
   if (!user.email && !user.phone) throw badRequest('Keep at least an email or a phone number so you can sign in.');
   await user.save();
+  res.json(publicUser(user));
+});
+
+// Look & feel (light/dark, accent colour) – saved per person so it follows them to every device.
+router.patch('/prefs', requireAuth, async (req, res) => {
+  const set = {};
+  if (req.body?.theme !== undefined) {
+    if (!['light', 'dark'].includes(req.body.theme)) throw badRequest('Theme must be light or dark.');
+    set['prefs.theme'] = req.body.theme;
+  }
+  if (req.body?.accent !== undefined) {
+    const accent = String(req.body.accent).toUpperCase();
+    if (!/^#[0-9A-F]{6}$/.test(accent)) throw badRequest('Accent must be a colour like #235EDF.');
+    set['prefs.accent'] = accent;
+  }
+  const user = await User.findByIdAndUpdate(req.userId, { $set: set }, { new: true, runValidators: true }).lean();
+  if (!user) throw notFound('Account not found.');
   res.json(publicUser(user));
 });
 

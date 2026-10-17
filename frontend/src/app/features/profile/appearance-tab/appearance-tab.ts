@@ -21,6 +21,6 @@ export class AppearanceTab {
   protected readonly isCustom = computed(() => !this.presets.some((p) => p.hex === this.theme.accent()));
 
   protected pickCustom(value: string) {
-    if (/^#[0-9a-f]{6}$/i.test(value)) this.theme.accent.set(value.toUpperCase());
+    if (/^#[0-9a-f]{6}$/i.test(value)) this.theme.setAccent(value);
   }
 }

@@ -301,6 +301,24 @@ test('each account only sees its own data', async () => {
   assert.equal((await agent.get('/api/months/2026-10')).body.bills[0].status, myBill.status);
 });
 
+test('look & feel is saved per account', async () => {
+  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null });
+  assert.equal((await agent.patch('/api/auth/prefs').send({ theme: 'purple' })).status, 400);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ accent: 'red' })).status, 400);
+  const res = await agent.patch('/api/auth/prefs').send({ theme: 'dark', accent: '#10b981' });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981' });
+  // Changing one leaves the other as it was.
+  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981' });
+  // A fresh sign-in (another device) gets them back; another account has its own.
+  const other = request.agent(app);
+  await other.post('/api/auth/login').send(LOGIN);
+  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981' });
+  const friend = request.agent(app);
+  await friend.post('/api/auth/login').send({ identifier: 'friend@example.com', password: 'friend-password-1' });
+  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null });
+});
+
 test('change password: needs the current one, then the new one works', async () => {
   assert.equal((await agent.post('/api/auth/password').send({ current: 'wrong-password', next: 'new-password-1' })).status, 400);
   assert.equal((await agent.post('/api/auth/password').send({ current: LOGIN.password, next: 'short' })).status, 400);

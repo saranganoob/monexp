@@ -70,7 +70,9 @@ export interface YearView {
   categories: { key: string; label: string; total: number }[];
 }
 
-export interface Account { email: string; phone: string; isAdmin?: boolean; }
+/** Look & feel saved in the account (null = not chosen yet). */
+export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; }
+export interface Account { email: string; phone: string; isAdmin?: boolean; prefs?: Prefs; }
 /** A login as the Admin page shows it – never any money data. */
 export interface AdminUser { id: string; email: string; phone: string; isAdmin: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }
 export interface ChangeResult { message: string; undoToken: string; id?: string; }

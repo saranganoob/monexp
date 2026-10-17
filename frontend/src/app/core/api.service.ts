@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { Account, AdminUser, Card, CardEmi, ChangeResult, Installment, MonthView, Person, PersonStats, Plan, YearView } from './models';
+import { Account, AdminUser, Card, CardEmi, ChangeResult, Installment, MonthView, Person, PersonStats, Plan, Prefs, YearView } from './models';
 
 /** Turns an HTTP error into the backend's plain-English message. */
 export function errorMessage(err: unknown): string {
@@ -30,6 +30,7 @@ export class Api {
   logout() { return this.post<{ ok: boolean }>('/auth/logout'); }
   me() { return this.get<Account>('/auth/me'); }
   updateMe(body: Partial<Account>) { return this.patch<Account>('/auth/me', body); }
+  updatePrefs(prefs: Partial<Prefs>) { return this.patch<Account>('/auth/prefs', prefs); }
   changePassword(current: string, next: string) { return this.post<{ ok: boolean }>('/auth/password', { current, next }); }
 
   // admin (logins only)

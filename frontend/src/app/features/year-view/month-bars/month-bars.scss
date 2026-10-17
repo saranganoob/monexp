@@ -7,7 +7,9 @@
 .swatch--spent, .bar--spent { background: var(--data-1); }
 .scroll { overflow-x: auto; }
 .bars { display: grid; grid-template-columns: repeat(12, minmax(52px, 1fr)); gap: 8px; min-width: 680px; align-items: end; height: 220px; }
-.month { font: inherit; background: none; border: none; padding: 0; cursor: pointer; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 8px; }
+.month { font: inherit; background: none; border: none; padding: 0; cursor: pointer; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 8px;
+  transform-origin: bottom; touch-action: manipulation; transition: transform var(--press) ease-out;
+  &:active { transform: scale(.97); } }
 .pair { display: flex; gap: 4px; align-items: flex-end; height: 180px; }
 .bar { width: 18px; border-radius: 6px 6px 0 0; }
 .none { width: 100%; height: 180px; border: 1.5px dashed var(--hair-2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); text-align: center; padding: 4px; }

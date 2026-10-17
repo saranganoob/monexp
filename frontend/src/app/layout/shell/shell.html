@@ -20,7 +20,7 @@
     </div>
   </main>
 
-  @if (store.dialog()) { <app-add-expense-dialog /> }
+  @if (store.dialog()) { <app-add-expense-dialog animate.leave="is-leaving" /> }
   <app-ask-ai />
   <app-undo-toast />
 </div>

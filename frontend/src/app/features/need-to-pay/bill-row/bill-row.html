@@ -1,6 +1,11 @@
 @let b = bill();
 <div class="row">
-  <div class="main">
+  <div class="swipe">
+  <!-- Behind the row: what a swipe right will do (phones). -->
+  <div class="swipe-bg" [class.is-undo]="b.status === 'paid'" aria-hidden="true">
+    <app-icon [name]="b.status === 'paid' ? 'refresh' : 'check'" [stroke]="2.6" />{{ b.status === 'paid' ? 'Unpaid' : 'Paid' }}
+  </div>
+  <div class="main" appSwipeAction [swipeEnabled]="b.status !== 'skipped' && !isEditing()" (swiped)="toggle()">
     <button class="tick" [class.is-paid]="b.status === 'paid'" [class.is-skipped]="b.status === 'skipped'" (click)="toggle()"
       [attr.aria-label]="(b.status === 'paid' ? 'Mark ' + b.name + ' unpaid' : 'Mark ' + b.name + ' paid')">
       @if (b.status === 'paid') { <app-icon name="check" [stroke]="3" /> }
@@ -28,6 +33,7 @@
         }
       }
     </div>
+  </div>
   </div>
 
   @if (isEditing()) {

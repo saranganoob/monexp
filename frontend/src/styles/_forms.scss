@@ -12,6 +12,17 @@
   &--otp { font-size: 20px; letter-spacing: .4em; text-align: center; font-weight: 700; }
 }
 select.field option { background: var(--surface-solid); color: var(--ink); }
+// Dropdowns: our own small ⌄ a comfortable distance from the right edge (the browser's arrow hugs the edge).
+// The arrow colour follows the theme's muted text colour.
+select.field {
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  padding-right: 42px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6272' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;
+}
+:root[data-theme='dark'] select.field { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239A9DAB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); }
+select.field--sm { padding-right: 36px; background-position: right 12px center; }
+select.field:disabled { cursor: default; opacity: .6; }
 .field-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; align-items: end; }
 .form-grid--wide { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
@@ -21,8 +32,8 @@ select.field option { background: var(--surface-solid); color: var(--ink); }
 .prefix-input { display: flex; gap: 8px; align-items: center;
   .prefix { min-height: 44px; display: flex; align-items: center; padding: 0 12px; border: 1px solid var(--hair-2); border-radius: var(--radius-sm); background: var(--sub); font-weight: 600; } }
 
-// blue "editing" box used under rows
-.edit-box { background: var(--info-bg); border: 1.5px solid var(--accent); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+// blue "editing" box used under rows – it eases open from the row above it
+.edit-box { transition: opacity .2s ease, transform var(--spring-dur) var(--spring); background: var(--info-bg); border: 1.5px solid var(--accent); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
   &__title { font-size: 13px; font-weight: 700; color: var(--info-fg); } }
 
 // info / notice boxes
@@ -31,3 +42,5 @@ select.field option { background: var(--surface-solid); color: var(--ink); }
   &--error { color: var(--bad-fg); background: var(--bad-bg); font-weight: 600; }
   &--muted { color: var(--ink-2); background: var(--sub); font-size: 13px; }
   &--sm { font-size: 13px; } }
+
+@starting-style { .edit-box { opacity: 0; transform: translateY(-6px); } }

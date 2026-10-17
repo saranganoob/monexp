@@ -3,9 +3,9 @@
   border-radius: 999px; border: 1px solid var(--stroke); background: var(--field); color: var(--ink);
   -webkit-backdrop-filter: var(--blur-sm); backdrop-filter: var(--blur-sm); box-shadow: var(--spec);
   cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; text-decoration: none;
-  transition: background .2s ease, box-shadow .2s ease, transform .12s ease, filter .2s ease;
+  touch-action: manipulation; transition: background .2s ease, box-shadow .2s ease, transform var(--press) ease-out, filter .2s ease;
   &:hover { background: var(--sel); color: var(--ink); }
-  &:active { transform: scale(.97); }
+  &:active { transform: scale(.97); } // feedback on press, not on release
   &:disabled { opacity: .6; cursor: default; transform: none; }
   &:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 }
@@ -25,6 +25,8 @@
 .pill {
   font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 0 14px; border-radius: 999px; cursor: pointer;
   border: 1px solid var(--stroke); background: var(--field); color: var(--ink-2);
+  touch-action: manipulation; transition: transform var(--press) ease-out, background .2s ease;
+  &:active { transform: scale(.97); }
   &.is-on { border-color: var(--accent); background: var(--accent-grad); color: var(--on-accent); }
   .count { opacity: .8; }
 }
@@ -33,6 +35,8 @@
 .seg {
   font: inherit; font-size: 14px; font-weight: 700; min-height: 44px; padding: 0 18px; border-radius: var(--radius-sm); cursor: pointer;
   border: 1px solid var(--stroke); background: var(--field); color: var(--ink-2);
+  touch-action: manipulation; transition: transform var(--press) ease-out, background .2s ease;
+  &:active { transform: scale(.97); }
   &.is-on { border-color: var(--accent); background: var(--accent-grad); color: var(--on-accent); }
   &--sm { min-height: 36px; padding: 0 14px; }
 }
@@ -42,17 +46,22 @@
 .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--hair); border-radius: var(--radius); padding: 4px; }
 .tab {
   font: inherit; font-size: 14px; font-weight: 700; min-height: 40px; border-radius: 9px; border: none; cursor: pointer;
-  background: transparent; color: var(--muted);
+  background: transparent; color: var(--muted); touch-action: manipulation; transition: transform var(--press) ease-out;
+  &:active { transform: scale(.97); }
   &.is-on { background: var(--sel); color: var(--ink); box-shadow: 0 1px 3px var(--hair-2); }
 }
 
 // text-looking button
-.link-btn { font: inherit; font-size: 13px; font-weight: 600; color: var(--accent-ink); background: none; border: none; cursor: pointer; padding: 4px 0; }
+.link-btn { font: inherit; font-size: 13px; font-weight: 600; color: var(--accent-ink); background: none; border: none; cursor: pointer; padding: 4px 0;
+  touch-action: manipulation; transition: opacity var(--press) ease-out;
+  &:active { opacity: .6; } }
 
 // big round "mark paid" tick
 .tick {
   width: 44px; height: 44px; flex: none; border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; justify-content: center;
   color: #fff; background: var(--field); border: 2px solid var(--hair-3);
+  touch-action: manipulation; transition: transform var(--press) ease-out, background .2s ease, border-color .2s ease;
+  &:active { transform: scale(.92); } // a small target gets a slightly bigger squeeze so it's visible
   &.is-paid { background: var(--ok); border-color: var(--ok); }
   &.is-skipped { border-style: dashed; }
 }

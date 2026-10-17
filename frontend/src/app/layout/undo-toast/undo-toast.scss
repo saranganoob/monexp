@@ -8,4 +8,11 @@
   &.is-error { background: rgba(138, 27, 22, 0.88); } }
 .action { background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.2); color: #fff; box-shadow: none;
   &:hover { background: rgba(255, 255, 255, 0.24); color: #fff; } }
+// Motion: rises from the bottom with a spring, sinks back the same way.
+.toast { transition: transform var(--spring-sheet-dur) var(--spring-sheet), opacity .2s ease; }
+@starting-style { .toast.toast { transform: translate(-50%, 24px) scale(.96); opacity: 0; } }
+.toast.is-leaving { transform: translate(-50%, 24px) scale(.96); opacity: 0; transition-duration: var(--exit-dur); transition-timing-function: ease-in; }
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast.is-leaving { transform: translateX(-50%) !important; transition: opacity .15s ease !important; }
+}
 @media (max-width: bp.$tablet) { .toast { width: calc(100% - 32px); bottom: 84px; } }

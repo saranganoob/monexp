@@ -1,5 +1,14 @@
 :host { display: block; border-top: 1px solid var(--hair); }
-.main { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 16px; }
+// Swipe right to mark paid (phones): the row slides over a coloured label.
+.swipe { position: relative; overflow: hidden; }
+.swipe-bg { position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding-left: 22px; font-weight: 800; color: #fff;
+  background: var(--ok); opacity: 0; pointer-events: none;
+  &.is-undo { background: var(--orange); } }
+.swipe.is-swiping {
+  .swipe-bg { opacity: calc(.35 + var(--swipe-progress, 0) * .65); }
+  .main { background: var(--surface-solid); box-shadow: -8px 0 18px -10px rgba(15, 23, 42, .35); will-change: transform; }
+}
+.main { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 16px; }
 .info { flex: 1 1 200px; min-width: 0; }
 .name { font-weight: 600; }
 .is-skipped { text-decoration: line-through; color: var(--muted); }

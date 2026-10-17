@@ -1,5 +1,7 @@
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .today { font-size: 13px; color: var(--muted); font-weight: 600; }
 .profile-btn { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 12px 4px 4px; border-radius: 999px; color: var(--ink); border: 1px solid var(--stroke); background: var(--sel); text-decoration: none; font-size: 14px;
+  touch-action: manipulation; transition: transform var(--press) ease-out;
+  &:active { transform: scale(.97); }
   &:hover { color: var(--ink); background: var(--sel); }
   &.is-on { border-color: var(--accent); background: var(--info-bg); } }

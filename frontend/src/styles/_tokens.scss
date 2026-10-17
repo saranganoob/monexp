@@ -73,11 +73,33 @@
     radial-gradient(800px 700px at -5% 105%, #FFE3E8 0%, rgba(255, 227, 232, 0) 58%),
     #EEF2FA;
 
+  // Motion (Apple-style springs, see .claude/skills/apple-design). CSS transitions run from the
+  // current on-screen value, so they turn around smoothly if interrupted.
+  --press: 100ms;                 // press feedback: scale(.97) the moment you touch
+  --spring: linear(0, 0.055, 0.173, 0.309, 0.441, 0.558, 0.656, 0.736, 0.8, 0.849, 0.887, 0.916, 0.938, 0.955, 0.967, 0.976, 0.982, 0.987, 0.991, 0.993, 0.995, 0.997, 0.998, 0.998, 1);
+  --spring-dur: 500ms;            // damping 1.0 · response 0.35 – default, no bounce
+  --spring-sheet: linear(0, 0.047, 0.158, 0.295, 0.436, 0.568, 0.682, 0.776, 0.851, 0.907, 0.948, 0.976, 0.995, 1.006, 1.012, 1.015, 1.015, 1.014, 1.012, 1.01, 1.008, 1.006, 1.004, 1.003, 1.002, 1.001, 1.001, 1, 1);
+  --spring-sheet-dur: 450ms;      // damping 0.8 · response 0.3 – panels and sheets
+  --exit-dur: 200ms;              // leaving is quicker than arriving
+
   --radius-sm: 10px;
   --radius: 12px;
   --radius-field: 14px;
   --radius-lg: 24px;
   --radius-xl: 28px;
+}
+
+// Increased contrast (system setting): solid surfaces, stronger borders and secondary text.
+@media (prefers-contrast: more) {
+  :root, :root[data-theme='dark'] {
+    --muted: var(--ink-2);
+    --surface: var(--surface-solid);
+    --surface-strong: var(--surface-solid);
+    --field: var(--surface-solid);
+    --stroke: var(--hair-3);
+    --hair: var(--hair-2);
+    --blur: none; --blur-sm: none; --blur-lg: none;
+  }
 }
 
 :root[data-theme='dark'] {

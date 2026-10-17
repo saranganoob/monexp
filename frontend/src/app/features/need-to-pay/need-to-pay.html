@@ -13,6 +13,7 @@
         <button class="btn btn--sm" (click)="store.openAdd('bill')"><app-icon name="plus" [stroke]="2.2" />Add bill to {{ m.ym | ym: 'short' }}</button>
       </div>
     </section>
+    <p class="swipe-hint small muted">Tip: swipe right on a bill to mark it paid.</p>
 
     @for (g of groups(); track g.key) {
       <section class="card card--clip">

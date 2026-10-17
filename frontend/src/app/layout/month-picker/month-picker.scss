@@ -5,8 +5,9 @@
 .divider { width: 1px; height: 22px; background: var(--hair-2); flex: none; }
 
 .step { width: 40px; height: 40px; flex: none; border: none; border-radius: 50%; background: transparent; color: var(--ink-2); cursor: pointer;
-  display: flex; align-items: center; justify-content: center; transition: background .2s ease;
+  display: flex; align-items: center; justify-content: center; touch-action: manipulation; transition: background .2s ease, transform var(--press) ease-out;
   &:hover { background: var(--sub); }
+  &:active { transform: scale(.92); }
   &:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; } }
 
 // A plain-text select with its own small arrow.

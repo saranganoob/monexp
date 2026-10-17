@@ -6,7 +6,7 @@
   background: var(--surface); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
   border: 1px solid var(--stroke); border-radius: var(--radius-xl); box-shadow: var(--lift), var(--spec);
   padding: 18px 12px; display: flex; flex-direction: column; gap: 22px; overflow-y: auto; overflow-x: hidden;
-  transition: width .28s ease, padding .28s ease;
+  transition: width var(--spring-dur) var(--spring), padding var(--spring-dur) var(--spring);
   scrollbar-width: none; // still scrolls if it must, but without a visible bar
   &::-webkit-scrollbar { display: none; } }
 .brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; flex: none; }
@@ -16,8 +16,9 @@
 .side-toggle { margin-left: auto; width: 36px; min-height: 36px; padding: 0; flex: none; }
 .navlist { display: flex; flex-direction: column; gap: 4px; }
 .navbtn { position: relative; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 14px; white-space: nowrap; text-decoration: none; color: var(--ink-2);
-  transition: background .2s ease, box-shadow .2s ease, color .2s ease;
+  touch-action: manipulation; transition: background .2s ease, box-shadow .2s ease, color .2s ease, transform var(--press) ease-out;
   app-icon { flex: none; }
+  &:active { transform: scale(.97); }
   &:hover { background: var(--sub); color: var(--ink-2); }
   &.is-active { font-weight: 700; background: var(--sel); color: var(--accent-ink); box-shadow: 0 6px 18px -8px rgba(15, 23, 42, 0.35), var(--spec); }
   &:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; } }

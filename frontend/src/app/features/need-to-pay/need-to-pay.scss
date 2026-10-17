@@ -1,2 +1,5 @@
 .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
 .totals { font-size: 14px; color: var(--ink-2); }
+// Only on touch screens, where swiping works.
+.swipe-hint { display: none; margin: -12px 0 0; }
+@media (hover: none) and (pointer: coarse) { .swipe-hint { display: block; } }

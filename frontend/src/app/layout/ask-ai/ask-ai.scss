@@ -21,10 +21,21 @@
 .foot { border-top: 1px solid var(--hair); padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
 .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
 .chip-btn { font: inherit; font-size: 13px; font-weight: 600; min-height: 36px; padding: 0 12px; border-radius: 999px; white-space: nowrap; cursor: pointer;
+  touch-action: manipulation; transition: transform var(--press) ease-out;
+  &:active:not(:disabled) { transform: scale(.97); }
   border: 1px solid var(--info-border); background: var(--info-bg); color: var(--info-fg);
   &:disabled { opacity: .5; cursor: default; } }
 .ask { display: flex; gap: 8px; }
 .note { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+// Motion: in from the right, out the same way. Transitions run from the current position,
+// so closing mid-slide turns around smoothly.
+.panel { transition: transform var(--spring-sheet-dur) var(--spring-sheet), opacity .2s ease; }
+@starting-style { .panel { transform: translateX(calc(100% + 24px)); opacity: 0; } }
+.panel.is-leaving { transform: translateX(calc(100% + 24px)); opacity: 0; transition-duration: var(--exit-dur); transition-timing-function: ease-in; }
+@media (prefers-reduced-motion: reduce) {
+  .panel, .panel.is-leaving { transform: none !important; transition: opacity .15s ease !important; }
+}
 
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .panel { background: var(--surface-solid); } }
 @media (prefers-reduced-transparency: reduce) { .panel { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }

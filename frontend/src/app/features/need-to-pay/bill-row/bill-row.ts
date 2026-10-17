@@ -6,13 +6,14 @@ import { Bill, CardView } from '../../../core/models';
 import { dueInfo } from '../../../core/utils/format';
 import { BillEditor } from '../../../shared/components/bill-editor/bill-editor';
 import { CardBillEditor } from '../../../shared/components/card-bill-editor/card-bill-editor';
+import { SwipeAction } from '../../../shared/directives/swipe-action';
 import { InrPipe } from '../../../shared/pipes/inr.pipe';
 import { Icon } from '../../../shared/ui/icon/icon';
 
-/** One bill: tick to pay, status, amount, and Skip / Edit / Remove. Card bills show their split. */
+/** One bill: tick (or swipe right on phones) to pay, status, amount, and Skip / Edit / Remove. Card bills show their split. */
 @Component({
   selector: 'app-bill-row',
-  imports: [RouterLink, BillEditor, CardBillEditor, InrPipe, Icon],
+  imports: [RouterLink, BillEditor, CardBillEditor, InrPipe, Icon, SwipeAction],
   templateUrl: './bill-row.html',
   styleUrl: './bill-row.scss',
 })

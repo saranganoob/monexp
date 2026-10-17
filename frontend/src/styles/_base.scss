@@ -42,7 +42,11 @@ h1, h2, h3 { margin: 0; letter-spacing: -.02em; }
 @media (max-width: bp.$tablet) { .split { margin: 0 16px 16px 16px; } }
 @media (max-width: bp.$phone) { .hide-xs { display: none; } }
 
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+// Reduce motion: no slides, springs or squeezes – only quick cross-fades (see each component).
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+  :active { transform: none !important; }
+}
 
 // Thin, rounded scrollbars that match the glass look (Windows otherwise shows thick grey bars with arrows).
 // Chrome, Edge and Safari use the ::-webkit-scrollbar rules; Firefox uses scrollbar-width / scrollbar-color.

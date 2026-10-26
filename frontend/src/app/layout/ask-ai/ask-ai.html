@@ -1,5 +1,5 @@
 @if (showFab()) {
-  <button class="btn btn--primary fab" (click)="open()" aria-label="Ask MonEXP AI">
+  <button class="btn btn--primary fab" animate.leave="is-leaving" (click)="open()" aria-label="Ask MonEXP AI">
     <app-icon name="sparkles" [size]="20" />
     <span class="fab__label">Ask AI</span>
   </button>

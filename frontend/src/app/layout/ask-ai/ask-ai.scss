@@ -54,13 +54,20 @@
 .ask { display: flex; gap: 8px; }
 .note { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
 
-// Motion: in from the right, out the same way. Transitions run from the current position,
-// so closing mid-slide turns around smoothly.
-.panel { transition: transform var(--spring-sheet-dur) var(--spring-sheet), opacity .2s ease; }
-@starting-style { .panel { transform: translateX(calc(100% + 24px)); opacity: 0; } }
-.panel.is-leaving { transform: translateX(calc(100% + 24px)); opacity: 0; transition-duration: var(--exit-dur); transition-timing-function: ease-in; }
+// Motion: the panel grows like a bubble out of the Ask AI button (bottom right) – a circle that
+// widens from that corner while the panel springs up to full size – and shrinks back into it on close.
+// Transitions run from the current state, so closing mid-open turns around smoothly.
+.panel { transform-origin: calc(100% - 48px) calc(100% - 26px); clip-path: circle(150% at calc(100% - 48px) calc(100% - 26px));
+  transition: transform var(--spring-sheet-dur) var(--spring-sheet), clip-path .45s cubic-bezier(.2, .8, .2, 1), opacity .2s ease; }
+@starting-style { .panel { transform: scale(.35); clip-path: circle(28px at calc(100% - 48px) calc(100% - 26px)); opacity: 0; } }
+.panel.is-leaving { transform: scale(.35); clip-path: circle(28px at calc(100% - 48px) calc(100% - 26px)); opacity: 0;
+  transition-duration: .28s, .28s, .22s; transition-timing-function: cubic-bezier(.4, 0, .8, .4); }
+// The button pops back in when the panel closes, and out when it opens.
+.fab { transition: transform var(--spring-sheet-dur) var(--spring-sheet), opacity .2s ease; }
+@starting-style { .fab { transform: scale(.5); opacity: 0; } }
+.fab.is-leaving { transform: scale(.5); opacity: 0; transition-duration: .15s; transition-timing-function: ease-in; }
 @media (prefers-reduced-motion: reduce) {
-  .panel, .panel.is-leaving { transform: none !important; transition: opacity .15s ease !important; }
+  .panel, .panel.is-leaving, .fab, .fab.is-leaving { transform: none !important; clip-path: none !important; transition: opacity .15s ease !important; }
 }
 
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .panel { background: var(--surface-solid); } }

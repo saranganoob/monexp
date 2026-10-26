@@ -1,15 +1,25 @@
-<nav class="side" [class.collapsed]="collapsed()" aria-label="Main">
+<nav #side class="side" [class.collapsed]="classicCollapsed()" [class.rail]="rail()" [class.is-open]="rail() && hoverOpen()" aria-label="Main"
+  (mouseenter)="open()" (mouseleave)="closeSoon()" (focusin)="open()" (focusout)="onFocusOut($event, side)">
   <div class="brand">
     <div class="logo">₹</div>
     <div class="brand-text">
       <div class="brand-name">MonEXP</div>
       <div class="brand-tag">Monthly money, sorted</div>
     </div>
-    <button type="button" class="btn btn--ghost side-toggle" (click)="collapsed.set(!collapsed())"
-      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!collapsed()"
-      [title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
-      <app-icon [name]="collapsed() ? 'expand-right' : 'collapse-left'" />
-    </button>
+    @if (pinStyle()) {
+      <!-- Pinned = always open; unpinned = slim rail that opens on hover. Saved to the account. -->
+      <button type="button" class="btn btn--ghost side-toggle pin" [class.is-pinned]="theme.sidebarPinned()" (click)="togglePin()"
+        [attr.aria-pressed]="theme.sidebarPinned()" [attr.aria-label]="theme.sidebarPinned() ? 'Unpin sidebar (open on hover)' : 'Pin sidebar open'"
+        [title]="theme.sidebarPinned() ? 'Unpin – open on hover' : 'Pin open'">
+        <app-icon name="pin" [size]="18" [stroke]="1.9" />
+      </button>
+    } @else {
+      <button type="button" class="btn btn--ghost side-toggle" (click)="collapsed.set(!collapsed())"
+        [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'" [attr.aria-expanded]="!collapsed()"
+        [title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+        <app-icon [name]="collapsed() ? 'expand-right' : 'collapse-left'" />
+      </button>
+    }
   </div>
   <div class="navlist">
     @for (n of nav(); track n.path) {

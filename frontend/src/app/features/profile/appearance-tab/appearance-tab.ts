@@ -1,11 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
 import { ACCENT_PRESETS, DEFAULT_ACCENT, ThemeMode, ThemeService } from '../../../core/theme.service';
+import { SidebarStyle } from '../../../core/models';
 import { Icon, IconName } from '../../../shared/ui/icon/icon';
 import { LangHint } from '../../../shared/ui/lang-hint/lang-hint';
 import { HINT_LABELS, HOME_LANGUAGES, HintKey } from '../../../core/i18n/home-language';
 import { HomeLang } from '../../../core/models';
 
-/** Preferences: light / dark theme, accent colour, and home-language hints. */
+/** Preferences: light / dark theme, sidebar style, accent colour, and home-language hints. */
 @Component({
   selector: 'app-appearance-tab',
   imports: [Icon, LangHint],
@@ -17,6 +18,10 @@ export class AppearanceTab {
   protected readonly options: { mode: ThemeMode; label: string; icon: IconName }[] = [
     { mode: 'light', label: 'Light', icon: 'sun' },
     { mode: 'dark', label: 'Dark', icon: 'moon' },
+  ];
+  protected readonly sidebarOptions: { style: SidebarStyle; label: string; icon: IconName }[] = [
+    { style: 'classic', label: 'Classic', icon: 'sidebar-left' },
+    { style: 'pin', label: 'Pin & hover', icon: 'pin' },
   ];
   protected readonly presets = ACCENT_PRESETS;
   protected readonly defaultAccent = DEFAULT_ACCENT;

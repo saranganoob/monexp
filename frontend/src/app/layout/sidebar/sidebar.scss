@@ -32,6 +32,48 @@
   .navbtn { justify-content: center; padding: 0; }
   .nav-badge { position: absolute; top: 4px; right: 4px; padding: 0 5px; font-size: 10px; line-height: 16px; } }
 
+// Pin style. The pin tilts when unpinned and stands up in the accent colour when pinned.
+.pin { color: var(--muted);
+  app-icon { transition: transform var(--spring-dur) var(--spring); transform: rotate(45deg); }
+  &.is-pinned { color: var(--accent-ink); app-icon { transform: none; } } }
+// Computers: the space kept for the menu glides between full and slim, so the page slides along smoothly
+// when the menu is pinned, unpinned or shrunk (instead of jumping).
+@media (min-width: bp.$tablet + 1) {
+  :host { width: 264px; transition: width var(--spring-dur) var(--spring); }
+  :host(.is-narrow) { width: 92px; }
+  :host(.has-rail) { position: relative; z-index: 25; }
+
+  // Unpinned rail: always the full menu, clipped to a slim strip; hovering widens it over the page.
+  // Labels keep their size and simply fade in/out, so nothing squeezes or re-wraps while it moves.
+  .side.rail { position: fixed; top: 16px; left: 0; margin: 0 0 0 16px; z-index: 25; width: 76px;
+    transition: width .26s cubic-bezier(.4, 0, .2, 1), box-shadow .2s ease; } // closing: quick and even
+  .side.rail.is-open { width: 248px; box-shadow: var(--lift-lg), var(--spec);
+    transition: width var(--spring-dur) var(--spring), box-shadow .25s ease; } // opening: the soft spring
+  .side.rail {
+    .brand-text, .navlist, .foot { min-width: 0; }
+    .brand { width: 224px; flex: none; } // same width as when pinned, so the name wraps the same way
+    // Menu items narrow with the rail, so a closed rail highlights just the icon (labels don't wrap – they're clipped).
+    .navbtn { width: 224px; padding: 0 16px; overflow: hidden; transition: width .26s cubic-bezier(.4, 0, .2, 1), background .2s ease, box-shadow .2s ease, color .2s ease; }
+    .foot { width: 224px; flex: none; }
+    .brand-text, .nav-label, .foot, .side-toggle { transition: opacity .15s ease; }
+    .nav-badge { transition: opacity .15s ease; } }
+  .side.rail:not(.is-open) .navbtn { width: 52px; }
+  .side.rail.is-open .navbtn { transition: width var(--spring-dur) var(--spring), background .2s ease, box-shadow .2s ease, color .2s ease; }
+  .side.rail:not(.is-open) {
+    .brand-text, .nav-label, .foot, .side-toggle, .nav-badge { opacity: 0; pointer-events: none; } }
+  .side.rail.is-open {
+    .brand-text, .nav-label, .foot, .side-toggle, .nav-badge { opacity: 1; transition-delay: .06s; } }
+  // A small dot on the Need-to-pay icon while the rail is closed, so unpaid bills are still noticed.
+  .side.rail:not(.is-open) .navbtn:has(.nav-badge)::after { content: ''; position: absolute; top: 9px; left: 30px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--surface-solid); }
+}
+@media (min-width: bp.$tablet + 1) and (max-width: bp.$small) {
+  :host { width: 228px; }
+  .side.rail.is-open { width: 212px; }
+  .side.rail .brand, .side.rail.is-open .navbtn, .side.rail .foot { width: 188px; }
+}
+@media (prefers-reduced-motion: reduce) { :host, .side, .side.rail, .side.rail.is-open { transition: none; } .pin app-icon { transition: none; } }
+
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .side { background: var(--surface-solid); } }
 @media (prefers-reduced-transparency: reduce) { .side { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 

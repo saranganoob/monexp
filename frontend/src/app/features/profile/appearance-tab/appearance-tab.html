@@ -15,6 +15,24 @@
 
 <section class="card panel">
   <div>
+    <h2 id="sideLbl" class="card__title">Sidebar</h2>
+    <p class="card__lead">How the menu on the left behaves on a computer. Saved to your account.</p>
+  </div>
+  <div role="radiogroup" aria-labelledby="sideLbl" class="seg-group">
+    @for (o of sidebarOptions; track o.style) {
+      <button type="button" role="radio" class="seg option" [class.is-on]="theme.sidebar() === o.style" [attr.aria-checked]="theme.sidebar() === o.style"
+        (click)="theme.setSidebar(o.style)">
+        <app-icon [name]="o.icon" />{{ o.label }}
+      </button>
+    }
+  </div>
+  <p class="small muted hint">{{ theme.sidebar() === 'pin'
+    ? 'Use the pin at the top of the menu: pinned keeps it open; unpinned shrinks it to icons that open when you point at them.'
+    : 'The menu stays open; the « button shrinks it to icons.' }}</p>
+</section>
+
+<section class="card panel">
+  <div>
     <h2 id="accentLbl" class="card__title">Accent colour</h2>
     <p class="card__lead">Used for buttons, the selected menu item, links and the budget card. Saved to your account, so it follows you to every device.</p>
   </div>

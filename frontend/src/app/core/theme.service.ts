@@ -1,7 +1,7 @@
 import { DOCUMENT, Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Api } from './api.service';
 import { AuthService } from './auth/auth.service';
-import { HomeLang, Prefs } from './models';
+import { HomeLang, Prefs, SidebarStyle } from './models';
 import { accentTokens } from './utils/color';
 
 export type ThemeMode = 'light' | 'dark';
@@ -41,6 +41,9 @@ export class ThemeService {
   readonly accent = signal<string>(this.savedAccent());
   /** Home-language hints (Tamil / Telugu / Hindi), or null for English only. Saved on the account. */
   readonly lang = signal<HomeLang | null>(null);
+  /** Web sidebar: 'classic' (« shrinks it) or 'pin' (pinned open, or a slim rail that opens on hover). */
+  readonly sidebar = signal<SidebarStyle>('classic');
+  readonly sidebarPinned = signal(true);
 
   private appliedFor: string | null = null; // whose saved look is showing
   private pending: Partial<Prefs> = {};
@@ -69,11 +72,13 @@ export class ThemeService {
         const who = account ? account.email || account.phone : null;
         if (who === this.appliedFor) return;
         this.appliedFor = who;
-        if (!account) { this.lang.set(null); return; } // signed out: the sign-in page keeps the last look on this device
+        if (!account) { this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); return; } // signed out: the sign-in page keeps the last look on this device
         // Their own choice, or the default look if they haven't picked one – never the previous person's.
         this.mode.set(account.prefs?.theme ?? 'light');
         this.accent.set(account.prefs?.accent ?? DEFAULT_ACCENT);
         this.lang.set(account.prefs?.lang ?? null);
+        this.sidebar.set(account.prefs?.sidebar ?? 'classic');
+        this.sidebarPinned.set(account.prefs?.sidebarPinned ?? true);
       });
     });
   }
@@ -91,6 +96,16 @@ export class ThemeService {
   setLang(lang: HomeLang | null) {
     this.lang.set(lang);
     this.save({ lang });
+  }
+
+  setSidebar(style: SidebarStyle) {
+    this.sidebar.set(style);
+    this.save({ sidebar: style });
+  }
+
+  setSidebarPinned(pinned: boolean) {
+    this.sidebarPinned.set(pinned);
+    this.save({ sidebarPinned: pinned });
   }
 
   /** Saves to the signed-in account (a moment after the last change). */

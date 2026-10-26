@@ -302,14 +302,14 @@ test('each account only sees its own data', async () => {
 });
 
 test('look & feel is saved per account', async () => {
-  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null });
+  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null });
   assert.equal((await agent.patch('/api/auth/prefs').send({ theme: 'purple' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ accent: 'red' })).status, 400);
   const res = await agent.patch('/api/auth/prefs').send({ theme: 'dark', accent: '#10b981' });
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null });
+  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null });
   // Changing one leaves the other as it was.
-  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null });
+  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null });
   // Home language: Tamil / Telugu / Hindi or none.
   assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'fr' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'ta' })).body.prefs.lang, 'ta');
@@ -317,10 +317,19 @@ test('look & feel is saved per account', async () => {
   // A fresh sign-in (another device) gets them back; another account has its own.
   const other = request.agent(app);
   await other.post('/api/auth/login').send(LOGIN);
-  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null });
+  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null });
   const friend = request.agent(app);
   await friend.post('/api/auth/login').send({ identifier: 'friend@example.com', password: 'friend-password-1' });
-  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null });
+  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null });
+});
+
+test('web sidebar style and pin are saved per account', async () => {
+  assert.equal((await agent.patch('/api/auth/prefs').send({ sidebar: 'floating' })).status, 400);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ sidebarPinned: 'yes' })).status, 400);
+  const prefs = (await agent.patch('/api/auth/prefs').send({ sidebar: 'pin', sidebarPinned: false })).body.prefs;
+  assert.deepEqual([prefs.sidebar, prefs.sidebarPinned, prefs.accent], ['pin', false, '#10B981']); // the rest is kept
+  assert.equal((await agent.get('/api/auth/me')).body.prefs.sidebarPinned, false);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ sidebar: 'classic' })).body.prefs.sidebar, 'classic');
 });
 
 test('change password: needs the current one, then the new one works', async () => {

@@ -6,6 +6,8 @@ const prefsSchema = new Schema({
   theme: { type: String, enum: ['light', 'dark', null], default: null },
   accent: { type: String, match: /^#[0-9A-F]{6}$/, default: null },
   lang: { type: String, enum: ['ta', 'te', 'hi', null], default: null }, // home-language hints; null = English only
+  sidebar: { type: String, enum: ['classic', 'pin', null], default: null }, // web sidebar style; null = classic
+  sidebarPinned: { type: Boolean, default: null }, // 'pin' style: stays open (true) or opens on hover (false); null = pinned
 }, { _id: false });
 
 const userSchema = new Schema({

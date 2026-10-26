@@ -5,13 +5,14 @@ import { routes } from './app.routes';
 import { sessionInterceptor } from './core/auth/session.interceptor';
 import { ThemeService } from './core/theme.service';
 import { clientIdInterceptor } from './core/live.service';
+import { timeoutInterceptor } from './core/http/timeout.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([sessionInterceptor, clientIdInterceptor])),
+    provideHttpClient(withInterceptors([sessionInterceptor, clientIdInterceptor, timeoutInterceptor])),
     { provide: LOCALE_ID, useValue: 'en-US' },
     // Apply the saved light/dark theme before the first screen shows.
     provideAppInitializer(() => { inject(ThemeService); }),

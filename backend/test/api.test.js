@@ -302,21 +302,25 @@ test('each account only sees its own data', async () => {
 });
 
 test('look & feel is saved per account', async () => {
-  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null });
+  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null });
   assert.equal((await agent.patch('/api/auth/prefs').send({ theme: 'purple' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ accent: 'red' })).status, 400);
   const res = await agent.patch('/api/auth/prefs').send({ theme: 'dark', accent: '#10b981' });
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981' });
+  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null });
   // Changing one leaves the other as it was.
-  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981' });
+  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null });
+  // Home language: Tamil / Telugu / Hindi or none.
+  assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'fr' })).status, 400);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'ta' })).body.prefs.lang, 'ta');
+  assert.equal((await agent.patch('/api/auth/prefs').send({ lang: null })).body.prefs.lang, null);
   // A fresh sign-in (another device) gets them back; another account has its own.
   const other = request.agent(app);
   await other.post('/api/auth/login').send(LOGIN);
-  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981' });
+  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null });
   const friend = request.agent(app);
   await friend.post('/api/auth/login').send({ identifier: 'friend@example.com', password: 'friend-password-1' });
-  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null });
+  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null });
 });
 
 test('change password: needs the current one, then the new one works', async () => {
@@ -369,6 +373,39 @@ test('admin: only the admin manages logins, and never sees money data', async ()
   } finally {
     config.maxUsers = saved;
   }
+});
+
+test('yearly bank/cash EMI for a friend, and "I owe them" rows in Need to pay', async () => {
+  const balaji = (await agent.get('/api/people')).body.find((p) => p.name === 'Balaji');
+  // Acceptance check 3: Sep 2024 → Sep 2034, ₹12,000 a year, paid from the bank.
+  const add = await agent.post('/api/emis').send({ cardId: null, item: 'Insurance', forWho: 'friend', personId: balaji.id, monthly: 12000, freq: 'yearly', totalMonths: 11, startYm: '2024-09' });
+  assert.equal(add.status, 201);
+  assert.deepEqual([add.body.cardId, add.body.freq], [null, 'yearly']);
+  assert.ok(!(await agent.get('/api/months/2026-10')).body.bills.some((b) => b.emiId === add.body.id), 'not due in Oct 2026');
+
+  // In a month it's due, its row can be marked paid (stored on the month, per plan).
+  await agent.post('/api/months/2027-09').send({ mode: 'blank' });
+  const row = async () => (await agent.get('/api/months/2027-09')).body.bills.find((b) => b.emiId === add.body.id);
+  assert.deepEqual([(await row()).inst.n, (await row()).status], [4, 'unpaid']);
+  assert.equal((await agent.patch(`/api/months/2027-09/emis/${add.body.id}`).send({ paid: 'paid' })).status, 200);
+  assert.equal((await row()).status, 'paid');
+
+  // Acceptance check 2: "I owe Mohan ₹450" shows under Money I owe; ticking it marks the People entry paid back.
+  const mohan = (await agent.get('/api/people')).body.find((p) => p.name === 'Mohan');
+  const before = (await agent.get('/api/months/2026-10')).body.totals;
+  const owe = await agent.post('/api/months/2026-10/people-entries').send({ direction: 'out', personId: mohan.id, name: 'Mohan', amount: 450 });
+  assert.equal(owe.status, 201);
+  const oct = (await agent.get('/api/months/2026-10')).body;
+  const oweRow = oct.bills.find((b) => b.kind === 'owe' && b.entryId === owe.body.id);
+  assert.deepEqual([oweRow.category, oweRow.amount, oweRow.status], ['owe', 450, 'unpaid']);
+  assert.equal(oct.totals.toPay - before.toPay, 450);
+  assert.equal(oct.totals.balance - before.balance, -450);
+  await agent.patch(`/api/people-entries/${owe.body.id}`).send({ status: 'done' });
+  const after = (await agent.get('/api/months/2026-10')).body;
+  assert.equal(after.bills.find((b) => b.entryId === owe.body.id).status, 'paid');
+  assert.equal(after.payables.find((r) => r.id === owe.body.id).status, 'done');
+  await agent.delete(`/api/people-entries/${owe.body.id}`);
+  await agent.delete(`/api/emis/${add.body.id}`);
 });
 
 test('logout clears the session', async () => {

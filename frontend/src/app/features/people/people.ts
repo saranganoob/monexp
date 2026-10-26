@@ -7,17 +7,19 @@ import { firstError, notBlank, rupees } from '../../core/forms/validators';
 import { InrPipe } from '../../shared/pipes/inr.pipe';
 import { personRow } from '../../shared/utils/person-row';
 import { PersonEntryRow } from './person-entry-row/person-entry-row';
+import { Busy } from '../../shared/directives/busy';
+import { LangHint } from '../../shared/ui/lang-hint/lang-hint';
 
 type Direction = 'in' | 'out';
 
 @Component({
   selector: 'app-people',
-  imports: [ReactiveFormsModule, InrPipe, PersonEntryRow],
+  imports: [ReactiveFormsModule, InrPipe, PersonEntryRow, Busy, LangHint],
   templateUrl: './people.html',
   styleUrl: './people.scss',
 })
 export class PeoplePage {
-  private store = inject(AppStore);
+  protected store = inject(AppStore);
   private api = inject(Api);
   private fb = inject(NonNullableFormBuilder);
 
@@ -56,7 +58,8 @@ export class PeoplePage {
     }));
     if (this.addError()) return;
     const v = this.addForm.getRawValue();
-    const err = await this.store.run(this.api.addEntry(this.store.ym(), { direction: this.dir(), name: v.name.trim(), amount: parseNum(v.amount) }), { quiet: true });
+    const ym = this.store.ym(), direction = this.dir(), body = { direction, name: v.name.trim(), amount: parseNum(v.amount) };
+    const err = await this.store.run(() => this.api.addEntry(ym, body), { quiet: true, key: 'add-entry' });
     if (err) return this.addError.set(err);
     this.addForm.reset();
   }

@@ -44,7 +44,7 @@
           </div>
           <div class="row-flex">
             <button class="btn btn--ghost btn--sm" (click)="editEmi(u.e.id)" [attr.aria-label]="'Edit ' + u.e.item + ' EMI details'">Edit</button>
-            <button class="btn btn--ghost btn--sm" (click)="removeEmi(u.e.id)" [attr.aria-label]="'Remove ' + u.e.item + ' EMI'">Remove</button>
+            <button class="btn btn--ghost btn--sm" (click)="removeEmi(u.e.id)" [appBusy]="'remove:' + u.e.id" [attr.aria-label]="'Remove ' + u.e.item + ' EMI'">Remove</button>
           </div>
         </div>
         @if (editingEmi() === u.e.id) { <app-emi-editor [emi]="u.e" (done)="editingEmi.set(null)" /> }
@@ -60,7 +60,7 @@
 
     <div class="row-flex">
       @if (!c.closedOn) { <button class="btn btn--sm" (click)="addEmi.emit(c.id)">Add EMI to this card</button> }
-      @if (c.billId) { <button class="btn btn--sm" (click)="togglePaid()">{{ paid() ? 'Mark bill unpaid' : 'Mark bill paid' }}</button> }
+      @if (c.billId) { <button class="btn btn--sm" (click)="togglePaid()" [appBusy]="payKey()">{{ store.loading.isPending(payKey()) ? 'Saving…' : (paid() ? 'Mark bill unpaid' : 'Mark bill paid') }}</button> }
     </div>
   </div>
 </article>

@@ -9,7 +9,7 @@
       </select>
     </label>
     <label><span class="field-label">Date</span><input type="date" class="field" formControlName="date" [min]="minDate()" [max]="maxDate()"></label>
-    <button type="submit" class="btn btn--primary">Add spend</button>
+    <button type="submit" class="btn btn--primary" appBusy="add-sudden">{{ store.loading.isPending('add-sudden') ? 'Adding…' : 'Add spend' }}</button>
   </div>
   @if (byCard()) {
     <div class="notice notice--info notice--sm">Paid by credit card, so this will show up in that card's bill. It's logged here but not deducted from your balance twice.</div>

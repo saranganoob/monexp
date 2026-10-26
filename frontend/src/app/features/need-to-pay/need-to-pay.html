@@ -18,7 +18,7 @@
     @for (g of groups(); track g.key) {
       <section class="card card--clip">
         <div class="card-head">
-          <h2>{{ g.label }}</h2>
+          <h2>{{ g.label }}@if (g.key === 'owe') { <app-lang-hint key="iOweThem" /> }</h2>
           <span class="card-head__meta num">
             @if (g.liveCount) { {{ g.total | inr }} · {{ g.paidCount }}/{{ g.liveCount }} paid } @else { {{ g.allCount }} skipped this month }
           </span>

@@ -1,0 +1,16 @@
+<span class="sr">Loading…</span>
+@if (variant() === 'page' || variant() === 'cards') {
+  <div class="tiles" aria-hidden="true">
+    @for (t of [1, 2, 3]; track t) {
+      <div class="card tile"><span class="bone bone--sm"></span><span class="bone bone--lg"></span><span class="bone bone--md"></span></div>
+    }
+  </div>
+}
+@if (variant() !== 'cards') {
+  <div class="card list" aria-hidden="true">
+    <div class="list-head"><span class="bone bone--md"></span></div>
+    @for (r of rowList(); track $index) {
+      <div class="row"><span class="bone bone--box"></span><span class="grow"><span class="bone bone--md"></span><span class="bone bone--sm"></span></span><span class="bone bone--amt"></span></div>
+    }
+  </div>
+}

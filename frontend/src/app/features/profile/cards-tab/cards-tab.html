@@ -19,7 +19,7 @@
         @if (message()?.id === t.c.id) { <div role="alert" class="err err--sm">{{ message()!.text }}</div> }
         <div class="row-flex">
           <button class="btn btn--sm" (click)="edit(t.c)">Edit</button>
-          <button class="btn btn--sm" (click)="toggleClosed(t.c)">{{ t.c.closedOn ? 'Reopen' : 'Mark closed' }}</button>
+          <button class="btn btn--sm" (click)="toggleClosed(t.c)" [appBusy]="'card:' + t.c.id">{{ t.c.closedOn ? 'Reopen' : 'Mark closed' }}</button>
           <button class="btn btn--ghost btn--sm" (click)="remove(t.c)" [attr.aria-label]="'Delete ' + t.c.name"><app-icon name="trash" [stroke]="1.8" />Delete</button>
         </div>
       </div>
@@ -39,7 +39,7 @@
       </select>
     </label>
     <div class="row-flex">
-      <button type="submit" class="btn btn--primary">{{ editingId() ? 'Save card' : 'Add card' }}</button>
+      <button type="submit" class="btn btn--primary" appBusy="save-card">{{ store.loading.isPending('save-card') ? 'Saving…' : (editingId() ? 'Save card' : 'Add card') }}</button>
       @if (editingId()) { <button type="button" class="btn" (click)="cancel()">Cancel</button> }
     </div>
   </div>

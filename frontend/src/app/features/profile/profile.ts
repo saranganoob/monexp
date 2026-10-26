@@ -25,7 +25,7 @@ export class ProfilePage {
   });
   protected readonly tabs = computed(() => [
     { key: 'account' as Tab, label: 'Account' },
-    { key: 'appearance' as Tab, label: 'Appearance' },
+    { key: 'appearance' as Tab, label: 'Preferences' },
     { key: 'cards' as Tab, label: `Credit cards · ${this.store.cards().length}` },
     { key: 'persons' as Tab, label: `People · ${this.store.people().length}` },
   ]);

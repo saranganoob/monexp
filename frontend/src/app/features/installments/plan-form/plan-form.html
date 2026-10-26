@@ -47,7 +47,7 @@
   </p>
   @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
   <div class="row-flex">
-    <button type="submit" class="btn btn--primary">{{ plan() ? 'Save plan' : 'Add plan' }}</button>
+    <button type="submit" class="btn btn--primary" [appBusy]="saveKey()">{{ store.loading.isPending(saveKey()) ? 'Saving…' : (plan() ? 'Save plan' : 'Add plan') }}</button>
     @if (plan()) { <button type="button" class="btn" (click)="cancel.emit()">Cancel</button> }
   </div>
 </form>

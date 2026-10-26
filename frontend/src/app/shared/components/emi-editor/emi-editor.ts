@@ -6,11 +6,12 @@ import { Api } from '../../../core/api.service';
 import { CardEmi } from '../../../core/models';
 import { FULL_MONTHS, addMonths, fmtInput, inr, makeYm, parseNum, yearOptions, ymLabel, ymMonth0, ymYear } from '../../../core/utils/format';
 import { firstError, notBlank, rupees, wholeNumber } from '../../../core/forms/validators';
+import { Busy } from '../../directives/busy';
 
 /** Inline form to change everything about a card EMI – also before its first installment. */
 @Component({
   selector: 'app-emi-editor',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Busy],
   templateUrl: './emi-editor.html',
   styleUrl: './emi-editor.scss',
 })
@@ -62,10 +63,11 @@ export class EmiEditor implements OnInit {
       }) || (v.forWho === 'friend' && !v.personId ? 'Choose who this EMI is for.' : ''),
     );
     if (this.error()) return;
-    const err = await this.store.run(this.api.updateEmi(this.emi().id, {
+    const id = this.emi().id, body = {
       item: v.item.trim(), forWho: v.forWho, personId: v.forWho === 'friend' ? v.personId : null,
       monthly: parseNum(v.monthly), totalMonths: Number(v.totalMonths), startYm: makeYm(Number(v.startYear), Number(v.startMonth)),
-    }), { quiet: true });
+    };
+    const err = await this.store.run(() => this.api.updateEmi(id, body), { quiet: true, key: `emi:${id}` });
     if (err) return this.error.set(err);
     this.done.emit();
   }

@@ -26,7 +26,12 @@
           @if (b.text) {
             <div class="bubble" [class.bubble--user]="b.role === 'user'" [class.bubble--error]="b.error">{{ b.text }}</div>
           }
-          @if (b.status) {
+          @if (b.status && !b.text) {
+            <!-- Waiting for the reply: a bubble with animated dots (and what it's checking). -->
+            <div class="bubble thinking" role="status">
+              <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>{{ b.status }}
+            </div>
+          } @else if (b.status) {
             <div class="status"><span class="dot"></span>{{ b.status }}</div>
           }
         </div>

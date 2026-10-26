@@ -1,7 +1,9 @@
 @if (store.toast(); as t) {
   <div role="status" class="toast" [class.is-error]="t.error" animate.leave="is-leaving">
     <span>{{ t.message }}</span>
-    @if (t.undoToken) {
+    @if (t.retry) {
+      <button class="btn btn--sm action" (click)="t.retry()">Retry</button>
+    } @else if (t.undoToken) {
       <button class="btn btn--sm action" (click)="store.undo()">Undo</button>
     } @else {
       <button class="btn btn--sm action" (click)="store.toast.set(null)" aria-label="Dismiss">✕</button>

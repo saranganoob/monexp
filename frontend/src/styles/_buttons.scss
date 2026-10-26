@@ -65,3 +65,15 @@
   &.is-paid { background: var(--ok); border-color: var(--ok); }
   &.is-skipped { border-style: dashed; }
 }
+
+// Loading state (see shared/directives/busy.ts): disabled at once, spinner after 300ms.
+.is-pending { pointer-events: none; }
+.btn.is-pending:not(.is-busy) { opacity: .85; }
+.btn.is-busy::before { content: ''; width: 14px; height: 14px; flex: none; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
+// The tick box swaps its mark for a spinner while saving.
+.tick.is-busy { background: var(--field); border-color: var(--hair-3);
+  > * { display: none; }
+  &::before { content: ''; width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid var(--accent); border-right-color: transparent; animation: spin .7s linear infinite; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn.is-busy::before, .tick.is-busy::before { animation-duration: 2s; } }

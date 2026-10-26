@@ -32,7 +32,7 @@
   @if (isFriend()) {
     <div class="friend between">
       <span>{{ e.received === 'done' ? e.personName + ' paid you this month' : e.personName + ' owes you ' + (e.amount ? (e.amount | inr) : 'this month’s EMI') }}</span>
-      <button class="btn btn--sm" (click)="toggleReceived()">{{ e.received === 'done' ? 'Undo' : 'Mark received' }}</button>
+      <button class="btn btn--sm" (click)="toggleReceived()" [appBusy]="recvKey()">{{ store.loading.isPending(recvKey()) ? 'Saving…' : (e.received === 'done' ? 'Undo' : 'Mark received') }}</button>
     </div>
   }
 </div>

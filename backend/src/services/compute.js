@@ -4,11 +4,15 @@
 // Inputs are plain objects with string ids (see normalize.js).
 
 import { CATEGORIES } from '../lib/categories.js';
-import { ymToIndex, indexToYm } from '../lib/ym.js';
+import { ymToIndex, indexToYm, ymLabel } from '../lib/ym.js';
+import { instAt, leftFrom, endIdx } from '../lib/installments.js';
 
 const sum = (list) => list.reduce((s, x) => s + (x.amount || 0), 0);
 
-// Where a plan/EMI stands in a given month. n < 1 = not started yet, n > total = finished.
+/** An EMI in the shared installment shape (see lib/installments.js). */
+export const emiPlan = (e) => ({ startIdx: ymToIndex(e.startYm), total: e.totalMonths, freq: e.freq || 'monthly' });
+
+// Where a monthly installment plan (Dad, gold chit…) stands. n < 1 = not started yet, n > total = finished.
 export function installmentAt(startYm, total, ym) {
   const start = ymToIndex(startYm);
   const n = ymToIndex(ym) - start + 1;
@@ -21,25 +25,30 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
   const overrides = new Map((month.emiOverrides || []).map((o) => [o.emiId, o]));
   const cardSpends = month.cardSpends || {};
 
-  // ---- card EMIs running this month ----
+  // ---- EMIs / installments with a payment due this month (yearly ones only in their month) ----
+  const I = ymToIndex(ym);
   const activeEmis = emis
     .map((e) => {
-      const at = installmentAt(e.startYm, e.totalMonths, ym);
+      const plan = emiPlan(e);
+      const at = instAt(plan, I);
       const o = overrides.get(e.id);
       return {
-        id: e.id, cardId: e.cardId, item: e.item, forWho: e.forWho,
+        id: e.id, cardId: e.cardId, item: e.item, forWho: e.forWho, freq: plan.freq,
         personId: e.personId, personName: personName.get(e.personId) || '',
         monthly: e.monthly,
-        amount: o && o.amount != null ? o.amount : e.monthly || 0, // this month's amount
-        n: at.n, total: e.totalMonths, startYm: e.startYm, endYm: at.endYm, active: at.active,
+        amount: o && o.amount != null ? o.amount : e.monthly || 0, // this payment's amount
+        n: at.n, total: e.totalMonths, left: leftFrom(plan, I), startYm: e.startYm, endYm: indexToYm(endIdx(plan)), active: at.due,
         received: (o && o.received) || 'pending',
+        paid: (o && o.paid) || 'unpaid',
       };
     })
     .filter((e) => e.active);
+  const cardEmis = activeEmis.filter((e) => e.cardId);
+  const bankEmis = activeEmis.filter((e) => !e.cardId);
 
   // ---- cards: bill = my spends + my EMIs + friends' EMIs ----
   const cardViews = cards.map((c) => {
-    const em = activeEmis.filter((e) => e.cardId === c.id);
+    const em = cardEmis.filter((e) => e.cardId === c.id);
     const myEmis = sum(em.filter((e) => e.forWho !== 'friend'));
     const friendEmis = sum(em.filter((e) => e.forWho === 'friend'));
     const spends = cardSpends[c.id] || 0;
@@ -64,7 +73,7 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
   // ---- bills ----
   const billViews = bills
     .map((b) => {
-      const v = { ...b, inst: null };
+      const v = { ...b, kind: 'bill', inst: null };
       const card = b.cardId && cardById.get(b.cardId);
       if (card) {
         v.amount = card.total;
@@ -78,25 +87,43 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
     })
     .filter(inPlanRange);
 
-  const live = billViews.filter((b) => b.status !== 'skipped');
+  // EMIs paid from the bank / cash: their own row (paid status is kept per month on the plan).
+  const freqLabel = (e) => (e.freq === 'yearly' ? 'Yearly' : 'Monthly');
+  const emiBillRows = bankEmis.map((e) => ({
+    id: `emi:${e.id}`, kind: 'emi', emiId: e.id, ym,
+    name: e.item + (e.forWho === 'friend' ? ` · ${e.personName || 'friend'}` : ''),
+    category: 'emi', amount: e.amount, status: e.paid, dueDay: null,
+    note: `${freqLabel(e)} · paid from bank / cash · closes ${ymLabel(e.endYm, { short: true })}`,
+    cardId: null, planId: null, forWho: e.forWho, inst: { n: e.n, total: e.total, left: e.left }, sortOrder: 0,
+  }));
+
+  // ---- people ----
+  const withInst = (r) => {
+    const at = r.planId && planAt(r.planId);
+    return { ...r, inst: at ? { n: at.n, total: at.total } : null, auto: null };
+  };
+  const payables = entries.filter((r) => r.direction === 'out').map(withInst);
+  // "I owe them" is money to pay too: it's listed (and counted) in Need to pay under "Money I owe".
+  // The People entry stays the single source of truth – ticking the row marks it paid back.
+  const oweRows = payables.filter((r) => r.status !== 'moved').map((r) => ({
+    id: `owe:${r.id}`, kind: 'owe', entryId: r.id, ym, name: r.name, category: 'owe', amount: r.amount,
+    status: r.status === 'done' ? 'paid' : 'unpaid', dueDay: null, note: r.note || 'You owe this – paid back is tracked in People',
+    cardId: null, planId: null, personId: r.personId, inst: null, sortOrder: r.sortOrder,
+  }));
+
+  const allBills = billViews.concat(emiBillRows, oweRows);
+  const live = allBills.filter((b) => b.status !== 'skipped');
   const paidBills = live.filter((b) => b.status === 'paid');
   const unpaidBills = live.filter((b) => b.status === 'unpaid');
 
-  // ---- people ----
   const friendEmiRows = activeEmis
     .filter((e) => e.forWho === 'friend')
     .map((e) => ({
       id: `emi:${e.id}`, emiId: e.id, direction: 'in', personId: e.personId,
       name: `${e.personName || 'Friend'} · ${e.item} EMI`, amount: e.amount, status: e.received,
-      inst: { n: e.n, total: e.total }, auto: cardById.get(e.cardId)?.name || 'card',
+      inst: { n: e.n, total: e.total }, auto: e.cardId ? cardById.get(e.cardId)?.name || 'card' : 'bank / cash',
     }));
-
-  const withInst = (r) => {
-    const at = r.planId && planAt(r.planId);
-    return { ...r, inst: at ? { n: at.n, total: at.total } : null, auto: null };
-  };
   const receivables = entries.filter((r) => r.direction === 'in').map(withInst).filter(inPlanRange).concat(friendEmiRows);
-  const payables = entries.filter((r) => r.direction === 'out').map(withInst);
 
   const notMoved = (r) => r.status !== 'moved';
   const pending = (r) => r.status === 'pending';
@@ -104,7 +131,9 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
 
   // ---- totals ----
   const toPay = sum(live);
-  const friendEmi = cardViews.reduce((s, c) => s + c.friendEmis, 0);
+  // EMIs I pay for friends (on a card or from the bank) aren't my own spending – they pay me back.
+  const friendEmi = cardViews.reduce((s, c) => s + c.friendEmis, 0)
+    + sum(emiBillRows.filter((b) => b.forWho === 'friend' && b.status !== 'skipped'));
   const ownPay = toPay - friendEmi;
   // Spends paid by card are already inside that card's bill – don't count them twice.
   const suddenTotal = sum(sudden.filter((s) => !s.cardId));
@@ -123,13 +152,14 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
       unpaid: sum(unpaidBills),
       paidCount: paidBills.length,
       unpaidCount: unpaidBills.length,
-      skippedCount: billViews.length - live.length,
+      skippedCount: allBills.length - live.length,
       paidPct: toPay ? Math.round((sum(paidBills) / toPay) * 100) : 0,
       friendEmi,
       ownPay,
       sudden: suddenTotal,
       balance,
-      balanceInclPeople: balance + recvOther - payTotal,
+      // What I owe is already inside "to pay" (Money I owe), so it isn't taken off a second time.
+      balanceInclPeople: balance + recvOther,
       recvTotal: sum(receivables.filter(notMoved)),
       recvPending: sum(receivables.filter(pending)),
       recvDone: sum(receivables.filter(done)),
@@ -138,7 +168,7 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
       payDone: sum(payables.filter(done)),
     },
     categories,
-    bills: billViews,
+    bills: allBills,
     cards: cardViews,
     receivables,
     payables,
@@ -151,26 +181,39 @@ export function listInstallments({ ym, emis, plans, cards, people }) {
   const cardName = new Map(cards.map((c) => [c.id, c.name]));
   const personName = new Map(people.map((p) => [p.id, p.name]));
 
-  const rows = emis
+  const I = ymToIndex(ym);
+
+  const emiRows = emis
     .map((e) => {
       const friend = e.forWho === 'friend';
       const who = personName.get(e.personId) || 'Friend';
+      const plan = emiPlan(e);
+      const at = instAt(plan, I);
+      const left = leftFrom(plan, I); // payments left, this month's included if it's due
       return {
         id: e.id, type: 'emi', name: e.item + (friend ? ` · ${who}` : ''),
-        kind: friend ? 'Friend’s card EMI' : 'My card EMI', source: `On ${cardName.get(e.cardId) || 'card'}`,
-        friend, incoming: false, monthly: e.monthly || 0, startYm: e.startYm, total: e.totalMonths,
+        kind: (friend ? 'For a friend' : 'Mine') + (e.cardId ? ' · card EMI' : ' · bank / cash'),
+        source: e.cardId ? `On ${cardName.get(e.cardId) || 'card'}` : 'Paid from bank / cash',
+        friend, incoming: false, freq: plan.freq, monthly: e.monthly || 0, startYm: e.startYm, total: e.totalMonths,
+        n: I < plan.startIdx ? 0 : at.n, due: at.due, endYm: indexToYm(endIdx(plan)),
+        monthsLeft: left, amountLeft: (e.monthly || 0) * left,
       };
     })
-    .concat(plans.map((p) => ({
-      id: p.id, type: 'plan', name: p.name, kind: p.kind, source: p.source,
-      friend: false, incoming: p.direction === 'in', monthly: p.monthly || 0, startYm: p.startYm, total: p.totalInstallments,
-    })))
-    .map((r) => {
-      const at = installmentAt(r.startYm, r.total, ym);
-      const monthsLeft = r.total - Math.max(at.n - 1, 0); // including this month
-      return { ...r, n: at.n, endYm: at.endYm, monthsLeft, amountLeft: r.monthly * monthsLeft };
+    .filter((r) => r.monthsLeft > 0);
+
+  const planRows = plans
+    .map((p) => {
+      const at = installmentAt(p.startYm, p.totalInstallments, ym);
+      const left = p.totalInstallments - Math.max(at.n - 1, 0); // including this month
+      return {
+        id: p.id, type: 'plan', name: p.name, kind: p.kind, source: p.source,
+        friend: false, incoming: p.direction === 'in', freq: 'monthly', monthly: p.monthly || 0, startYm: p.startYm, total: p.totalInstallments,
+        n: at.n, due: at.active, endYm: at.endYm, monthsLeft: left, amountLeft: (p.monthly || 0) * left,
+      };
     })
     .filter((r) => r.n <= r.total);
+
+  const rows = emiRows.concat(planRows);
 
   return rows.sort((a, b) => a.endYm.localeCompare(b.endYm));
 }

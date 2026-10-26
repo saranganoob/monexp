@@ -29,7 +29,7 @@
   @if (summary()) { <div class="num small">{{ summary() }}</div> }
   @if (error()) { <div role="alert" class="err err--sm">{{ error() }}</div> }
   <div class="row-flex">
-    <button type="submit" class="btn btn--primary btn--sm">Save</button>
+    <button type="submit" class="btn btn--primary btn--sm" [appBusy]="'emi:' + emi().id">{{ store.loading.isPending('emi:' + emi().id) ? 'Saving…' : 'Save' }}</button>
     <button type="button" class="btn btn--sm" (click)="done.emit()">Cancel</button>
   </div>
 </form>

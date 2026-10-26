@@ -11,9 +11,9 @@ What the figures mean:
 - Amounts are whole Indian rupees. Write them like ₹1,00,000 (Indian digit grouping).
 - "My share of bills" = all bills to pay minus friends' EMIs on the person's credit cards (friends repay those).
 - "Balance left" = budget − my share of bills − sudden spends that weren't paid by card.
-- "Balance incl. people" = balance left + money people owe the person − money the person owes.
+- "Balance incl. people" = balance left + money people owe the person. (Money the person owes others is already a bill in "to pay", under "Money I owe".)
 - A credit card bill = my spends + my EMIs + friends' EMIs on that card. A sudden spend paid by card is already inside that card's bill.
-- Installment plans (e.g. money sent to Dad, a gold chit) and card EMIs show "X of Y" installments.
+- Installment plans (e.g. money sent to Dad, a gold chit) and EMIs show "X of Y" installments. EMIs can be monthly or yearly (yearly ones are only due in their month) and paid from a card or from the bank / cash.
 
 How to answer:
 - Be short: 1–5 sentences, or a few lines starting with "• " when listing. Plain text only – no markdown headings, tables, bold or code.

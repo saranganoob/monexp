@@ -1,22 +1,21 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AppStore } from '../../../core/app-store';
-import { Api } from '../../../core/api.service';
 import { Bill, MonthData } from '../../../core/models';
 import { dueInfo } from '../../../core/utils/format';
 import { InrPipe } from '../../../shared/pipes/inr.pipe';
 import { YmPipe } from '../../../shared/pipes/ym.pipe';
+import { Busy } from '../../../shared/directives/busy';
 
 /** Unpaid bills, soonest due first, each with "Mark paid". */
 @Component({
   selector: 'app-still-to-pay',
-  imports: [RouterLink, InrPipe, YmPipe],
+  imports: [RouterLink, InrPipe, YmPipe, Busy],
   templateUrl: './still-to-pay.html',
   styleUrl: './still-to-pay.scss',
 })
 export class StillToPay {
-  private store = inject(AppStore);
-  private api = inject(Api);
+  protected store = inject(AppStore);
   readonly month = input.required<MonthData>();
 
   protected readonly rows = computed(() => {
@@ -26,5 +25,5 @@ export class StillToPay {
       .map((b) => ({ b, due: dueInfo(b, m.ym) }));
   });
 
-  markPaid(b: Bill) { this.store.run(this.api.updateBill(b.id, { status: 'paid' })); }
+  markPaid(b: Bill) { this.store.togglePaid(b, this.month().ym, true); }
 }

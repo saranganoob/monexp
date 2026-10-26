@@ -6,6 +6,7 @@ const emiOverrideSchema = new Schema({
   emi: { type: ObjectId, ref: 'CardEmi', required: true },
   amount: { ...amountField(), default: null }, // null = use the EMI's normal monthly amount
   received: { type: String, enum: ['pending', 'done'], default: 'pending' }, // friend EMIs only
+  paid: { type: String, enum: ['unpaid', 'paid'], default: 'unpaid' },      // bank / cash EMIs only (their Need to pay row)
 }, { _id: false });
 
 const monthSchema = new Schema({

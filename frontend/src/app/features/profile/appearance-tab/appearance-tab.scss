@@ -19,3 +19,7 @@
 .preview { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid var(--hair); padding-top: 14px; }
 .link-like { font-size: 13px; font-weight: 600; color: var(--accent-ink); }
 .reset { margin-left: auto; }
+.native { font-weight: 500; color: var(--muted); font-size: 14px; font-family: 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Devanagari', var(--font); }
+.native-name { font-family: 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Devanagari', var(--font); }
+.lang-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; border-top: 1px solid var(--hair); padding-top: 14px; }
+.lang-sample { display: flex; flex-direction: column; gap: 2px; }

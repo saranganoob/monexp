@@ -9,7 +9,7 @@
   </label>
   @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
   <div class="row-flex">
-    <button type="submit" class="btn btn--primary">Save changes</button>
+    <button type="submit" class="btn btn--primary" [appBusy]="busy()">{{ busy() ? 'Saving…' : 'Save changes' }}</button>
     <button type="button" class="btn" (click)="signOut()">Sign out</button>
     @if (status()) { <span class="ok-text">{{ status() }}</span> }
   </div>

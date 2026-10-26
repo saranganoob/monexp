@@ -26,8 +26,8 @@
 
   <div class="actions">
     @if (from(); as f) {
-      <button class="btn btn--primary" [disabled]="busy()" (click)="create('rollover')">Roll over from {{ f | ym: 'short' }}</button>
+      <button class="btn btn--primary" [appBusy]="busy() && mode() === 'rollover'" [disabled]="busy()" (click)="create('rollover')">{{ busy() && mode() === 'rollover' ? 'Setting up ' + (ym() | ym: 'short') + '…' : 'Roll over from ' + (f | ym: 'short') }}</button>
     }
-    <button class="btn" [disabled]="busy()" (click)="create('blank')">Start a blank month</button>
+    <button class="btn" [appBusy]="busy() && mode() === 'blank'" [disabled]="busy()" (click)="create('blank')">{{ busy() && mode() === 'blank' ? 'Setting up ' + (ym() | ym: 'short') + '…' : 'Start a blank month' }}</button>
   </div>
 </section>

@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AppStore } from '../../../core/app-store';
 import { Api } from '../../../core/api.service';
@@ -6,19 +6,20 @@ import { fmtInput, parseNum } from '../../../core/utils/format';
 import { firstError, notBlank, rupees } from '../../../core/forms/validators';
 import { InrPipe } from '../../../shared/pipes/inr.pipe';
 import { PersonRow } from '../../../shared/utils/person-row';
-import { toggleEntry } from '../../../shared/utils/entry-actions';
+import { entryKey, toggleEntry } from '../../../shared/utils/entry-actions';
+import { Busy } from '../../../shared/directives/busy';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { Icon } from '../../../shared/ui/icon/icon';
 
 /** One "they owe me / I owe them" line with Mark received, Edit and Delete. */
 @Component({
   selector: 'app-person-entry-row',
-  imports: [ReactiveFormsModule, InrPipe, Avatar, Icon],
+  imports: [ReactiveFormsModule, InrPipe, Avatar, Icon, Busy],
   templateUrl: './person-entry-row.html',
   styleUrl: './person-entry-row.scss',
 })
 export class PersonEntryRow {
-  private store = inject(AppStore);
+  protected store = inject(AppStore);
   private api = inject(Api);
 
   readonly row = input.required<PersonRow>();
@@ -43,8 +44,10 @@ export class PersonEntryRow {
     });
   }
 
+  protected readonly key = computed(() => entryKey(this.row().r));
+  protected readonly saving = computed(() => this.store.loading.isPending(this.key()));
   toggle() { toggleEntry(this.api, this.store, this.row().r); }
-  remove() { this.store.run(this.api.deleteEntry(this.row().r.id)); }
+  remove() { const id = this.row().r.id; this.store.run(() => this.api.deleteEntry(id), { key: `remove:${id}` }); }
 
   async save() {
     this.form.markAllAsTouched();
@@ -54,7 +57,8 @@ export class PersonEntryRow {
     }));
     if (this.error()) return;
     const v = this.form.getRawValue();
-    const err = await this.store.run(this.api.updateEntry(this.row().r.id, { name: v.name.trim(), amount: parseNum(v.amount) }), { quiet: true });
+    const id = this.row().r.id, body = { name: v.name.trim(), amount: parseNum(v.amount) };
+    const err = await this.store.run(() => this.api.updateEntry(id, body), { quiet: true, key: `save:${id}` });
     if (err) return this.error.set(err);
     this.closed.emit();
   }

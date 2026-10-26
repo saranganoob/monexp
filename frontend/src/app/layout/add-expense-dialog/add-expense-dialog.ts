@@ -8,18 +8,22 @@ import { FULL_MONTHS, defaultDate, firstDate, lastDate, makeYm, parseNum, yearOp
 import { firstError, rupees, wholeNumber } from '../../core/forms/validators';
 import { BILL_GROUPS } from '../../shared/components/bill-editor/bill-editor';
 import { Icon } from '../../shared/ui/icon/icon';
+import { Busy } from '../../shared/directives/busy';
+import { LangHint } from '../../shared/ui/lang-hint/lang-hint';
+import { HintKey } from '../../core/i18n/home-language';
 
-const TYPES: { key: AddType; label: string; sub: string }[] = [
+const SAVE_KEY = 'add-expense';
+const TYPES: { key: AddType; label: string; sub: string; hint?: HintKey }[] = [
   { key: 'bill', label: 'Bill / expense', sub: 'Goes to Need to pay' },
   { key: 'sudden', label: 'Sudden spend', sub: 'Unplanned, one-off' },
-  { key: 'in', label: 'They owe me', sub: 'You lent or paid' },
-  { key: 'out', label: 'I owe them', sub: 'You borrowed' },
+  { key: 'in', label: 'They owe me', sub: 'You lent or paid', hint: 'theyOweMe' },
+  { key: 'out', label: 'I owe them', sub: 'You borrowed', hint: 'iOweThem' },
 ];
 
 /** "Add expense" – a bill, sudden spend or people entry, to any month. */
 @Component({
   selector: 'app-add-expense-dialog',
-  imports: [ReactiveFormsModule, Icon],
+  imports: [ReactiveFormsModule, Icon, Busy, LangHint],
   templateUrl: './add-expense-dialog.html',
   styleUrl: './add-expense-dialog.scss',
   host: { '(document:keydown.escape)': 'close()' },
@@ -35,7 +39,7 @@ export class AddExpenseDialog implements AfterViewInit {
   protected readonly months = FULL_MONTHS;
   protected readonly groups = BILL_GROUPS;
   protected readonly error = signal('');
-  protected readonly busy = signal(false);
+  protected readonly saveKey = SAVE_KEY;
 
   protected readonly form = this.fb.group({
     type: [this.store.dialog()?.type ?? ('bill' as AddType)],
@@ -50,6 +54,8 @@ export class AddExpenseDialog implements AfterViewInit {
     status: ['unpaid'],
     mode: ['UPI'],
     date: [defaultDate(this.store.ym())],
+    /** Keep the dialog open after saving, ready for the next one. */
+    again: [false],
   });
   private readonly v = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
 
@@ -81,6 +87,10 @@ export class AddExpenseDialog implements AfterViewInit {
   }
 
   ngAfterViewInit() {
+    this.focusFirst();
+  }
+
+  private focusFirst() {
     setTimeout(() => this.host.nativeElement.querySelector<HTMLElement>(this.isPerson() ? '#dPerson' : '#dName')?.focus());
   }
 
@@ -111,23 +121,29 @@ export class AddExpenseDialog implements AfterViewInit {
     const v = this.form.getRawValue(), ym = this.ym(), amount = parseNum(v.amount), name = v.name.trim();
     let request, path: string;
     if (v.type === 'bill') {
-      request = this.api.addBill(ym, { name, category: v.category, amount, status: v.status, dueDay: v.dueDay ? Number(v.dueDay) : null });
+      request = () => this.api.addBill(ym, { name, category: v.category, amount, status: v.status, dueDay: v.dueDay ? Number(v.dueDay) : null });
       path = '/pay';
     } else if (v.type === 'sudden') {
-      request = this.api.addSudden(ym, { name, amount, mode: v.mode, date: v.date });
+      request = () => this.api.addSudden(ym, { name, amount, mode: v.mode, date: v.date });
       path = '/sudden';
     } else {
-      request = this.api.addEntry(ym, {
-        direction: v.type, amount, reason: name,
+      request = () => this.api.addEntry(ym, {
+        direction: v.type as 'in' | 'out', amount, reason: name,
         ...(v.person === '__new' ? { newPersonName: v.newPerson.trim() } : { personId: v.person }),
       });
       path = '/people';
     }
-    this.busy.set(true);
-    const err = await this.store.run(request, { quiet: true });
-    this.busy.set(false);
+    const err = await this.store.run(request, { quiet: true, key: SAVE_KEY });
     if (err) return this.error.set(err);
     this.store.ym.set(ym);
+    if (v.again) {
+      // Ready for the next one: keep type, month, category, payment mode and person; clear the rest.
+      this.form.patchValue({ name: '', amount: '', dueDay: '', newPerson: '' });
+      for (const c of ['name', 'amount', 'dueDay', 'newPerson'] as const) this.form.controls[c].markAsUntouched();
+      this.error.set('');
+      this.focusFirst();
+      return;
+    }
     this.close();
     this.router.navigate([path], { queryParams: this.isPerson() ? { tab: v.type } : {} });
   }

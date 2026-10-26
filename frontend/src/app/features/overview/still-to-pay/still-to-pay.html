@@ -10,7 +10,7 @@
         <div class="due" [class]="'due due--' + row.due.tone">{{ row.due.label }}</div>
       </div>
       <div class="num strong">{{ row.b.amount | inr }}</div>
-      <button class="btn btn--sm" (click)="markPaid(row.b)">Mark paid</button>
+      <button class="btn btn--sm" (click)="markPaid(row.b)" [appBusy]="'bill:' + row.b.id">{{ store.loading.isPending('bill:' + row.b.id) ? 'Saving…' : (row.b.kind === 'owe' ? 'Mark paid back' : 'Mark paid') }}</button>
     </div>
   } @empty {
     <p class="muted empty">Everything is paid for {{ month().ym | ym }}. Nice.</p>

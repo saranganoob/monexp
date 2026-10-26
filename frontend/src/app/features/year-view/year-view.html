@@ -1,6 +1,8 @@
 <div class="page">
   @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
-  @if (data(); as d) {
+  @if (showSkeleton()) {
+    <app-skeleton variant="cards" />
+  } @else if (data(); as d) {
     <section class="grid-220">
       <div class="card stat"><div class="label">Budgeted in {{ d.year }}</div><div class="stat__value">{{ d.budget | inr }}</div><div class="stat__note">{{ d.trackedCount }} month{{ d.trackedCount === 1 ? '' : 's' }} tracked</div></div>
       <div class="card stat"><div class="label">Spent in {{ d.year }}</div><div class="stat__value">{{ d.spent | inr }}</div><div class="stat__note">Bills + sudden spends</div></div>

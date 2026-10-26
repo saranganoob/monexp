@@ -3,10 +3,13 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Account, AdminUser, Card, CardEmi, ChangeResult, Installment, MonthView, Person, PersonStats, Plan, Prefs, YearView } from './models';
 
+/** True when the request never got an answer (offline, server down, timed out) – worth a Retry. */
+export const isConnectionError = (err: unknown) => err instanceof HttpErrorResponse && err.status === 0;
+
 /** Turns an HTTP error into the backend's plain-English message. */
 export function errorMessage(err: unknown): string {
   if (err instanceof HttpErrorResponse) {
-    if (err.status === 0) return 'Can’t reach the MonEXP server. Is the backend running?';
+    if (err.status === 0) return err.error?.error || 'Can’t reach the MonEXP server. Check your connection.';
     return err.error?.error || `Something went wrong (${err.status}).`;
   }
   return 'Something went wrong.';
@@ -45,7 +48,7 @@ export class Api {
   setCardBill(ym: string, cardId: string, body: { total: number } | { spends: number } | { add: number }) { return this.put<ChangeResult>(`/months/${ym}/cards/${cardId}/bill`, body); }
   addCardSpend(ym: string, cardId: string, body: { name: string; amount: number; date: string }) { return this.post<ChangeResult>(`/months/${ym}/cards/${cardId}/spends`, body); }
   deleteCardSpend(id: string) { return this.del<ChangeResult>(`/card-spends/${id}`); }
-  setEmiMonth(ym: string, emiId: string, body: { amount?: number | null; received?: 'pending' | 'done' }) { return this.patch<ChangeResult>(`/months/${ym}/emis/${emiId}`, body); }
+  setEmiMonth(ym: string, emiId: string, body: { amount?: number | null; received?: 'pending' | 'done'; paid?: 'paid' | 'unpaid' }) { return this.patch<ChangeResult>(`/months/${ym}/emis/${emiId}`, body); }
 
   // bills
   addBill(ym: string, body: { name: string; category: string; amount: number; status: string; dueDay?: number | null }) { return this.post<ChangeResult>(`/months/${ym}/bills`, body); }

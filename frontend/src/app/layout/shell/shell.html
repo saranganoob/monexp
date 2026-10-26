@@ -12,7 +12,9 @@
         </div>
       }
 
-      @if (showEmpty()) {
+      @if (store.showSkeleton()) {
+        <app-skeleton />
+      } @else if (showEmpty()) {
         <app-empty-month />
       } @else {
         <router-outlet />
@@ -21,6 +23,9 @@
   </main>
 
   @if (store.dialog()) { <app-add-expense-dialog animate.leave="is-leaving" /> }
+  @if (store.emiDialog()) { <app-emi-dialog animate.leave="is-leaving" /> }
+  <!-- Screen readers hear "Saving…" when an action takes a while (the toast then says how it went). -->
+  <div class="sr" role="status" aria-live="polite">{{ store.loading.anySlow() ? 'Saving…' : '' }}</div>
   <app-ask-ai />
   <app-undo-toast />
 </div>

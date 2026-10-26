@@ -8,13 +8,14 @@ import { firstError, notBlank } from '../../../core/forms/validators';
 import { InrPipe } from '../../../shared/pipes/inr.pipe';
 import { YmPipe } from '../../../shared/pipes/ym.pipe';
 import { Icon } from '../../../shared/ui/icon/icon';
+import { Busy } from '../../../shared/directives/busy';
 
 export const NETWORKS = ['Visa', 'RuPay', 'Maestro', 'Mastercard'] as const;
 
 /** Your credit cards: name, network, last 4 digits; close, reopen or delete. */
 @Component({
   selector: 'app-cards-tab',
-  imports: [ReactiveFormsModule, InrPipe, YmPipe, Icon],
+  imports: [ReactiveFormsModule, InrPipe, YmPipe, Icon, Busy],
   templateUrl: './cards-tab.html',
   styleUrl: './cards-tab.scss',
 })
@@ -61,11 +62,11 @@ export class CardsTab {
 
   toggleClosed(c: Card) {
     this.message.set(null);
-    this.store.run(this.api.updateCard(c.id, { closed: !c.closedOn }));
+    this.store.run(() => this.api.updateCard(c.id, { closed: !c.closedOn }), { key: `card:${c.id}` });
   }
 
   async remove(c: Card) {
-    const err = await this.store.run(this.api.deleteCard(c.id), { quiet: true });
+    const err = await this.store.run(() => this.api.deleteCard(c.id), { quiet: true, key: `card:${c.id}` });
     this.message.set(err ? { id: c.id, text: err } : null);
   }
 
@@ -79,7 +80,8 @@ export class CardsTab {
     if (this.error()) return;
     const v = this.form.getRawValue(), id = this.editingId();
     const body = { name: v.name.trim(), last4: v.last4, network: v.network };
-    const err = await this.store.run(id ? this.api.updateCard(id, body) : this.api.addCard({ ...body, addToYm: this.store.ym() }), { quiet: true });
+    const ym = this.store.ym();
+    const err = await this.store.run(() => (id ? this.api.updateCard(id, body) : this.api.addCard({ ...body, addToYm: ym })), { quiet: true, key: 'save-card' });
     if (err) return this.error.set(err);
     this.cancel();
   }

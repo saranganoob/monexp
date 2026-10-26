@@ -75,19 +75,22 @@ router.delete('/cards/:id', async (req, res) => {
   res.json(await withUndo({ global: ['Card'] }, () => Card.deleteOne({ _id: card._id }).then(() => ({})), `${card.name} deleted`));
 });
 
-// ---------------- card EMIs ----------------
+// ---------------- EMIs & installments ----------------
+// Paid from a card (added to that card's bill) or from the bank / cash (cardId null: its own row
+// in Need to pay). Monthly or yearly; `totalMonths` is the number of payments.
 
 async function emiFields(b, { partial }) {
   const out = {};
   if (!partial || b.cardId !== undefined) {
-    out.card = toId(b.cardId, 'card');
-    if (!(await Card.exists({ _id: out.card }))) throw notFound('Card not found.');
+    out.card = toOptionalId(b.cardId, 'card'); // null / '' = bank or cash
+    if (out.card && !(await Card.exists({ _id: out.card }))) throw notFound('Card not found.');
   }
-  if (!partial || b.item !== undefined) out.item = toText(b.item, 'What was bought', { required: true });
+  if (!partial || b.item !== undefined) out.item = toText(b.item, 'What is it', { required: true });
   if (!partial || b.forWho !== undefined) out.forWho = toEnum(b.forWho ?? 'me', ['me', 'friend'], 'forWho');
   if (!partial || b.personId !== undefined) out.person = toOptionalId(b.personId, 'person');
-  if (!partial || b.monthly !== undefined) out.monthly = toAmount(b.monthly, 'EMI per month');
-  if (!partial || b.totalMonths !== undefined) out.totalMonths = toInt(b.totalMonths, 'Total months', { min: 1, max: 600 });
+  if (!partial || b.monthly !== undefined) out.monthly = toAmount(b.monthly, 'Amount per payment');
+  if (!partial || b.freq !== undefined) out.freq = toEnum(b.freq ?? 'monthly', ['monthly', 'yearly'], 'How often');
+  if (!partial || b.totalMonths !== undefined) out.totalMonths = toInt(b.totalMonths, 'Number of payments', { min: 1, max: 600 });
   if (b.startYm !== undefined) out.startYm = toYm(b.startYm, 'startYm');
   return out;
 }
@@ -96,11 +99,12 @@ router.get('/emis', async (_req, res) => {
   res.json((await loadSetup()).emis);
 });
 
-// POST /api/emis { cardId, item, forWho, personId?, monthly, totalMonths, startYm }
-//   or instead of startYm: { atYm, alreadyPaid } – "Already paid before Oct"
+// POST /api/emis { cardId|null, item, forWho, personId?, monthly, freq, totalMonths, startYm }
+//   or instead of startYm: { atYm, alreadyPaid } – "Already paid before Oct" (monthly)
 router.post('/emis', async (req, res) => {
   const b = req.body || {};
   const fields = await emiFields(b, { partial: false });
+  if (!fields.monthly) throw badRequest('Add the amount per payment.');
   if (!fields.startYm) {
     const atYm = toYm(b.atYm, 'atYm');
     const alreadyPaid = toInt(b.alreadyPaid ?? 0, 'Already paid', { min: 0 });
@@ -113,9 +117,9 @@ router.post('/emis', async (req, res) => {
   } else {
     fields.person = null;
   }
-  const card = await Card.findById(fields.card).lean();
+  const card = fields.card ? await Card.findById(fields.card).lean() : null;
   res.status(201).json(await withUndo({ global: ['CardEmi'] }, async () => N.normEmi((await CardEmi.create(fields)).toObject()),
-    `${fields.item} EMI added to ${card.name}`));
+    card ? `${fields.item} EMI added to ${card.name}` : `${fields.item} added (paid from bank / cash)`));
 });
 
 router.patch('/emis/:id', async (req, res) => {

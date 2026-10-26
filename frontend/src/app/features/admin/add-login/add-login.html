@@ -9,7 +9,7 @@
       <span class="prefix-input"><span class="prefix">+91</span><input type="tel" class="field num" inputmode="numeric" formControlName="phone" placeholder="10-digit mobile number" autocomplete="off"></span>
     </label>
     <label><span class="field-label">Temporary password</span><input type="text" class="field" formControlName="password" placeholder="At least 8 characters" autocomplete="new-password"></label>
-    <button type="submit" class="btn btn--primary" [disabled]="busy() || full()">{{ busy() ? 'Adding…' : 'Add login' }}</button>
+    <button type="submit" class="btn btn--primary" [disabled]="full()" [appBusy]="busy()">{{ busy() ? 'Adding…' : 'Add login' }}</button>
   </div>
   @if (full()) {
     <div role="status" class="notice notice--muted">You've reached {{ maxUsers() }} logins – the most allowed. To allow more, raise <strong>MAX_USERS</strong> in Render → Environment.</div>

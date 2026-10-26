@@ -14,7 +14,7 @@ import { Icon } from '../../../shared/ui/icon/icon';
   styleUrl: './budget-card.scss',
 })
 export class BudgetCard {
-  private store = inject(AppStore);
+  protected store = inject(AppStore);
   private api = inject(Api);
   readonly ym = input.required<string>();
   readonly budget = input.required<number>();
@@ -27,6 +27,7 @@ export class BudgetCard {
   save() {
     const v = parseNum(this.control.value);
     if (v === this.budget()) return this.control.setValue(fmtInput(v));
-    this.store.run(this.api.setBudget(this.ym(), v));
+    const ym = this.ym();
+    this.store.run(() => this.api.setBudget(ym, v), { key: 'budget' });
   }
 }

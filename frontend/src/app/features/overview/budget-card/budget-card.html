@@ -5,5 +5,5 @@
     <input id="budget" class="num" inputmode="numeric" [formControl]="control" (change)="save()" (keydown.enter)="$any($event.target).blur()">
     <app-icon name="edit" [stroke]="1.8" />
   </div>
-  <div class="note">Edit anytime — every total recalculates.</div>
+  <div class="note" role="status">{{ store.loading.isSlow('budget') ? 'Saving…' : 'Edit anytime — every total recalculates.' }}</div>
 </div>

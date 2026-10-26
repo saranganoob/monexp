@@ -1,0 +1,100 @@
+<div class="backdrop" (click)="backdrop($event)">
+  <form role="dialog" aria-modal="true" aria-labelledby="emiTitle" class="card dialog" [formGroup]="form" (ngSubmit)="save()">
+    <div class="between top">
+      <div>
+        <h2 id="emiTitle">Add EMI / installment</h2>
+        <p class="hint">Monthly or yearly, from your bank or a card. It can have started already – earlier payments are counted for you.</p>
+      </div>
+      <button type="button" class="btn btn--ghost btn--icon" (click)="close()" aria-label="Close"><app-icon name="close" [size]="20" /></button>
+    </div>
+
+    <fieldset class="group">
+      <legend class="field-label">Who is it for?</legend>
+      <div class="seg-group" role="radiogroup">
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="!isFriend()" [attr.aria-checked]="!isFriend()" (click)="set('forWho', 'me')">Me</button>
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="isFriend()" [attr.aria-checked]="isFriend()" (click)="set('forWho', 'friend')">A friend</button>
+      </div>
+    </fieldset>
+
+    <div class="form-grid form-grid--wide">
+      @if (isFriend()) {
+        <label><span class="field-label">Which friend</span>
+          <select id="ePerson" class="field" formControlName="personId">
+            <option value="">Choose a person…</option>
+            @for (p of store.people(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+          </select>
+          @if (!store.people().length) { <span class="field-hint">Add people first under Profile → People (on the website).</span> }
+        </label>
+      }
+      <label><span class="field-label">What is it?</span><input id="eItem" class="field" formControlName="item" placeholder="e.g. Insurance, iPhone, Bike loan"></label>
+      <label><span class="field-label">{{ amountLabel() }}</span><input class="field num" inputmode="numeric" formControlName="amount" placeholder="0"></label>
+      <label><span class="field-label">Paid from</span>
+        <select class="field" formControlName="paidFrom">
+          <option value="">Bank / cash (not on a card)</option>
+          @for (c of openCards(); track c.id) { <option [value]="c.id">{{ c.name }} credit card</option> }
+        </select>
+      </label>
+    </div>
+
+    <fieldset class="group">
+      <legend class="field-label">How often?</legend>
+      <div class="seg-group" role="radiogroup">
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="!yearly()" [attr.aria-checked]="!yearly()" (click)="set('freq', 'monthly')">Monthly</button>
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="yearly()" [attr.aria-checked]="yearly()" (click)="set('freq', 'yearly')">Yearly</button>
+      </div>
+    </fieldset>
+
+    <div class="two">
+      <label><span class="field-label">First payment · month</span>
+        <select class="field" formControlName="startMonth">
+          @for (mn of months; track $index) { <option [ngValue]="$index">{{ mn }}</option> }
+        </select>
+      </label>
+      <label><span class="field-label">Year</span>
+        <select class="field" formControlName="startYear">
+          @for (y of years; track y) { <option [ngValue]="y">{{ y }}</option> }
+        </select>
+      </label>
+    </div>
+
+    <fieldset class="group">
+      <legend class="field-label">How long?</legend>
+      <div class="seg-group" role="radiogroup">
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="form.controls.howLong.value === 'count'" [attr.aria-checked]="form.controls.howLong.value === 'count'" (click)="set('howLong', 'count')">Number of payments</button>
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="form.controls.howLong.value === 'until'" [attr.aria-checked]="form.controls.howLong.value === 'until'" (click)="set('howLong', 'until')">Until an end date</button>
+      </div>
+    </fieldset>
+    @if (form.controls.howLong.value === 'count') {
+      <label class="count"><span class="field-label">Number of payments</span><input class="field num" inputmode="numeric" formControlName="count" placeholder="e.g. 12"></label>
+    } @else {
+      <div class="two">
+        <label><span class="field-label">Last payment · month</span>
+          <select class="field" formControlName="endMonth">
+            @for (mn of months; track $index) { <option [ngValue]="$index">{{ mn }}</option> }
+          </select>
+        </label>
+        <label><span class="field-label">Year</span>
+          <select class="field" formControlName="endYear">
+            @for (y of years; track y) { <option [ngValue]="y">{{ y }}</option> }
+          </select>
+        </label>
+      </div>
+    }
+
+    <!-- Live summary -->
+    @if (summary().problem) {
+      <div role="alert" class="notice notice--error notice--sm">{{ summary().problem }}</div>
+    } @else if (summary().lines.length) {
+      <div class="notice notice--info summary" aria-live="polite">
+        @for (line of summary().lines; track $index) { <div [class.strong]="$first">{{ line }}</div> }
+      </div>
+    }
+    @if (error() && error() !== summary().problem) { <div role="alert" class="err">{{ error() }}</div> }
+
+    <div class="actions">
+      <label class="check again"><input type="checkbox" formControlName="again"> Add another after saving</label>
+      <button type="button" class="btn" (click)="close()">Close</button>
+      <button type="submit" class="btn btn--primary" [appBusy]="saveKey">{{ store.loading.isPending(saveKey) ? 'Saving…' : 'Add' }}</button>
+    </div>
+  </form>
+</div>

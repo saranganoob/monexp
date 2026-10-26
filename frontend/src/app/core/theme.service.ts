@@ -1,7 +1,7 @@
 import { DOCUMENT, Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Api } from './api.service';
 import { AuthService } from './auth/auth.service';
-import { Prefs } from './models';
+import { HomeLang, Prefs } from './models';
 import { accentTokens } from './utils/color';
 
 export type ThemeMode = 'light' | 'dark';
@@ -39,6 +39,8 @@ export class ThemeService {
 
   readonly mode = signal<ThemeMode>(this.read(STORAGE_KEY) === 'dark' ? 'dark' : 'light');
   readonly accent = signal<string>(this.savedAccent());
+  /** Home-language hints (Tamil / Telugu / Hindi), or null for English only. Saved on the account. */
+  readonly lang = signal<HomeLang | null>(null);
 
   private appliedFor: string | null = null; // whose saved look is showing
   private pending: Partial<Prefs> = {};
@@ -67,10 +69,11 @@ export class ThemeService {
         const who = account ? account.email || account.phone : null;
         if (who === this.appliedFor) return;
         this.appliedFor = who;
-        if (!account) return; // signed out: the sign-in page keeps the last look on this device
+        if (!account) { this.lang.set(null); return; } // signed out: the sign-in page keeps the last look on this device
         // Their own choice, or the default look if they haven't picked one – never the previous person's.
         this.mode.set(account.prefs?.theme ?? 'light');
         this.accent.set(account.prefs?.accent ?? DEFAULT_ACCENT);
+        this.lang.set(account.prefs?.lang ?? null);
       });
     });
   }
@@ -83,6 +86,11 @@ export class ThemeService {
   setAccent(hex: string) {
     this.accent.set(hex.toUpperCase());
     this.save({ accent: hex.toUpperCase() });
+  }
+
+  setLang(lang: HomeLang | null) {
+    this.lang.set(lang);
+    this.save({ lang });
   }
 
   /** Saves to the signed-in account (a moment after the last change). */

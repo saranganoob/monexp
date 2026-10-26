@@ -7,6 +7,7 @@ import { Plan } from '../../../core/models';
 import { FULL_MONTHS, addMonths, fmtInput, inr, makeYm, parseNum, yearOptions, ymLabel, ymMonth0, ymYear } from '../../../core/utils/format';
 import { firstError, notBlank, rupees, wholeNumber } from '../../../core/forms/validators';
 import { YmPipe } from '../../../shared/pipes/ym.pipe';
+import { Busy } from '../../../shared/directives/busy';
 
 const PLAN_GROUPS = [
   { key: 'fam', label: 'Family & personal' },
@@ -18,12 +19,13 @@ const PLAN_GROUPS = [
 /** Add a new installment plan, or edit one when `plan` is given. */
 @Component({
   selector: 'app-plan-form',
-  imports: [ReactiveFormsModule, YmPipe],
+  imports: [ReactiveFormsModule, YmPipe, Busy],
   templateUrl: './plan-form.html',
   styleUrl: './plan-form.scss',
 })
 export class PlanForm implements OnInit {
   protected store = inject(AppStore);
+  protected readonly saveKey = () => `plan:${this.plan()?.id ?? 'new'}`;
   private api = inject(Api);
   private fb = inject(NonNullableFormBuilder);
 
@@ -95,10 +97,11 @@ export class PlanForm implements OnInit {
       ...(v.direction === 'in' ? { personId: v.personId } : { category: v.category }),
     };
     const p = this.plan();
+    const startYm = this.startYm();
     const err = await this.store.run(
-      p ? this.api.updatePlan(p.id, { ...body, startYm: this.startYm() })
-        : this.api.addPlan({ ...body, direction: v.direction, alreadyPaid: parseNum(v.alreadyPaid) }),
-      { quiet: true },
+      () => (p ? this.api.updatePlan(p.id, { ...body, startYm })
+        : this.api.addPlan({ ...body, direction: v.direction, alreadyPaid: parseNum(v.alreadyPaid) })),
+      { quiet: true, key: this.saveKey() },
     );
     if (err) return this.error.set(err);
     if (!p) {

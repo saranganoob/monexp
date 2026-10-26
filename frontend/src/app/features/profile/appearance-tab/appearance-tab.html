@@ -40,3 +40,24 @@
     }
   </div>
 </section>
+
+<section class="card panel">
+  <div>
+    <h2 id="langLbl" class="card__title">Home language <span class="native">(தாய்மொழி / మాతృభాష / मातृभाषा)</span></h2>
+    <p class="card__lead">MonEXP stays in English. Pick a language to see a small hint in it under “They owe me” and “I owe them”. Saved to your account.</p>
+  </div>
+  <div role="radiogroup" aria-labelledby="langLbl" class="seg-group">
+    <button type="button" role="radio" class="seg option" [class.is-on]="theme.lang() === null" [attr.aria-checked]="theme.lang() === null" (click)="pickLang(null)">None (English only)</button>
+    @for (l of languages; track l.code) {
+      <button type="button" role="radio" class="seg option" [class.is-on]="theme.lang() === l.code" [attr.aria-checked]="theme.lang() === l.code"
+        (click)="pickLang(l.code)" [attr.aria-label]="l.english"><span [attr.lang]="l.code" class="native-name">{{ l.name }}</span></button>
+    }
+  </div>
+  <div class="lang-preview" aria-live="polite">
+    <span class="small muted">Preview</span>
+    @for (k of previewKeys; track k) {
+      <div class="lang-sample"><span class="strong">{{ hintLabels[k] }}</span><app-lang-hint [key]="k" /></div>
+    }
+    @if (!theme.lang()) { <span class="small muted">No hints – English only.</span> }
+  </div>
+</section>

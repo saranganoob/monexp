@@ -17,7 +17,7 @@ const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 const lastTenDigits = (s) => s.replace(/\D/g, '').slice(-10);
 const publicUser = (u) => ({
   email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin),
-  prefs: { theme: u.prefs?.theme ?? null, accent: u.prefs?.accent ?? null },
+  prefs: { theme: u.prefs?.theme ?? null, accent: u.prefs?.accent ?? null, lang: u.prefs?.lang ?? null },
 });
 
 /** Email, or the last 10 digits of a mobile number. Throws if it's neither. */
@@ -141,6 +141,10 @@ router.patch('/prefs', requireAuth, async (req, res) => {
     const accent = String(req.body.accent).toUpperCase();
     if (!/^#[0-9A-F]{6}$/.test(accent)) throw badRequest('Accent must be a colour like #235EDF.');
     set['prefs.accent'] = accent;
+  }
+  if (req.body?.lang !== undefined) {
+    if (![null, 'ta', 'te', 'hi'].includes(req.body.lang)) throw badRequest('Home language must be Tamil, Telugu, Hindi or none.');
+    set['prefs.lang'] = req.body.lang;
   }
   const user = await User.findByIdAndUpdate(req.userId, { $set: set }, { new: true, runValidators: true }).lean();
   if (!user) throw notFound('Account not found.');

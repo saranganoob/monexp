@@ -11,7 +11,7 @@
       </div>
       <div class="num strong">{{ row.r.amount | inr }}</div>
       @if (row.canToggle) {
-        <button class="btn btn--sm" [class.btn--primary]="row.btnPrimary" (click)="toggle(row.r)">{{ row.btnLabel }}</button>
+        <button class="btn btn--sm" [class.btn--primary]="row.btnPrimary" (click)="toggle(row.r)" [appBusy]="entryKey(row.r)">{{ store.loading.isPending(entryKey(row.r)) ? 'Saving…' : row.btnLabel }}</button>
       }
     </div>
   } @empty {

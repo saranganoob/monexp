@@ -5,6 +5,7 @@ import { Api } from '../../../core/api.service';
 import { Bill } from '../../../core/models';
 import { fmtInput, parseNum } from '../../../core/utils/format';
 import { firstError, notBlank, rupees, wholeNumber } from '../../../core/forms/validators';
+import { Busy } from '../../directives/busy';
 
 export const BILL_GROUPS = [
   { key: 'fam', label: 'Family & personal' },
@@ -16,12 +17,12 @@ export const BILL_GROUPS = [
 /** Inline form to change a bill's name, amount, group, due day and note. */
 @Component({
   selector: 'app-bill-editor',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Busy],
   templateUrl: './bill-editor.html',
   styleUrl: './bill-editor.scss',
 })
 export class BillEditor implements OnInit, AfterViewInit {
-  private store = inject(AppStore);
+  protected store = inject(AppStore);
   private api = inject(Api);
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private fb = inject(NonNullableFormBuilder);
@@ -57,10 +58,11 @@ export class BillEditor implements OnInit, AfterViewInit {
     }));
     if (this.form.invalid) return;
     const v = this.form.getRawValue();
-    const err = await this.store.run(this.api.updateBill(this.bill().id, {
+    const id = this.bill().id, body = {
       name: v.name.trim(), amount: parseNum(v.amount), category: v.category,
       dueDay: v.dueDay ? Number(v.dueDay) : null, note: v.note.trim(),
-    }), { quiet: true });
+    };
+    const err = await this.store.run(() => this.api.updateBill(id, body), { quiet: true, key: `edit:${id}` });
     if (err) return this.error.set(err);
     this.done.emit();
   }

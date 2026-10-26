@@ -1,7 +1,9 @@
 import { DOCUMENT, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
-import { Api, errorMessage } from './api.service';
+import { Api, errorMessage, isConnectionError } from './api.service';
+import { LoadingService, SPINNER_DELAY_MS } from './loading.service';
+import { CONNECTION_MESSAGE } from './http/timeout.interceptor';
 import { AuthService } from './auth/auth.service';
-import { Card, CardEmi, ChangeResult, MonthData, MonthView, PersonStats } from './models';
+import { Bill, Card, CardEmi, ChangeResult, MonthData, MonthView, PersonStats } from './models';
 import { currentYm } from './utils/format';
 
 const YM_KEY = 'monexp.ym';
@@ -16,7 +18,15 @@ function savedYm(): string | null {
   }
 }
 
-export interface Toast { message: string; undoToken?: string; error?: boolean; }
+export interface Toast { message: string; undoToken?: string; error?: boolean; retry?: () => void; }
+/** A change to send: a function (can be retried after a connection failure) or a request already sent. */
+export type ChangeRequest = (() => Promise<ChangeResult>) | Promise<ChangeResult>;
+export interface RunOptions {
+  /** Don't show failures as a toast (the form shows them itself). */
+  quiet?: boolean;
+  /** Action id: buttons/ticks with this key show a spinner, and a second click is ignored until it's done. */
+  key?: string;
+}
 export type AddType = 'bill' | 'sudden' | 'in' | 'out';
 
 /**
@@ -29,6 +39,7 @@ export class AppStore {
   private api = inject(Api);
   private auth = inject(AuthService);
   private doc = inject(DOCUMENT);
+  readonly loading = inject(LoadingService);
   private lastRefresh = 0;
 
   /** Selected month – remembered for this browser tab, so a refresh stays on it. */
@@ -44,11 +55,18 @@ export class AppStore {
 
   readonly toast = signal<Toast | null>(null);
   readonly dialog = signal<{ type: AddType } | null>(null);
+  /** The "Add EMI / installment" dialog; cardId pre-selects "Paid from" (null = bank / cash). */
+  readonly emiDialog = signal<{ cardId: string | null } | null>(null);
   readonly askAiOpen = signal(false);
 
   /** The month's data, or null if it isn't set up yet / still loading. */
   readonly month = computed(() => { const v = this.view(); return v && v.exists ? (v as MonthData) : null; });
   readonly unpaidCount = computed(() => this.month()?.totals.unpaidCount ?? 0);
+
+  /** The month's data is loading and has taken longer than 300ms (time for the skeleton). */
+  private readonly loadingSlow = signal(false);
+  /** Show placeholders instead of the page: still loading after 300ms and what's on screen is for another month. */
+  readonly showSkeleton = computed(() => this.loadingSlow() && this.view()?.ym !== this.ym());
 
   private loadSeq = 0;
   private toastTimer?: ReturnType<typeof setTimeout>;
@@ -82,12 +100,14 @@ export class AppStore {
     this.loadError.set('');
     this.toast.set(null);
     this.dialog.set(null);
+    this.emiDialog.set(null);
     this.askAiOpen.set(false);
   }
 
   private async load(ym: string) {
     const seq = ++this.loadSeq;
     this.lastRefresh = Date.now();
+    const slowTimer = setTimeout(() => { if (seq === this.loadSeq) this.loadingSlow.set(true); }, SPINNER_DELAY_MS);
     try {
       const [view, cards, emis, people] = await Promise.all([this.api.month(ym), this.api.cards(), this.api.emis(), this.api.people(ym)]);
       if (seq !== this.loadSeq) return; // a newer load started meanwhile
@@ -98,6 +118,9 @@ export class AppStore {
       this.loadError.set('');
     } catch (err) {
       if (seq === this.loadSeq) this.loadError.set(errorMessage(err));
+    } finally {
+      clearTimeout(slowTimer);
+      if (seq === this.loadSeq) this.loadingSlow.set(false);
     }
   }
 
@@ -106,18 +129,37 @@ export class AppStore {
   /**
    * Sends a change to the backend. On success shows the "… · Undo" toast and reloads.
    * Returns null on success, or the error message (also shown as a toast unless `quiet`).
+   * With a `key`, the action shows its spinner and can't be sent twice at once.
+   * If the connection fails, the toast offers Retry (when the change was given as a function).
    */
-  async run(request: Promise<ChangeResult>, { quiet = false } = {}): Promise<string | null> {
+  async run(request: ChangeRequest, opts: RunOptions = {}): Promise<string | null> {
+    const { quiet = false, key } = opts;
+    if (key && this.loading.isPending(key)) return 'Still saving…';
+    const send = () => (typeof request === 'function' ? request() : request);
     try {
-      const res = await request;
+      const res = await (key ? this.loading.track(key, send) : send());
       this.showToast({ message: res.message, undoToken: res.undoToken });
       this.reload();
       return null;
     } catch (err) {
       const msg = errorMessage(err);
-      if (!quiet) this.showToast({ message: msg, error: true });
+      if (isConnectionError(err)) {
+        // Nothing was changed on screen before the answer, so there's nothing to roll back.
+        const retry = typeof request === 'function' ? () => { this.toast.set(null); void this.run(request, opts); } : undefined;
+        this.showToast({ message: CONNECTION_MESSAGE, error: true, retry });
+      } else if (!quiet) {
+        this.showToast({ message: msg, error: true });
+      }
       return msg;
     }
+  }
+
+  /** Mark a Need-to-pay row paid / unpaid – whichever record it really is (bill, bank EMI, money I owe). */
+  togglePaid(b: Bill, ym: string, paid = b.status !== 'paid') {
+    const key = `bill:${b.id}`;
+    if (b.kind === 'emi' && b.emiId) return this.run(() => this.api.setEmiMonth(ym, b.emiId!, { paid: paid ? 'paid' : 'unpaid' }), { key });
+    if (b.kind === 'owe' && b.entryId) return this.run(() => this.api.updateEntry(b.entryId!, { status: paid ? 'done' : 'pending' }), { key });
+    return this.run(() => this.api.updateBill(b.id, { status: paid ? 'paid' : 'unpaid' }), { key });
   }
 
   async undo() {
@@ -135,8 +177,9 @@ export class AppStore {
   showToast(t: Toast) {
     clearTimeout(this.toastTimer);
     this.toast.set(t);
-    this.toastTimer = setTimeout(() => this.toast.set(null), t.undoToken ? 8000 : 5000);
+    this.toastTimer = setTimeout(() => this.toast.set(null), t.undoToken || t.retry ? 8000 : 5000);
   }
 
   openAdd(type: AddType = 'bill') { this.dialog.set({ type }); }
+  openEmi(cardId: string | null = null) { this.emiDialog.set({ cardId }); }
 }

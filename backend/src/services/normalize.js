@@ -5,7 +5,7 @@ export const normCard = (c) => ({ id: sid(c._id), name: c.name, last4: c.last4 |
 
 export const normEmi = (e) => ({
   id: sid(e._id), cardId: sid(e.card), item: e.item, forWho: e.forWho, personId: sid(e.person),
-  monthly: e.monthly || 0, totalMonths: e.totalMonths, startYm: e.startYm,
+  monthly: e.monthly || 0, freq: e.freq || 'monthly', totalMonths: e.totalMonths, startYm: e.startYm,
 });
 
 export const normPlan = (p) => ({
@@ -18,7 +18,7 @@ export const normPerson = (p) => ({ id: sid(p._id), name: p.name, relation: p.re
 export const normMonth = (m) => ({
   id: sid(m._id), ym: m.ym, budget: m.budget || 0, createdHow: m.createdHow,
   cardSpends: m.cardSpends instanceof Map ? Object.fromEntries(m.cardSpends) : { ...(m.cardSpends || {}) },
-  emiOverrides: (m.emiOverrides || []).map((o) => ({ emiId: sid(o.emi), amount: o.amount ?? null, received: o.received || 'pending' })),
+  emiOverrides: (m.emiOverrides || []).map((o) => ({ emiId: sid(o.emi), amount: o.amount ?? null, received: o.received || 'pending', paid: o.paid || 'unpaid' })),
 });
 
 export const normBill = (b) => ({

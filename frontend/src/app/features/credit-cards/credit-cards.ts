@@ -1,24 +1,22 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AppStore } from '../../core/app-store';
 import { isInstalledApp } from '../../core/utils/platform';
 import { InrPipe } from '../../shared/pipes/inr.pipe';
-import { AddEmiForm } from './add-emi-form/add-emi-form';
 import { CardTile } from './card-tile/card-tile';
 import { FriendEmis } from './friend-emis/friend-emis';
+import { Icon } from '../../shared/ui/icon/icon';
 
 @Component({
   selector: 'app-credit-cards',
-  imports: [RouterLink, InrPipe, CardTile, AddEmiForm, FriendEmis],
+  imports: [RouterLink, InrPipe, CardTile, FriendEmis, Icon],
   templateUrl: './credit-cards.html',
   styleUrl: './credit-cards.scss',
 })
 export class CreditCardsPage {
-  private store = inject(AppStore);
+  protected store = inject(AppStore);
   protected readonly inApp = isInstalledApp();
   protected readonly month = this.store.month;
-  /** Card picked with "Add EMI to this card" – the form below pre-selects it. */
-  protected readonly presetCard = signal<{ cardId: string } | null>(null);
 
   /** Cards with a bill this month, an EMI running, or one starting later. */
   protected readonly cards = computed(() => {

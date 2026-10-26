@@ -60,3 +60,9 @@ h1, h2, h3 { margin: 0; letter-spacing: -.02em; }
 @supports (-moz-appearance: none) {
   * { scrollbar-width: thin; scrollbar-color: var(--hair-2) transparent; }
 }
+
+// Home-language hint under an English label (Tamil / Telugu / Hindi – see app-lang-hint).
+.lang-hint { display: block; font-family: 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Devanagari', var(--font);
+  font-size: 12px; font-weight: 500; line-height: 1.35; color: var(--muted); letter-spacing: 0; }
+// On a selected (coloured) button the hint takes the button's text colour, so it stays readable.
+.is-on .lang-hint { color: inherit; opacity: .9; }

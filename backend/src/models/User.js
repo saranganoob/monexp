@@ -5,6 +5,7 @@ import { Schema } from './common.js';
 const prefsSchema = new Schema({
   theme: { type: String, enum: ['light', 'dark', null], default: null },
   accent: { type: String, match: /^#[0-9A-F]{6}$/, default: null },
+  lang: { type: String, enum: ['ta', 'te', 'hi', null], default: null }, // home-language hints; null = English only
 }, { _id: false });
 
 const userSchema = new Schema({

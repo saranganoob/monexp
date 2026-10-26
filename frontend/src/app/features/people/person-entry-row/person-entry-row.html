@@ -8,14 +8,14 @@
   <span class="chip" [class]="'chip chip--' + x.status">{{ x.statusLabel }}</span>
   <div class="num heavy amount">{{ x.r.amount | inr }}</div>
   @if (x.canToggle) {
-    <button class="btn btn--sm" [class.btn--primary]="x.btnPrimary" (click)="toggle()">{{ x.btnLabel }}</button>
+    <button class="btn btn--sm" [class.btn--primary]="x.btnPrimary" (click)="toggle()" [appBusy]="key()">{{ saving() ? 'Saving…' : x.btnLabel }}</button>
   }
   <div class="row-flex actions">
     @if (x.canEdit) {
       <button class="btn btn--ghost btn--sm" (click)="edit.emit()" [attr.aria-label]="'Edit ' + x.r.name"><app-icon name="edit" [size]="16" />Edit</button>
     }
     @if (x.canDelete) {
-      <button class="btn btn--ghost btn--sm btn--icon-sm" (click)="remove()" [attr.aria-label]="'Delete ' + x.r.name"><app-icon name="trash" [stroke]="1.8" /></button>
+      <button class="btn btn--ghost btn--sm btn--icon-sm" (click)="remove()" [appBusy]="'remove:' + x.r.id" [attr.aria-label]="'Delete ' + x.r.name"><app-icon name="trash" [stroke]="1.8" /></button>
     }
   </div>
 </div>
@@ -27,7 +27,7 @@
       <label><span class="field-label">{{ x.r.planId ? 'Amount this month (₹)' : 'Amount (₹)' }}</span>
         <input [id]="'rowAmt-' + x.r.id" class="field num" inputmode="numeric" formControlName="amount"></label>
       <div class="row-flex">
-        <button type="submit" class="btn btn--primary">Save</button>
+        <button type="submit" class="btn btn--primary" [appBusy]="'save:' + x.r.id">{{ store.loading.isPending('save:' + x.r.id) ? 'Saving…' : 'Save' }}</button>
         <button type="button" class="btn" (click)="closed.emit()">Cancel</button>
       </div>
     </div>

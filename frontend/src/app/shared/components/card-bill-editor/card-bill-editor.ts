@@ -7,16 +7,17 @@ import { CardView } from '../../../core/models';
 import { fmtInput, inr, parseNum } from '../../../core/utils/format';
 import { firstError, rupees } from '../../../core/forms/validators';
 import { YmPipe } from '../../pipes/ym.pipe';
+import { Busy } from '../../directives/busy';
 
 /** "Edit bill": type the statement total; the EMIs are kept and the rest counts as my spends. */
 @Component({
   selector: 'app-card-bill-editor',
-  imports: [ReactiveFormsModule, YmPipe],
+  imports: [ReactiveFormsModule, YmPipe, Busy],
   templateUrl: './card-bill-editor.html',
   styleUrl: './card-bill-editor.scss',
 })
 export class CardBillEditor implements OnInit, AfterViewInit {
-  private store = inject(AppStore);
+  protected store = inject(AppStore);
   private api = inject(Api);
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private fb = inject(NonNullableFormBuilder);
@@ -43,7 +44,8 @@ export class CardBillEditor implements OnInit, AfterViewInit {
     this.form.markAllAsTouched();
     this.error.set(firstError(this.form, { total: { required: 'Enter the bill amount (₹0 if nothing is due).', rupees: 'Amount must be whole rupees.' } }));
     if (this.form.invalid) return;
-    const err = await this.store.run(this.api.setCardBill(this.store.ym(), this.card().id, { total: parseNum(this.form.getRawValue().total) }), { quiet: true });
+    const ym = this.store.ym(), cardId = this.card().id, total = parseNum(this.form.getRawValue().total);
+    const err = await this.store.run(() => this.api.setCardBill(ym, cardId, { total }), { quiet: true, key: `card-bill:${cardId}` });
     if (err) return this.error.set(err);
     this.done.emit();
   }

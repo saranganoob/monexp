@@ -9,16 +9,17 @@ import { dateBetween, firstError, rupees } from '../../../core/forms/validators'
 import { InrPipe } from '../../../shared/pipes/inr.pipe';
 import { YmPipe } from '../../../shared/pipes/ym.pipe';
 import { Icon } from '../../../shared/ui/icon/icon';
+import { Busy } from '../../../shared/directives/busy';
 
 /** "Add a new spend" (what, amount, date) and the list of itemised spends on a card. */
 @Component({
   selector: 'app-card-spends',
-  imports: [ReactiveFormsModule, InrPipe, YmPipe, Icon],
+  imports: [ReactiveFormsModule, InrPipe, YmPipe, Icon, Busy],
   templateUrl: './card-spends.html',
   styleUrl: './card-spends.scss',
 })
 export class CardSpends {
-  private store = inject(AppStore);
+  protected store = inject(AppStore);
   private api = inject(Api);
   private fb = inject(NonNullableFormBuilder);
 
@@ -52,14 +53,14 @@ export class CardSpends {
     }));
     if (this.error()) return;
     const v = this.form.getRawValue();
-    const err = await this.store.run(
-      this.api.addCardSpend(this.store.ym(), this.card().id, { name: v.name.trim() || 'Spend', amount: parseNum(v.amount), date: v.date }),
-      { quiet: true },
-    );
+    const ym = this.store.ym(), cardId = this.card().id;
+    const body = { name: v.name.trim() || 'Spend', amount: parseNum(v.amount), date: v.date };
+    const err = await this.store.run(() => this.api.addCardSpend(ym, cardId, body), { quiet: true, key: this.addKey() });
     if (err) return this.error.set(err);
     this.form.patchValue({ name: '', amount: '' });
     this.form.markAsUntouched();
   }
 
-  remove(item: CardSpendItem) { this.store.run(this.api.deleteCardSpend(item.id)); }
+  protected readonly addKey = () => `add-spend:${this.card().id}`;
+  remove(item: CardSpendItem) { this.store.run(() => this.api.deleteCardSpend(item.id), { key: `remove:${item.id}` }); }
 }

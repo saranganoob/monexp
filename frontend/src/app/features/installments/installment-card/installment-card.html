@@ -8,9 +8,10 @@
       <div class="small muted">{{ i.source }}</div>
     </div>
   </div>
+  <div class="freq small">{{ i.freq === 'yearly' ? 'Yearly' : 'Monthly' }} · {{ i.total }} payments</div>
   <dl>
-    <div><dt>Per month</dt><dd class="num">{{ i.monthly ? (i.monthly | inr) : 'Not entered yet' }}</dd></div>
-    <div><dt>Months left</dt><dd class="num">{{ i.monthsLeft === 1 ? 'This is the last' : i.monthsLeft + ' incl. this month' }}</dd></div>
+    <div><dt>{{ i.freq === 'yearly' ? 'Per year' : 'Per month' }}</dt><dd class="num">{{ i.monthly ? (i.monthly | inr) : 'Not entered yet' }}</dd></div>
+    <div><dt>Payments left</dt><dd class="num">{{ i.monthsLeft === 1 ? 'Just the last one' : i.monthsLeft + (i.due ? ' incl. this month' : '') }}</dd></div>
     <div><dt>Amount left</dt><dd class="num">{{ i.monthly ? (i.amountLeft | inr) : '—' }}</dd></div>
     <div><dt>Closes</dt><dd>{{ i.endYm | ym }}</dd></div>
   </dl>
@@ -24,8 +25,10 @@
           <button class="btn btn--ghost btn--sm" (click)="remove.emit()" [attr.aria-label]="'Remove ' + p.name + ' plan'">Remove</button>
         </div>
       }
-    } @else {
+    } @else if (cardEmi()) {
       <a class="btn btn--ghost btn--sm" routerLink="/cards">Edit on Credit cards</a>
+    } @else {
+      <button class="btn btn--ghost btn--sm" (click)="remove.emit()" [appBusy]="removeKey()" [attr.aria-label]="'Remove ' + i.name">Remove</button>
     }
   </div>
 </article>

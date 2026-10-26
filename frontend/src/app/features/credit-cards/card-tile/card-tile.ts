@@ -11,11 +11,12 @@ import { YmPipe } from '../../../shared/pipes/ym.pipe';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { CardEmiItem } from '../card-emi/card-emi';
 import { CardSpends } from '../card-spends/card-spends';
+import { Busy } from '../../../shared/directives/busy';
 
 /** One credit card: this month's bill, my spends, itemised spends, EMIs and totals. */
 @Component({
   selector: 'app-card-tile',
-  imports: [ReactiveFormsModule, CardBillEditor, EmiEditor, CardSpends, CardEmiItem, InrPipe, YmPipe, Icon],
+  imports: [ReactiveFormsModule, CardBillEditor, EmiEditor, CardSpends, CardEmiItem, InrPipe, YmPipe, Icon, Busy],
   templateUrl: './card-tile.html',
   styleUrl: './card-tile.scss',
 })
@@ -49,8 +50,11 @@ export class CardTile {
   }
   togglePaid() {
     const c = this.card();
-    if (c.billId) this.store.run(this.api.updateBill(c.billId, { status: c.billStatus === 'paid' ? 'unpaid' : 'paid' }));
+    const billId = c.billId, status = c.billStatus === 'paid' ? 'unpaid' : 'paid';
+    if (billId) this.store.run(() => this.api.updateBill(billId, { status }), { key: this.payKey() });
   }
-  removeEmi(id: string) { this.store.run(this.api.deleteEmi(id)); }
+  /** Same key as the card's row in Need to pay, so both show it saving. */
+  protected readonly payKey = () => `bill:${this.card().billId}`;
+  removeEmi(id: string) { this.store.run(() => this.api.deleteEmi(id), { key: `remove:${id}` }); }
   editEmi(id: string) { this.editingEmi.set(this.editingEmi() === id ? null : id); }
 }

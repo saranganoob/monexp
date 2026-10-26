@@ -10,7 +10,7 @@
       <div class="card stat">
         <div class="label">Balance incl. people</div>
         <div class="stat__value stat__value--xl" [class.neg]="m.totals.balanceInclPeople < 0" [class.pos]="m.totals.balanceInclPeople >= 0">{{ m.totals.balanceInclPeople | inr }}</div>
-        <div class="stat__note">Adds other money people owe you, minus what you owe</div>
+        <div class="stat__note">Adds money people owe you (what you owe is already in To pay, under Money I owe)</div>
       </div>
     </section>
 

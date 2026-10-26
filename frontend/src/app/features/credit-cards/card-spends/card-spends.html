@@ -4,7 +4,7 @@
     <label><span class="sr">What was it</span><input class="field" formControlName="name" placeholder="What? e.g. Supermarket"></label>
     <label><span class="sr">Amount (₹)</span><input class="field num" inputmode="numeric" formControlName="amount" placeholder="₹ e.g. 321"></label>
     <label><span class="sr">Date</span><input type="date" class="field" formControlName="date" [min]="minDate()" [max]="maxDate()"></label>
-    <button type="submit" class="btn btn--primary"><app-icon name="plus" [size]="16" [stroke]="2.2" />Add</button>
+    <button type="submit" class="btn btn--primary" [appBusy]="addKey()"><app-icon name="plus" [size]="16" [stroke]="2.2" />{{ store.loading.isPending(addKey()) ? 'Adding…' : 'Add' }}</button>
   </div>
   @if (preview()) {
     <div class="num small preview">{{ preview() }}</div>
@@ -20,7 +20,7 @@
           <span class="grow strong">{{ it.name }}</span>
           <span class="tiny muted">{{ it.date | ym: 'day' }}</span>
           <span class="num strong amount">{{ it.amount | inr }}</span>
-          <button type="button" class="btn btn--ghost btn--sm remove" (click)="remove(it)" [attr.aria-label]="'Remove ' + it.name + ' ' + (it.amount | inr)">
+          <button type="button" class="btn btn--ghost btn--sm remove"  (click)="remove(it)" [appBusy]="'remove:' + it.id" [attr.aria-label]="'Remove ' + it.name + ' ' + (it.amount | inr)">
             <app-icon name="trash" [size]="16" [stroke]="1.8" />
           </button>
         </div>

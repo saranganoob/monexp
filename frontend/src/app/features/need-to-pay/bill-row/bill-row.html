@@ -1,13 +1,13 @@
 @let b = bill();
-<div class="row">
+<div class="row" [class.is-saving]="saving()">
   <div class="swipe">
   <!-- Behind the row: what a swipe right will do (phones). -->
   <div class="swipe-bg" [class.is-undo]="b.status === 'paid'" aria-hidden="true">
     <app-icon [name]="b.status === 'paid' ? 'refresh' : 'check'" [stroke]="2.6" />{{ b.status === 'paid' ? 'Unpaid' : 'Paid' }}
   </div>
   <div class="main" appSwipeAction [swipeEnabled]="b.status !== 'skipped' && !isEditing()" (swiped)="toggle()">
-    <button class="tick" [class.is-paid]="b.status === 'paid'" [class.is-skipped]="b.status === 'skipped'" (click)="toggle()"
-      [attr.aria-label]="(b.status === 'paid' ? 'Mark ' + b.name + ' unpaid' : 'Mark ' + b.name + ' paid')">
+    <button class="tick" [class.is-paid]="b.status === 'paid'" [class.is-skipped]="b.status === 'skipped'" (click)="toggle()" [appBusy]="key()"
+      [attr.aria-label]="(b.kind === 'owe' ? (b.status === 'paid' ? 'Mark ' + b.name + ' not paid back' : 'Mark ' + b.name + ' paid back') : (b.status === 'paid' ? 'Mark ' + b.name + ' unpaid' : 'Mark ' + b.name + ' paid'))">
       @if (b.status === 'paid') { <app-icon name="check" [stroke]="3" /> }
     </button>
     <div class="info">
@@ -15,7 +15,7 @@
       <div class="sub" [class]="'sub sub--' + (card() || b.status === 'skipped' ? 'normal' : due().tone)">{{ sub() }}</div>
     </div>
     @if (b.inst) { <span class="inst-pill">{{ b.inst.n }} of {{ b.inst.total }} · {{ b.inst.total - b.inst.n }} left</span> }
-    <span class="chip" [class]="'chip chip--' + status()">{{ statusLabel() }}</span>
+    <span class="chip" [class]="'chip chip--' + status()">{{ b.kind === 'owe' && b.status === 'paid' ? 'Paid back' : statusLabel() }}</span>
     <div class="num amount" [class.is-skipped]="b.status === 'skipped'">{{ b.status === 'skipped' ? '—' : (b.amount | inr) }}</div>
     <div class="actions">
       @if (card(); as c) {
@@ -23,6 +23,10 @@
         @if (!isEditing()) {
           <button class="btn btn--sm" (click)="edit()" [attr.aria-label]="'Edit ' + c.name + ' bill amount'"><app-icon name="edit" [size]="16" />Edit amount</button>
         }
+      } @else if (b.kind === 'owe') {
+        <a class="btn btn--ghost btn--sm" routerLink="/people" [queryParams]="{ tab: 'out' }">Manage in People</a>
+      } @else if (b.kind === 'emi') {
+        <a class="btn btn--ghost btn--sm" routerLink="/installments">See installments</a>
       } @else {
         <button class="btn btn--ghost btn--sm" (click)="skip()">{{ b.status === 'skipped' ? 'Resume' : 'Skip month' }}</button>
         @if (!isEditing()) {

@@ -1,6 +1,7 @@
 // Per-person figures for the People list (and the AI assistant).
 import { loadSetup, computeMonths } from './monthService.js';
-import { installmentAt } from './compute.js';
+import { emiPlan } from './compute.js';
+import { instAt, leftFrom } from '../lib/installments.js';
 import { ymToIndex } from '../lib/ym.js';
 
 /** An entry belongs to a person by link, or by name ("Mohan · trip advance") when it isn't linked. */
@@ -19,11 +20,12 @@ export async function peopleStats(at) {
   return setup.people.map((p) => {
     const owed = now ? sum(now.receivables.filter((r) => r.status === 'pending' && matchesPerson(p, r))) : 0;
     const iOwe = now ? sum(now.payables.filter((r) => r.status === 'pending' && matchesPerson(p, r))) : 0;
-    const running = setup.emis.filter((e) => e.personId === p.id && ymToIndex(e.startYm) + e.totalMonths - 1 >= I);
+    // EMIs I pay for them that still have payments to come (monthly or yearly, card or bank).
+    const running = setup.emis.filter((e) => e.personId === p.id && leftFrom(emiPlan(e), I) > 0);
     const leftToRecover = running.reduce((s, e) => {
-      const at2 = installmentAt(e.startYm, e.totalMonths, at);
-      let left = e.totalMonths - Math.max(at2.n - 1, 0);
-      if (at2.n >= 1 && now?.receivables.some((r) => r.emiId === e.id && r.status === 'done')) left -= 1;
+      const plan = emiPlan(e);
+      let left = leftFrom(plan, I);
+      if (instAt(plan, I).due && now?.receivables.some((r) => r.emiId === e.id && r.status === 'done')) left -= 1;
       return s + (e.monthly || 0) * left;
     }, 0);
     const receivedSoFar = all.reduce((s, c) => s + sum(c.receivables.filter((r) => r.status === 'done' && matchesPerson(p, r))), 0);

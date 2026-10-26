@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Api, errorMessage } from '../../../core/api.service';
+import { Busy } from '../../../shared/directives/busy';
 
 /** Change the sign-in password (needs the current one). */
 @Component({
   selector: 'app-password-card',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Busy],
   templateUrl: './password-card.html',
   styleUrl: './password-card.scss',
 })

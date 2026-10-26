@@ -18,7 +18,8 @@ h2 { font-size: 20px; font-weight: 800; }
   &.is-on { border-color: var(--accent); background: var(--info-bg); color: var(--info-fg); }
   &:focus-within { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
   .sub { opacity: .85; } }
-.actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; }
+.again { margin-right: auto; } // the "Add another" tick sits on the left, the buttons on the right
 
 .backdrop { transition: opacity .25s ease, backdrop-filter .25s ease, -webkit-backdrop-filter .25s ease; }
 .dialog { transition: transform var(--spring-sheet-dur) var(--spring-sheet), opacity .2s ease; }

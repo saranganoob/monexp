@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { Api, errorMessage } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { firstError, optionalEmail, optionalMobile } from '../../../core/forms/validators';
+import { Busy } from '../../../shared/directives/busy';
 
 /** Email and mobile used to sign in. */
 @Component({
   selector: 'app-account-tab',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Busy],
   templateUrl: './account-tab.html',
   styleUrl: './account-tab.scss',
 })
@@ -23,6 +24,7 @@ export class AccountTab {
   });
   protected readonly error = signal('');
   protected readonly status = signal('');
+  protected readonly busy = signal(false);
 
   constructor() {
     effect(() => {
@@ -38,13 +40,16 @@ export class AccountTab {
       email: { email: 'Enter a valid email address.' },
       phone: { mobile: 'Enter a 10-digit Indian mobile number starting with 6, 7, 8 or 9.' },
     }));
-    if (this.error()) return;
+    if (this.error() || this.busy()) return;
     const v = this.form.getRawValue();
+    this.busy.set(true);
     try {
       this.auth.account.set(await this.api.updateMe({ email: v.email.trim(), phone: v.phone.replace(/\D/g, '') }));
       this.status.set('Saved');
     } catch (e) {
       this.error.set(errorMessage(e));
+    } finally {
+      this.busy.set(false);
     }
   }
 

@@ -5,12 +5,13 @@ import { AuthService } from '../../core/auth/auth.service';
 import { Api, errorMessage } from '../../core/api.service';
 import { emailOrMobile, firstError } from '../../core/forms/validators';
 import { Icon } from '../../shared/ui/icon/icon';
+import { Busy } from '../../shared/directives/busy';
 
 type Mode = 'pw' | 'otp';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, Icon],
+  imports: [ReactiveFormsModule, Icon, Busy],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })

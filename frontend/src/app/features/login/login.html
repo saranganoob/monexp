@@ -68,7 +68,7 @@
       @if (info()) { <div role="status" class="notice notice--info">{{ info() }}</div> }
       @if (error()) { <div role="alert" class="notice notice--error">{{ error() }}</div> }
 
-      <button type="submit" class="btn btn--primary btn--block btn--tall" [disabled]="busy()">{{ submitLabel() }}</button>
+      <button type="submit" class="btn btn--primary btn--block btn--tall" [appBusy]="busy()">{{ submitLabel() }}</button>
 
       @if (mode() === 'otp') {
         <p class="demo">Demo mode: no SMS or email is sent yet. Use the OTP set in <strong>backend/.env</strong> (DEV_OTP).</p>

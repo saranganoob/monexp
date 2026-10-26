@@ -5,11 +5,12 @@ import { AppStore } from '../../../core/app-store';
 import { Api } from '../../../core/api.service';
 import { defaultDate, firstDate, lastDate, parseNum, ymLabel } from '../../../core/utils/format';
 import { dateBetween, firstError, notBlank, rupees } from '../../../core/forms/validators';
+import { Busy } from '../../../shared/directives/busy';
 
 /** "Log an unplanned spend" form. */
 @Component({
   selector: 'app-sudden-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Busy],
   templateUrl: './sudden-form.html',
   styleUrl: './sudden-form.scss',
 })
@@ -49,7 +50,8 @@ export class SuddenForm {
     }));
     if (this.error()) return;
     const v = this.form.getRawValue();
-    const err = await this.store.run(this.api.addSudden(this.store.ym(), { name: v.name.trim(), amount: parseNum(v.amount), mode: v.mode, date: v.date }), { quiet: true });
+    const ym = this.store.ym(), body = { name: v.name.trim(), amount: parseNum(v.amount), mode: v.mode, date: v.date };
+    const err = await this.store.run(() => this.api.addSudden(ym, body), { quiet: true, key: 'add-sudden' });
     if (err) return this.error.set(err);
     this.form.patchValue({ name: '', amount: '' });
     this.form.markAsUntouched();

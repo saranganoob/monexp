@@ -22,3 +22,5 @@
   .kv { color: var(--ink-2); }
   .kv--friend { color: var(--orange-fg); }
   .kv--total { color: var(--ink); } }
+// While a change is saving, the row can't be clicked again.
+.row.is-saving .main { pointer-events: none; opacity: .75; transition: opacity .2s ease; }

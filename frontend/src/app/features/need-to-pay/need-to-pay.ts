@@ -5,12 +5,13 @@ import { InrPipe } from '../../shared/pipes/inr.pipe';
 import { YmPipe } from '../../shared/pipes/ym.pipe';
 import { Icon } from '../../shared/ui/icon/icon';
 import { BillRow } from './bill-row/bill-row';
+import { LangHint } from '../../shared/ui/lang-hint/lang-hint';
 
 type Filter = 'all' | BillStatus;
 
 @Component({
   selector: 'app-need-to-pay',
-  imports: [InrPipe, YmPipe, Icon, BillRow],
+  imports: [InrPipe, YmPipe, Icon, BillRow, LangHint],
   templateUrl: './need-to-pay.html',
   styleUrl: './need-to-pay.scss',
 })

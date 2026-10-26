@@ -1,3 +1,5 @@
 .tile { padding: 18px 20px; }
 .tile__value { font-size: 24px; font-weight: 800; margin-top: 6px; }
 .warm { color: var(--orange-fg); }
+.intro { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px;
+  .lead { flex: 1 1 420px; } }

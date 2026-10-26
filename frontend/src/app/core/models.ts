@@ -2,16 +2,23 @@
 
 export type BillStatus = 'paid' | 'unpaid' | 'skipped';
 export type EntryStatus = 'pending' | 'done' | 'moved';
-export type CategoryKey = 'cc' | 'fam' | 'house' | 'sub' | 'inv';
-export interface Inst { n: number; total: number; }
+/** emi / owe are filled by the app (bank-cash EMIs, money I owe) and can't be picked for a bill. */
+export type CategoryKey = 'cc' | 'fam' | 'house' | 'sub' | 'inv' | 'emi' | 'owe';
+export interface Inst { n: number; total: number; left?: number; }
+export type Freq = 'monthly' | 'yearly';
 
+/**
+ * A Need-to-pay row. kind: 'bill' = a normal bill; 'emi' = an EMI paid from the bank / cash
+ * (status kept per month on the EMI); 'owe' = money I owe someone (the People entry is the record).
+ */
 export interface Bill {
   id: string; ym: string; name: string; category: CategoryKey; amount: number; status: BillStatus;
   dueDay: number | null; note: string; cardId: string | null; planId: string | null; sortOrder: number; inst: Inst | null;
+  kind: 'bill' | 'emi' | 'owe'; emiId?: string; entryId?: string;
 }
 
 export interface EmiView {
-  id: string; cardId: string; item: string; forWho: 'me' | 'friend'; personId: string | null; personName: string;
+  id: string; cardId: string | null; item: string; forWho: 'me' | 'friend'; freq: Freq; personId: string | null; personName: string;
   monthly: number; amount: number; n: number; total: number; startYm: string; endYm: string; received: 'pending' | 'done';
 }
 
@@ -51,7 +58,8 @@ export interface MissingMonth { exists: false; ym: string; rolloverFrom: string 
 export type MonthView = MonthData | MissingMonth;
 
 export interface Card { id: string; name: string; last4: string; network: string; closedOn: string; }
-export interface CardEmi { id: string; cardId: string; item: string; forWho: 'me' | 'friend'; personId: string | null; monthly: number; totalMonths: number; startYm: string; }
+/** An EMI / installment. cardId null = paid from the bank / cash. monthly = amount per payment; totalMonths = number of payments. */
+export interface CardEmi { id: string; cardId: string | null; item: string; forWho: 'me' | 'friend'; personId: string | null; monthly: number; freq: Freq; totalMonths: number; startYm: string; }
 export interface Plan {
   id: string; name: string; kind: string; source: string; direction: 'out' | 'in'; category: CategoryKey;
   personId: string | null; monthly: number; totalInstallments: number; startYm: string;
@@ -61,7 +69,7 @@ export interface PersonStats extends Person { owed: number; iOwe: number; runnin
 
 export interface Installment {
   id: string; type: 'emi' | 'plan'; name: string; kind: string; source: string; friend: boolean; incoming: boolean;
-  monthly: number; startYm: string; total: number; n: number; endYm: string; monthsLeft: number; amountLeft: number;
+  freq: Freq; monthly: number; startYm: string; total: number; n: number; due: boolean; endYm: string; monthsLeft: number; amountLeft: number;
 }
 
 export interface YearView {
@@ -71,7 +79,8 @@ export interface YearView {
 }
 
 /** Look & feel saved in the account (null = not chosen yet). */
-export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; }
+export type HomeLang = 'ta' | 'te' | 'hi';
+export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; }
 export interface Account { email: string; phone: string; isAdmin?: boolean; prefs?: Prefs; }
 /** A login as the Admin page shows it – never any money data. */
 export interface AdminUser { id: string; email: string; phone: string; isAdmin: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }

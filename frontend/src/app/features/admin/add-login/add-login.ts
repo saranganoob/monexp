@@ -3,11 +3,12 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Api, errorMessage } from '../../../core/api.service';
 import { firstError, optionalEmail, optionalMobile } from '../../../core/forms/validators';
 import { AdminUser } from '../../../core/models';
+import { Busy } from '../../../shared/directives/busy';
 
 /** "Add a friend": email and/or mobile + a temporary password they change after signing in. */
 @Component({
   selector: 'app-add-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, Busy],
   templateUrl: './add-login.html',
   styleUrl: './add-login.scss',
 })

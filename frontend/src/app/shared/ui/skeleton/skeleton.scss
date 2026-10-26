@@ -1,0 +1,19 @@
+:host { display: flex; flex-direction: column; gap: 24px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 16px; }
+.tile { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.list { overflow: hidden; }
+.list-head { padding: 16px 20px; background: var(--sub); border-bottom: 1px solid var(--hair); }
+.row { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-top: 1px solid var(--hair);
+  .grow { display: flex; flex-direction: column; gap: 8px; } }
+
+// A soft light sweeping across grey bars.
+.bone { display: block; border-radius: 8px; height: 12px; background: var(--hair);
+  background-image: linear-gradient(90deg, transparent 0, var(--sel) 50%, transparent 100%);
+  background-size: 200% 100%; background-repeat: no-repeat; animation: shimmer 1.3s ease-in-out infinite; }
+.bone--sm { width: 40%; }
+.bone--md { width: 60%; height: 14px; }
+.bone--lg { width: 55%; height: 26px; }
+.bone--box { width: 44px; height: 44px; border-radius: 12px; flex: none; }
+.bone--amt { width: 72px; height: 16px; flex: none; }
+@keyframes shimmer { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+@media (prefers-reduced-motion: reduce) { .bone { animation: none; } }

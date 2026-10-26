@@ -14,7 +14,7 @@
             @if (row.s.note) { <div class="small muted note">{{ row.s.note }}</div> }
           </div>
           <div class="num strong">{{ row.s.amount | inr }}</div>
-          <button class="btn btn--ghost btn--sm" (click)="remove(row.s)" [attr.aria-label]="'Remove ' + row.s.name">Remove</button>
+          <button class="btn btn--ghost btn--sm" (click)="remove(row.s)" [appBusy]="'remove:' + row.s.id" [attr.aria-label]="'Remove ' + row.s.name">Remove</button>
         </div>
       } @empty {
         <div class="list-empty">No sudden spends in {{ m.ym | ym }} so far.</div>

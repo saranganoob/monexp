@@ -120,7 +120,8 @@ router.post('/:ym/cards/:cardId/spends', async (req, res) => {
   res.status(201).json(out);
 });
 
-// PATCH /api/months/:ym/emis/:emiId  { amount?: number|null, received?: "pending"|"done" }
+// PATCH /api/months/:ym/emis/:emiId  { amount?: number|null, received?: "pending"|"done", paid?: "unpaid"|"paid" }
+// (paid = the Need to pay row of an EMI paid from the bank / cash)
 router.patch('/:ym/emis/:emiId', async (req, res) => {
   const emiId = toId(req.params.emiId, 'EMI');
   const emi = await CardEmi.findById(emiId).populate('person', 'name').lean();
@@ -128,10 +129,13 @@ router.patch('/:ym/emis/:emiId', async (req, res) => {
   const change = {};
   if (req.body?.amount !== undefined) change.amount = req.body.amount === null ? null : toAmount(req.body.amount, 'EMI amount');
   if (req.body?.received !== undefined) change.received = toEnum(req.body.received, ['pending', 'done'], 'received');
+  if (req.body?.paid !== undefined) change.paid = toEnum(req.body.paid, ['unpaid', 'paid'], 'paid');
   if (!Object.keys(change).length) throw badRequest('Nothing to change.');
 
   const who = emi.person?.name || 'Friend';
-  const label = change.received === 'done' ? `${who} · ${emi.item} EMI marked received`
+  const label = change.paid === 'paid' ? `${emi.item} marked paid`
+    : change.paid === 'unpaid' ? `${emi.item} marked unpaid`
+    : change.received === 'done' ? `${who} · ${emi.item} EMI marked received`
     : change.received === 'pending' ? `${who} · ${emi.item} EMI set back to pending`
       : `${emi.item} EMI for ${ymLabel(req.ym)} updated`;
   const out = await withUndo({ yms: [req.ym] }, async () => {

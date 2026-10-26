@@ -21,7 +21,7 @@
       </div>
       <div class="row-flex">
         <button class="btn btn--sm" (click)="edit(row.p)">Edit</button>
-        <button class="btn btn--ghost btn--sm btn--icon-sm" (click)="remove(row.p)" [attr.aria-label]="'Delete ' + row.p.name"><app-icon name="trash" [stroke]="1.8" /></button>
+        <button class="btn btn--ghost btn--sm btn--icon-sm" (click)="remove(row.p)" [appBusy]="'person:' + row.p.id" [attr.aria-label]="'Delete ' + row.p.name"><app-icon name="trash" [stroke]="1.8" /></button>
       </div>
     </div>
   } @empty {
@@ -45,7 +45,7 @@
   </div>
   @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
   <div class="row-flex">
-    <button type="submit" class="btn btn--primary">{{ editingId() ? 'Save changes' : 'Add person' }}</button>
+    <button type="submit" class="btn btn--primary" appBusy="save-person">{{ store.loading.isPending('save-person') ? 'Saving…' : (editingId() ? 'Save changes' : 'Add person') }}</button>
     @if (editingId()) { <button type="button" class="btn" (click)="cancel()">Cancel</button> }
   </div>
 </form>

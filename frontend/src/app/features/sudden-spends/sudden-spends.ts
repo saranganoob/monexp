@@ -6,15 +6,16 @@ import { MONTHS } from '../../core/utils/format';
 import { InrPipe } from '../../shared/pipes/inr.pipe';
 import { YmPipe } from '../../shared/pipes/ym.pipe';
 import { SuddenForm } from './sudden-form/sudden-form';
+import { Busy } from '../../shared/directives/busy';
 
 @Component({
   selector: 'app-sudden-spends',
-  imports: [InrPipe, YmPipe, SuddenForm],
+  imports: [InrPipe, YmPipe, SuddenForm, Busy],
   templateUrl: './sudden-spends.html',
   styleUrl: './sudden-spends.scss',
 })
 export class SuddenSpendsPage {
-  private store = inject(AppStore);
+  protected store = inject(AppStore);
   private api = inject(Api);
   protected readonly month = this.store.month;
   protected readonly rows = computed(() => (this.month()?.suddenSpends ?? []).map((s) => ({
@@ -23,5 +24,5 @@ export class SuddenSpendsPage {
     mode: s.mode + (s.cardId ? ' · already in a card bill, not deducted again' : ''),
   })));
 
-  remove(s: Sudden) { this.store.run(this.api.deleteSudden(s.id)); }
+  remove(s: Sudden) { this.store.run(() => this.api.deleteSudden(s.id), { key: `remove:${s.id}` }); }
 }

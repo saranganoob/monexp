@@ -8,13 +8,14 @@ import { firstError, notBlank, optionalMobile, optionalUpi } from '../../../core
 import { InrPipe } from '../../../shared/pipes/inr.pipe';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { Icon } from '../../../shared/ui/icon/icon';
+import { Busy } from '../../../shared/directives/busy';
 
 export const RELATIONS = ['Friend', 'Family', 'Colleague', 'Roommate', 'Other'] as const;
 
 /** The People list: contact details, what's owed, running EMIs; add / edit / delete. */
 @Component({
   selector: 'app-people-tab',
-  imports: [ReactiveFormsModule, InrPipe, Avatar, Icon],
+  imports: [ReactiveFormsModule, InrPipe, Avatar, Icon, Busy],
   templateUrl: './people-tab.html',
   styleUrl: './people-tab.scss',
 })
@@ -73,7 +74,7 @@ export class PeopleTab {
   }
 
   async remove(p: PersonStats) {
-    const err = await this.store.run(this.api.deletePerson(p.id), { quiet: true });
+    const err = await this.store.run(() => this.api.deletePerson(p.id), { quiet: true, key: `person:${p.id}` });
     this.message.set(err ? { id: p.id, text: err } : null);
   }
 
@@ -93,7 +94,7 @@ export class PeopleTab {
     if (this.error()) return;
     const v = this.form.getRawValue(), id = this.editingId();
     const body = { name: v.name.trim(), relation: v.relation, phone: v.phone, upi: v.upi.trim(), note: v.note.trim() };
-    const err = await this.store.run(id ? this.api.updatePerson(id, body) : this.api.addPerson(body), { quiet: true });
+    const err = await this.store.run(() => (id ? this.api.updatePerson(id, body) : this.api.addPerson(body)), { quiet: true, key: 'save-person' });
     if (err) return this.error.set(err);
     this.cancel();
   }

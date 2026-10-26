@@ -1,6 +1,9 @@
 @if (month(); as m) {
   <div class="page">
+    <div class="intro">
     <p class="lead">Each card's bill is built from your own spends plus every running EMI on it — yours and the ones you took for friends. Change anything here and the card's row in Need to Pay updates instantly; friends' EMIs also show up under People so you can track their repayments.</p>
+      <button type="button" class="btn btn--primary" (click)="store.openEmi()"><app-icon name="plus" [stroke]="2.2" />Add EMI</button>
+    </div>
 
     <section class="grid-200">
       <div class="card tile"><div class="label">Card dues this month</div><div class="num tile__value">{{ sums().total | inr }}</div></div>
@@ -11,7 +14,7 @@
 
     <section class="grid-340">
       @for (c of cards(); track c.id) {
-        <app-card-tile [card]="c" (addEmi)="presetCard.set({ cardId: $event })" />
+        <app-card-tile [card]="c" (addEmi)="store.openEmi($event)" />
       } @empty {
         <div class="card list-empty">
           @if (inApp) { No card bills this month. Add your cards on the MonEXP website under Profile → Credit cards. }
@@ -20,7 +23,6 @@
       }
     </section>
 
-    <app-add-emi-form [preset]="presetCard()" />
     <app-friend-emis />
   </div>
 }

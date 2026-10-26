@@ -25,7 +25,9 @@
       @for (t of types; track t.key) {
         <label class="type" [class.is-on]="type() === t.key">
           <input type="radio" class="sr" formControlName="type" [value]="t.key">
-          <span class="heavy">{{ t.label }}</span><span class="tiny sub">{{ t.sub }}</span>
+          <span class="heavy">{{ t.label }}</span>
+          @if (t.hint) { <app-lang-hint [key]="t.hint" /> }
+          <span class="tiny sub">{{ t.sub }}</span>
         </label>
       }
     </div>
@@ -75,8 +77,9 @@
     @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
 
     <div class="actions">
-      <button type="button" class="btn" (click)="close()">Cancel</button>
-      <button type="submit" class="btn btn--primary" [disabled]="busy()">{{ saveLabel() }}</button>
+      <label class="check again"><input type="checkbox" formControlName="again"> Add another after saving</label>
+      <button type="button" class="btn" (click)="close()">Close</button>
+      <button type="submit" class="btn btn--primary" [appBusy]="saveKey">{{ store.loading.isPending(saveKey) ? 'Saving…' : saveLabel() }}</button>
     </div>
   </form>
 </div>

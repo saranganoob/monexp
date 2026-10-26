@@ -1,1 +1,12 @@
+@use 'styles/breakpoints' as bp;
 
+// Account + Change password side by side on wide screens, stacked on narrow ones.
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 24px; align-items: stretch;
+  > * { display: block; } } // both boxes the same height
+
+// Phones: the tabs stay on one line and scroll sideways instead of wrapping.
+@media (max-width: bp.$phone) {
+  .profile-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 2px 14px 4px;
+    &::-webkit-scrollbar { display: none; }
+    .seg { flex: none; } }
+}

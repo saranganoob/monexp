@@ -1,5 +1,18 @@
-:host { display: flex; flex-direction: column; gap: 24px; }
-.panel { padding: 24px; display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
+// Wide screens: Theme and Home language side by side, Accent colour across the full width below.
+:host { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: 'theme lang' 'accent accent'; gap: 24px; align-items: stretch; }
+.panel { padding: 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.panel:nth-of-type(1) { grid-area: theme; }
+.panel:nth-of-type(2) { grid-area: accent; }
+.panel:nth-of-type(3) { grid-area: lang;
+  .option { min-width: 0; padding: 0 16px; } } // four language buttons fit on one line
+@media (max-width: 1000px) {
+  :host { grid-template-columns: 1fr; grid-template-areas: 'theme' 'accent' 'lang'; }
+}
+@media (max-width: 520px) {
+  .panel { padding: 20px; }
+  .option { min-width: 0; flex: 1 1 auto; }
+  .swatches { gap: 10px; }
+}
 .option { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 120px; }
 
 .swatches { display: flex; flex-wrap: wrap; gap: 12px; }

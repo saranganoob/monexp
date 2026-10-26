@@ -1,9 +1,23 @@
 <div class="card card--navy budget">
-  <label for="budget" class="title">Monthly budget · {{ ym() | ym }}</label>
-  <div class="input-wrap">
-    <span class="rupee">₹</span>
-    <input id="budget" class="num" inputmode="numeric" [formControl]="control" (change)="save()" (keydown.enter)="$any($event.target).blur()">
-    <app-icon name="edit" [stroke]="1.8" />
+  <div class="head">
+    <label [attr.for]="shown() ? 'budget' : null" class="title">Monthly budget · {{ ym() | ym }}</label>
+    <!-- Hidden by default so nobody reads the salary over your shoulder; shown for this tab until sign-out. -->
+    <button type="button" class="eye" (click)="toggle()" [attr.aria-pressed]="shown()"
+      [attr.aria-label]="shown() ? 'Hide budget' : 'Show budget'" [title]="shown() ? 'Hide budget' : 'Show budget'">
+      <app-icon [name]="shown() ? 'eye-off' : 'eye'" [size]="18" [stroke]="1.8" />
+    </button>
   </div>
-  <div class="note" role="status">{{ store.loading.isSlow('budget') ? 'Saving…' : 'Edit anytime — every total recalculates.' }}</div>
+  @if (shown()) {
+    <div class="input-wrap">
+      <span class="rupee">₹</span>
+      <input id="budget" class="num" inputmode="numeric" [formControl]="control" (change)="save()" (keydown.enter)="$any($event.target).blur()">
+      <app-icon name="edit" [stroke]="1.8" />
+    </div>
+    <div class="note" role="status">{{ store.loading.isSlow('budget') ? 'Saving…' : 'Edit anytime — every total recalculates.' }}</div>
+  } @else {
+    <button type="button" class="input-wrap masked" (click)="toggle()" aria-label="Budget hidden – show it">
+      <span class="rupee">₹</span><span class="dots" aria-hidden="true">••••••</span>
+    </button>
+    <div class="note">Hidden for privacy — tap the eye to show and edit.</div>
+  }
 </div>

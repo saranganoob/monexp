@@ -2,6 +2,9 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Api } from '../api.service';
 import { Account } from '../models';
 
+/** Shown monthly budget (hidden by default): remembered only in this browser tab, and forgotten on sign-out. */
+export const BUDGET_SHOWN_KEY = 'monexp-budget-shown';
+
 /** Who is signed in. `undefined` = not checked yet, `null` = signed out. */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -31,6 +34,7 @@ export class AuthService {
     try {
       await this.api.logout();
     } finally {
+      try { sessionStorage.removeItem(BUDGET_SHOWN_KEY); } catch { /* storage blocked – nothing to forget */ }
       this.account.set(null);
     }
   }

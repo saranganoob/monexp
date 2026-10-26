@@ -13,8 +13,12 @@ const userSchema = new Schema({
   phone: { type: String, match: /^([6-9]\d{9})?$/, default: '' },
   passwordHash: { type: String, required: true },
   isAdmin: { type: Boolean, default: false }, // can open the Admin page (manage logins – never other people's money)
+  aiAllowed: { type: Boolean, default: false }, // admin switched AI on for this login (the admin always has it)
   lastSignInAt: { type: Date, default: null },
   prefs: { type: prefsSchema, default: () => ({}) },
 }, { timestamps: true });
+
+/** Whether this login may use Ask AI and the AI summary. */
+export const canUseAi = (u) => Boolean(u?.isAdmin || u?.aiAllowed);
 
 export const User = mongoose.model('User', userSchema);

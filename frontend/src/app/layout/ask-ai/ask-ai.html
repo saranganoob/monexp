@@ -21,18 +21,20 @@
       @if (!bubbles().length) {
         <p class="intro">Ask about your bills, cards, EMIs, people and sudden spends. Try one of these:</p>
       }
-      @for (b of bubbles(); track $index) {
+      @for (b of bubbles(); track $index; let last = $last) {
         <div class="msg" [class.msg--user]="b.role === 'user'">
           @if (b.text) {
-            <div class="bubble" [class.bubble--user]="b.role === 'user'" [class.bubble--error]="b.error">{{ b.text }}</div>
+            <!-- Streamed replies: each new piece fades in; a caret blinks while Claude is still writing. -->
+            <div class="bubble" [class.bubble--user]="b.role === 'user'" [class.bubble--error]="b.error" [class.is-streaming]="last && busy() && b.role === 'assistant'">@if (b.parts && !b.error) {@for (p of b.parts; track $index) {<span class="chunk">{{ p }}</span>}} @else {<span>{{ b.text }}</span>}</div>
           }
           @if (b.status && !b.text) {
             <!-- Waiting for the reply: a bubble with animated dots (and what it's checking). -->
             <div class="bubble thinking" role="status">
-              <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>{{ b.status }}
+              <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+              @for (s of [b.status]; track s) { <span class="status-text">{{ s }}</span> }
             </div>
           } @else if (b.status) {
-            <div class="status"><span class="dot"></span>{{ b.status }}</div>
+            <div class="status"><span class="dot"></span>@for (s of [b.status]; track s) { <span class="status-text">{{ s }}</span> }</div>
           }
         </div>
       }

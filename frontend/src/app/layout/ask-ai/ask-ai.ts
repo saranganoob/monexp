@@ -5,7 +5,8 @@ import { AiService, ChatTurn } from '../../core/ai.service';
 import { YmPipe } from '../../shared/pipes/ym.pipe';
 import { Icon } from '../../shared/ui/icon/icon';
 
-interface Bubble { role: 'user' | 'assistant'; text: string; status?: string; error?: boolean; }
+/** `parts` keeps each streamed piece separate so new words can fade in on their own. */
+interface Bubble { role: 'user' | 'assistant'; text: string; parts?: string[]; status?: string; error?: boolean; }
 
 const SUGGESTIONS = [
   'Summarise my last 6 months',
@@ -39,13 +40,16 @@ export class AskAi implements AfterViewChecked, OnDestroy {
   private abort: AbortController | null = null;
   private stickToBottom = true;
 
-  open() { this.store.askAiOpen.set(true); setTimeout(() => document.getElementById('askAiInput')?.focus()); }
+  open() {
+    this.stickToBottom = true; // reopen at the latest message
+    this.store.askAiOpen.set(true);
+    setTimeout(() => document.getElementById('askAiInput')?.focus());
+  }
 
+  /** Hides the panel; the conversation (and an answer still coming in) stays until Clear. */
   close() {
     if (!this.store.askAiOpen()) return;
-    this.abort?.abort();
     this.store.askAiOpen.set(false);
-    this.bubbles.set([]); // a fresh conversation each time the panel opens
   }
 
   clear() {
@@ -74,8 +78,8 @@ export class AskAi implements AfterViewChecked, OnDestroy {
     try {
       await this.ai.chat(history, this.store.ym(), (e) => {
         if (e.type === 'status') patchLast((b) => ({ ...b, status: e.text }));
-        else if (e.type === 'text') patchLast((b) => ({ ...b, text: b.text + e.delta, status: undefined }));
-        else if (e.type === 'error') patchLast((b) => ({ ...b, text: b.text ? `${b.text}\n\n${e.message}` : e.message, status: undefined, error: true }));
+        else if (e.type === 'text') patchLast((b) => ({ ...b, text: b.text + e.delta, parts: [...(b.parts ?? []), e.delta], status: undefined }));
+        else if (e.type === 'error') patchLast((b) => ({ ...b, text: b.text ? `${b.text}\n\n${e.message}` : e.message, parts: undefined, status: undefined, error: true }));
       }, this.abort.signal);
     } catch (err) {
       if (!this.abort?.signal.aborted) {

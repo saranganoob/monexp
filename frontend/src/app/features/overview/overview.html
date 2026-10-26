@@ -14,7 +14,7 @@
       </div>
     </section>
 
-    <app-ai-summary [ym]="m.ym" />
+    @if (auth.account()?.aiAllowed) { <app-ai-summary [ym]="m.ym" /> }
 
     <app-pay-summary [totals]="m.totals" />
 

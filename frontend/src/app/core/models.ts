@@ -81,7 +81,7 @@ export interface YearView {
 /** Look & feel saved in the account (null = not chosen yet). */
 export type HomeLang = 'ta' | 'te' | 'hi';
 export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; }
-export interface Account { email: string; phone: string; isAdmin?: boolean; prefs?: Prefs; }
+export interface Account { email: string; phone: string; isAdmin?: boolean; aiAllowed?: boolean; prefs?: Prefs; }
 /** A login as the Admin page shows it – never any money data. */
-export interface AdminUser { id: string; email: string; phone: string; isAdmin: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }
+export interface AdminUser { id: string; email: string; phone: string; isAdmin: boolean; aiAllowed: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }
 export interface ChangeResult { message: string; undoToken: string; id?: string; }

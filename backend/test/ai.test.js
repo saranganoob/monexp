@@ -59,7 +59,7 @@ before(async () => {
   await mongoose.connect(TEST_DB);
   assert.match(mongoose.connection.name, /_test_ai$/);
   await mongoose.connection.dropDatabase();
-  owner = (await User.create({ email: 'ai@example.com', passwordHash: await bcrypt.hash('test-password-1', 4) }))._id;
+  owner = (await User.create({ email: 'ai@example.com', aiAllowed: true, passwordHash: await bcrypt.hash('test-password-1', 4) }))._id;
   await seedSampleData(owner);
   await agent.post('/api/auth/login').send({ identifier: 'ai@example.com', password: 'test-password-1' });
 });

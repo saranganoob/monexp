@@ -1,10 +1,11 @@
-// Admin page: manage logins (list, add, reset password). Only for accounts with isAdmin.
+// Admin page: manage logins (list, add, reset password, switch AI on/off, delete). Only for accounts with isAdmin.
 // Deliberately shows nothing of anyone's money data.
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { User } from '../models/index.js';
+import { MONEY_MODELS, User, canUseAi } from '../models/index.js';
+import { runAsOwner } from '../lib/owner.js';
 import { config } from '../config.js';
-import { isOnline } from '../services/live.js';
+import { disconnectUser, isOnline } from '../services/live.js';
 import { HttpError, badRequest, conflict, notFound } from '../lib/http.js';
 import { toId, toText } from '../lib/validate.js';
 
@@ -20,7 +21,7 @@ router.use(async (req, _res, next) => {
 });
 
 const listUser = (u) => ({
-  id: String(u._id), email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin),
+  id: String(u._id), email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
   createdAt: u.createdAt, lastSignInAt: u.lastSignInAt ?? null, online: isOnline(u._id),
 });
 
@@ -57,6 +58,28 @@ router.post('/users/:id/password', async (req, res) => {
   if (!user) throw notFound('Account not found.');
   user.passwordHash = await bcrypt.hash(password, 12);
   await user.save();
+  res.json({ ok: true });
+});
+
+// Switch Ask AI + the AI summary on or off for one login. The admin always keeps it.
+router.patch('/users/:id/ai', async (req, res) => {
+  if (typeof req.body?.allowed !== 'boolean') throw badRequest('Say whether AI is allowed (true or false).');
+  const user = await User.findById(toId(req.params.id));
+  if (!user) throw notFound('Account not found.');
+  if (user.isAdmin) throw badRequest('The admin always has AI.');
+  user.aiAllowed = req.body.allowed;
+  await user.save();
+  res.json(listUser(user));
+});
+
+// Delete a login and everything in it (bills, cards, EMIs, people…). Can't be undone; the admin can't be deleted.
+router.delete('/users/:id', async (req, res) => {
+  const user = await User.findById(toId(req.params.id));
+  if (!user) throw notFound('Account not found.');
+  if (user.isAdmin) throw badRequest('The admin login can’t be deleted.');
+  await runAsOwner(user._id, () => Promise.all(MONEY_MODELS.map((M) => M.deleteMany({}))));
+  await user.deleteOne();
+  disconnectUser(user._id);
   res.json({ ok: true });
 });
 

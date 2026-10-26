@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { WebSocketServer } from 'ws';
 import { config } from '../config.js';
 import { SESSION_COOKIE } from '../middleware/auth.js';
+import { User } from '../models/index.js';
 
 export const LIVE_PATH = '/api/live';
 /** Header each page sends with its requests, so it isn't told about its own changes. */
@@ -49,17 +50,20 @@ export function attachLive(server) {
     if (!sameSite(req)) return reject(socket, 403, 'Forbidden');
     const userId = readSession(req);
     if (!userId) return reject(socket, 401, 'Unauthorized');
-    wss.handleUpgrade(req, socket, head, (ws) => {
-      ws.userId = userId;
-      ws.alive = true;
-      if (!pagesByUser.has(userId)) pagesByUser.set(userId, new Set());
-      pagesByUser.get(userId).add(ws);
-      ws.on('pong', () => { ws.alive = true; });
-      ws.on('message', () => {}); // pages don't send anything
-      ws.on('close', () => {
-        const pages = pagesByUser.get(userId);
-        pages?.delete(ws);
-        if (pages && !pages.size) pagesByUser.delete(userId);
+    User.exists({ _id: userId }).catch(() => null).then((exists) => {
+      if (!exists) return reject(socket, 401, 'Unauthorized'); // a deleted login
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        ws.userId = userId;
+        ws.alive = true;
+        if (!pagesByUser.has(userId)) pagesByUser.set(userId, new Set());
+        pagesByUser.get(userId).add(ws);
+        ws.on('pong', () => { ws.alive = true; });
+        ws.on('message', () => {}); // pages don't send anything
+        ws.on('close', () => {
+          const pages = pagesByUser.get(userId);
+          pages?.delete(ws);
+          if (pages && !pages.size) pagesByUser.delete(userId);
+        });
       });
     });
   });
@@ -85,6 +89,17 @@ export function notifyChanged(userId, from) {
   if (!pages) return;
   const message = JSON.stringify({ type: 'changed', from: from || null });
   for (const ws of pages) if (ws.readyState === ws.OPEN) ws.send(message);
+}
+
+/** A deleted login: its open pages reload (and find they're signed out), then the connections close. */
+export function disconnectUser(userId) {
+  const pages = pagesByUser.get(String(userId));
+  if (!pages) return;
+  for (const ws of pages) {
+    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type: 'changed', from: null }));
+    ws.close();
+  }
+  pagesByUser.delete(String(userId));
 }
 
 /** Express middleware: after a successful change (not a read, not an AI question), notify the user's pages. */

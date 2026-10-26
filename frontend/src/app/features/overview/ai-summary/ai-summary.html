@@ -1,7 +1,7 @@
 <section class="card box">
   <div class="between">
     <div class="title">
-      <span class="logo"><app-icon name="sparkle" [size]="18" /></span>
+      <span class="logo" [class.is-busy]="busy()"><app-icon name="sparkle" [size]="18" /></span>
       <h2 class="card__title">AI summary · {{ ym() | ym }}</h2>
     </div>
     @if (view()?.enabled && view()?.summary) {
@@ -13,7 +13,14 @@
     @if (!v.enabled) {
       <p class="muted text">Add your Claude API key to <strong>backend/.env</strong> (ANTHROPIC_API_KEY=…) and restart the backend to get an AI-written summary of each month.</p>
     } @else if (v.summary; as s) {
-      <p class="text" [class.is-busy]="busy()">{{ s.text }}</p>
+      <!-- A fresh note fades in sentence by sentence; while refreshing, the old one dims under a sheen. -->
+      <div class="text-wrap" [class.is-busy]="busy()">
+        @if (reveal()) {
+          <p class="text">@for (line of sentences(); track $index + line) {<span class="line" [style.animation-delay.ms]="$index * 140">{{ line }}</span>}</p>
+        } @else {
+          <p class="text">{{ s.text }}</p>
+        }
+      </div>
       <div class="meta">
         @if (v.stale) {
           <span class="stale">Your figures changed since this was written — tap Refresh for an updated note.</span>
@@ -23,7 +30,14 @@
         <button class="link-btn" (click)="openChat()">Ask a follow-up →</button>
       </div>
     } @else {
-      <p class="muted text">Get a short note on how {{ ym() | ym }} is going compared with last month, and anything to watch.</p>
+      @if (busy()) {
+        <div class="writing" role="status">
+          <span class="writing__label">Reading your month…</span>
+          <span class="bar"></span><span class="bar"></span><span class="bar bar--short"></span>
+        </div>
+      } @else {
+        <p class="muted text">Get a short note on how {{ ym() | ym }} is going compared with last month, and anything to watch.</p>
+      }
       <div><button class="btn btn--primary btn--sm" [disabled]="busy()" (click)="generate()"><app-icon name="sparkles" [size]="16" />{{ busy() ? 'Writing…' : 'Summarise this month' }}</button></div>
     }
   }

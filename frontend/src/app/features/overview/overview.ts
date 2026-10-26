@@ -1,5 +1,6 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { AppStore } from '../../core/app-store';
+import { AuthService } from '../../core/auth/auth.service';
 import { Api } from '../../core/api.service';
 import { Installment } from '../../core/models';
 import { InrPipe } from '../../shared/pipes/inr.pipe';
@@ -18,6 +19,7 @@ import { StillToPay } from './still-to-pay/still-to-pay';
 })
 export class OverviewPage {
   private store = inject(AppStore);
+  protected auth = inject(AuthService);
   private api = inject(Api);
   protected readonly month = this.store.month;
   protected readonly installments = signal<Installment[]>([]);

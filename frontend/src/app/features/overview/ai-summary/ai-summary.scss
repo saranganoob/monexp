@@ -2,7 +2,31 @@
 .box { padding: 18px 24px; display: flex; flex-direction: column; gap: 10px; border-color: var(--info-border); background: linear-gradient(180deg, var(--info-bg), var(--surface)); }
 .title { display: flex; align-items: center; gap: 10px; }
 .logo { width: 30px; height: 30px; border-radius: 9px; background: var(--info-bg); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; }
-.text { margin: 0; line-height: 1.6; font-size: 15px; white-space: pre-line;
-  &.is-busy { opacity: .5; } }
+.text { margin: 0; line-height: 1.6; font-size: 15px; white-space: pre-line; }
+.text-wrap { position: relative; border-radius: var(--radius-sm); transition: opacity .3s ease, filter .3s ease;
+  &.is-busy { opacity: .4; filter: blur(1px);
+    &::after { content: ''; position: absolute; inset: 0; pointer-events: none; animation: sheen 1.6s ease-in-out infinite;
+      background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--accent) 22%, transparent) 50%, transparent 80%); background-size: 220% 100%; } } }
+.line { animation: line-in .6s ease-out both; }
+@keyframes line-in { from { opacity: 0; filter: blur(5px); } }
+
+// Waiting for the first note: shimmering lines in place of the text.
+.writing { display: flex; flex-direction: column; gap: 10px; padding: 2px 0 4px; }
+.writing__label { font-size: 13px; font-weight: 600; color: var(--accent-ink); animation: fade 1.6s ease-in-out infinite; }
+.bar { height: 12px; border-radius: 6px; animation: sheen 1.6s ease-in-out infinite;
+  background: linear-gradient(100deg, var(--sub) 30%, color-mix(in srgb, var(--accent) 18%, var(--sub)) 50%, var(--sub) 70%); background-size: 220% 100%;
+  &--short { width: 60%; } }
+@keyframes sheen { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+@keyframes fade { 50% { opacity: .55; } }
+
+// The sparkle badge "breathes" while Claude is writing.
+.logo { transition: box-shadow .3s ease;
+  &.is-busy { animation: breathe 1.6s ease-in-out infinite; } }
+@keyframes breathe { 50% { transform: scale(1.08); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 16%, transparent); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .line, .bar, .writing__label, .logo.is-busy, .text-wrap.is-busy::after { animation: none; }
+  .text-wrap { transition: none; }
+}
 .meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 .stale { color: var(--orange-fg); font-weight: 600; }

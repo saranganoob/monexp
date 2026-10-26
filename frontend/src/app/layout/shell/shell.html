@@ -26,6 +26,7 @@
   @if (store.emiDialog()) { <app-emi-dialog animate.leave="is-leaving" /> }
   <!-- Screen readers hear "Saving…" when an action takes a while (the toast then says how it went). -->
   <div class="sr" role="status" aria-live="polite">{{ store.loading.anySlow() ? 'Saving…' : '' }}</div>
-  <app-ask-ai />
+  <!-- Ask AI only for logins the admin switched AI on for – others never see it. -->
+  @if (auth.account()?.aiAllowed) { <app-ask-ai /> }
   <app-undo-toast />
 </div>

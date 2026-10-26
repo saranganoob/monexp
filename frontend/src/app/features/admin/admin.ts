@@ -4,15 +4,17 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Api, errorMessage } from '../../core/api.service';
 import { AdminUser } from '../../core/models';
 import { Avatar } from '../../shared/ui/avatar/avatar';
+import { Icon } from '../../shared/ui/icon/icon';
+import { Busy } from '../../shared/directives/busy';
 import { AddLogin } from './add-login/add-login';
 
 /** How often the list (and the green "online" dots) refreshes while the page is open. */
 const REFRESH_MS = 20_000;
 
-/** Admin: everyone who can sign in, add a friend, reset a password. No money data here. */
+/** Admin: everyone who can sign in, add a friend, reset a password, switch AI on/off, delete a login. No money data here. */
 @Component({
   selector: 'app-admin',
-  imports: [DatePipe, ReactiveFormsModule, Avatar, AddLogin],
+  imports: [DatePipe, ReactiveFormsModule, Avatar, AddLogin, Icon, Busy],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
 })
@@ -31,6 +33,13 @@ export class AdminPage {
   });
   protected readonly resetError = signal('');
   protected readonly resetDone = signal('');
+  /** The login whose AI switch is being saved. */
+  protected readonly aiSaving = signal<string | null>(null);
+  protected readonly aiError = signal('');
+  /** The login waiting for "Delete for good". */
+  protected readonly deleting = signal<string | null>(null);
+  protected readonly deleteBusy = signal(false);
+  protected readonly deleteError = signal('');
 
   constructor() {
     this.load();
@@ -49,7 +58,46 @@ export class AdminPage {
     }
   }
 
+  protected async toggleAi(u: AdminUser) {
+    const allowed = !u.aiAllowed;
+    const setRow = (value: boolean) => this.users.update((list) => list.map((x) => (x.id === u.id ? { ...x, aiAllowed: value } : x)));
+    setRow(allowed); // flip at once; put it back if saving fails
+    this.aiSaving.set(u.id);
+    this.aiError.set('');
+    try {
+      await this.api.adminSetAi(u.id, allowed);
+    } catch (e) {
+      setRow(!allowed);
+      this.aiError.set(errorMessage(e));
+    } finally {
+      this.aiSaving.set(null);
+    }
+  }
+
+  protected startDelete(u: AdminUser) {
+    this.deleting.set(u.id);
+    this.resetting.set(null);
+    this.deleteError.set('');
+    this.resetDone.set('');
+  }
+
+  protected async confirmDelete(u: AdminUser) {
+    this.deleteBusy.set(true);
+    this.deleteError.set('');
+    try {
+      await this.api.adminDeleteUser(u.id);
+      this.users.update((list) => list.filter((x) => x.id !== u.id));
+      this.deleting.set(null);
+      this.resetDone.set(`Deleted ${u.email || u.phone} – they can't sign in any more.`);
+    } catch (e) {
+      this.deleteError.set(errorMessage(e));
+    } finally {
+      this.deleteBusy.set(false);
+    }
+  }
+
   protected startReset(u: AdminUser) {
+    this.deleting.set(null);
     this.resetting.set(u.id);
     this.resetForm.reset();
     this.resetError.set('');

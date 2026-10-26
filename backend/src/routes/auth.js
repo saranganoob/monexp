@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/index.js';
+import { User, canUseAi } from '../models/index.js';
 import { config } from '../config.js';
 import { requireAuth, SESSION_COOKIE } from '../middleware/auth.js';
 import { HttpError, badRequest, notFound } from '../lib/http.js';
@@ -16,7 +16,7 @@ const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 
 const lastTenDigits = (s) => s.replace(/\D/g, '').slice(-10);
 const publicUser = (u) => ({
-  email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin),
+  email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
   prefs: { theme: u.prefs?.theme ?? null, accent: u.prefs?.accent ?? null, lang: u.prefs?.lang ?? null },
 });
 

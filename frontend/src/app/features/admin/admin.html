@@ -7,6 +7,7 @@
       <span class="card-head__meta">{{ users().length }} of {{ maxUsers() }} logins used · you only see who can sign in, never their money</span>
     </div>
     @if (loadError()) { <div role="alert" class="list-empty err">{{ loadError() }}</div> }
+    @if (aiError()) { <div role="alert" class="list-empty err">{{ aiError() }}</div> }
     @if (resetDone()) { <div role="status" class="notice notice--info done">{{ resetDone() }}</div> }
 
     <div class="table" role="table" aria-label="Logins">
@@ -15,6 +16,7 @@
         <span role="columnheader">Created</span>
         <span role="columnheader">Last signed in</span>
         <span role="columnheader">Status</span>
+        <span role="columnheader">AI</span>
         <span role="columnheader"><span class="sr">Actions</span></span>
       </div>
       @for (u of users(); track u.id) {
@@ -34,8 +36,36 @@
           <div class="small status" role="cell">
             <span class="dot" [class.is-on]="u.online" aria-hidden="true"></span>{{ u.online ? 'Online now' : 'Offline' }}
           </div>
-          <div class="actions" role="cell"><button type="button" class="btn btn--sm" (click)="startReset(u)">Reset password</button></div>
+          <div class="small ai" role="cell">
+            <span class="cap">AI </span>
+            @if (u.isAdmin) {
+              <span class="muted">Always on</span>
+            } @else {
+              <!-- Ask AI + AI summary for this login. Off = they don't see any AI at all. -->
+              <button type="button" role="switch" class="switch" [class.is-on]="u.aiAllowed" [attr.aria-checked]="u.aiAllowed"
+                [attr.aria-label]="'AI for ' + (u.email || u.phone)" [disabled]="aiSaving() === u.id" (click)="toggleAi(u)"><span class="switch__knob"></span></button>
+              <span>{{ u.aiAllowed ? 'On' : 'Off' }}</span>
+            }
+          </div>
+          <div class="actions" role="cell">
+            <button type="button" class="btn btn--sm" (click)="startReset(u)">Reset password</button>
+            @if (!u.isAdmin) {
+              <button type="button" class="btn btn--ghost btn--icon btn--sm del-btn" (click)="startDelete(u)" [attr.aria-label]="'Delete ' + (u.email || u.phone)" title="Delete login"><app-icon name="trash" [size]="18" [stroke]="1.8" /></button>
+            }
+          </div>
         </div>
+        @if (deleting() === u.id) {
+          <!-- Deleting can't be undone, so it asks first and says exactly what goes. -->
+          <div class="edit-box confirm-del" role="alertdialog" [attr.aria-label]="'Delete ' + (u.email || u.phone)">
+            <div class="edit-box__title">Delete {{ u.email || u.phone }}?</div>
+            <p class="small">Their login and <strong>all their MonEXP data</strong> (bills, cards, EMIs, people, sudden spends) are removed for good. If they have MonEXP open, they're signed out straight away. This can't be undone.</p>
+            <div class="row-flex">
+              <button type="button" class="btn btn--sm btn-danger" [appBusy]="deleteBusy()" (click)="confirmDelete(u)">{{ deleteBusy() ? 'Deleting…' : 'Delete for good' }}</button>
+              <button type="button" class="btn btn--ghost btn--sm" [disabled]="deleteBusy()" (click)="deleting.set(null)">Cancel</button>
+            </div>
+            @if (deleteError()) { <div role="alert" class="err err--sm">{{ deleteError() }}</div> }
+          </div>
+        }
         @if (resetting() === u.id) {
           <form class="edit-box reset" [formGroup]="resetForm" (ngSubmit)="saveReset(u)">
             <label class="edit-box__title" [for]="'pw-' + u.id">New password for {{ u.email || u.phone }}</label>

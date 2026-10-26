@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { AppStore } from '../../core/app-store';
+import { AuthService } from '../../core/auth/auth.service';
 import { LiveService } from '../../core/live.service';
 import { EmptyMonth } from '../../shared/components/empty-month/empty-month';
 import { AddExpenseDialog } from '../add-expense-dialog/add-expense-dialog';
@@ -24,6 +25,7 @@ import { UndoToast } from '../undo-toast/undo-toast';
 })
 export class Shell {
   protected store = inject(AppStore);
+  protected auth = inject(AuthService);
   private live = inject(LiveService);
   private router = inject(Router);
 

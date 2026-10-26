@@ -40,6 +40,8 @@ export class Api {
   adminUsers() { return this.get<{ users: AdminUser[]; maxUsers: number }>('/admin/users'); }
   adminAddUser(body: { email: string; phone: string; password: string }) { return this.post<AdminUser>('/admin/users', body); }
   adminResetPassword(id: string, password: string) { return this.post<{ ok: boolean }>(`/admin/users/${id}/password`, { password }); }
+  adminDeleteUser(id: string) { return this.del<{ ok: boolean }>(`/admin/users/${id}`); }
+  adminSetAi(id: string, allowed: boolean) { return this.patch<AdminUser>(`/admin/users/${id}/ai`, { allowed }); }
 
   // months
   month(ym: string) { return this.get<MonthView>(`/months/${ym}`); }

@@ -5,10 +5,18 @@ import { generateSummary, getSummary } from '../services/ai/summary.js';
 import { config } from '../config.js';
 import { badRequest, HttpError } from '../lib/http.js';
 import { toYm } from '../lib/validate.js';
+import { User, canUseAi } from '../models/index.js';
 
 const router = Router();
 const MAX_HISTORY = 20;
 const MAX_MESSAGE_CHARS = 4000;
+
+// Only logins the admin switched AI on for. Others get a plain "not found", as if there were no AI.
+router.use(async (req, _res, next) => {
+  const me = await User.findById(req.userId).select('isAdmin aiAllowed').lean();
+  if (!canUseAi(me)) throw new HttpError(404, 'Not found.');
+  next();
+});
 
 router.get('/status', (_req, res) => {
   res.json({ enabled: aiEnabled(), model: config.anthropicModel });

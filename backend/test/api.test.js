@@ -363,6 +363,23 @@ test('admin: only the admin manages logins, and never sees money data', async ()
   assert.equal((await pal.get('/api/admin/users')).status, 403);
   assert.equal((await pal.post(`/api/admin/users/${add.body.id}/password`).send({ password: 'hijack-pass-1' })).status, 403);
 
+  // AI is off for a new friend (it simply isn't there) until the admin switches it on; the admin always has it.
+  assert.equal(add.body.aiAllowed, false);
+  assert.equal((await pal.get('/api/auth/me')).body.aiAllowed, false);
+  assert.equal((await pal.get('/api/ai/status')).status, 404);
+  assert.equal((await pal.post('/api/ai/summary/2026-10')).status, 404);
+  assert.equal((await agent.get('/api/ai/status')).status, 200);
+  assert.equal((await pal.patch(`/api/admin/users/${add.body.id}/ai`).send({ allowed: true })).status, 403);
+  assert.equal((await agent.patch(`/api/admin/users/${add.body.id}/ai`).send({ allowed: 'yes' })).status, 400);
+  const on = await agent.patch(`/api/admin/users/${add.body.id}/ai`).send({ allowed: true });
+  assert.equal(on.body.aiAllowed, true);
+  assert.equal((await pal.get('/api/auth/me')).body.aiAllowed, true);
+  assert.equal((await pal.get('/api/ai/status')).status, 200);
+  const adminId = list.find((u) => u.isAdmin).id;
+  assert.equal((await agent.patch(`/api/admin/users/${adminId}/ai`).send({ allowed: false })).status, 400);
+  await agent.patch(`/api/admin/users/${add.body.id}/ai`).send({ allowed: false });
+  assert.equal((await pal.get('/api/ai/status')).status, 404);
+
   // No more than MAX_USERS logins in total.
   const saved = config.maxUsers;
   try {
@@ -373,6 +390,21 @@ test('admin: only the admin manages logins, and never sees money data', async ()
   } finally {
     config.maxUsers = saved;
   }
+
+  // Delete a login: only the admin, never the admin's own; the person can't sign in and their data is gone.
+  assert.equal((await pal.post('/api/people').send({ name: 'Pal friend' })).status, 201);
+  const { Person } = await import('../src/models/index.js');
+  const palPeople = () => Person.collection.countDocuments({ owner: new mongoose.Types.ObjectId(add.body.id) });
+  assert.equal(await palPeople(), 1);
+  assert.equal((await pal.delete(`/api/admin/users/${add.body.id}`)).status, 403);
+  assert.equal((await agent.delete(`/api/admin/users/${adminId}`)).status, 400);
+  assert.equal((await agent.delete(`/api/admin/users/${add.body.id}`)).status, 200);
+  assert.equal(await palPeople(), 0);
+  assert.equal((await pal.get('/api/people')).status, 401); // their open session stops working
+  assert.equal((await request(app).post('/api/auth/login').send({ identifier: 'pal@example.com', password: 'reset-pass-1' })).status, 401);
+  assert.ok(!(await agent.get('/api/admin/users')).body.users.some((u) => u.id === add.body.id));
+  assert.equal((await agent.delete(`/api/admin/users/${add.body.id}`)).status, 404);
+  assert.ok((await agent.get('/api/people')).body.length > 0); // the admin's own data is untouched
 });
 
 test('yearly bank/cash EMI for a friend, and "I owe them" rows in Need to pay', async () => {

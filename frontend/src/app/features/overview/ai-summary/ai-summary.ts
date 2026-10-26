@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { AppStore } from '../../../core/app-store';
 import { AiService, AiSummaryView } from '../../../core/ai.service';
@@ -21,6 +21,9 @@ export class AiSummary {
   protected readonly view = signal<AiSummaryView | null>(null);
   protected readonly busy = signal(false);
   protected readonly error = signal('');
+  /** True right after Claude writes a new note, so it appears sentence by sentence. */
+  protected readonly reveal = signal(false);
+  protected readonly sentences = computed(() => this.view()?.summary?.text.match(/[^.!?\n]+[.!?]*["')\]]*\s*|\n+/g) ?? []);
 
   constructor() {
     // Reading the saved summary is free; only "Summarise" / "Refresh" calls Claude.
@@ -29,6 +32,7 @@ export class AiSummary {
       this.store.version();
       try {
         this.view.set(await this.ai.summary(ym));
+        this.reveal.set(false);
         this.error.set('');
       } catch (e) {
         this.error.set(errorMessage(e));
@@ -41,6 +45,7 @@ export class AiSummary {
     this.error.set('');
     try {
       this.view.set(await this.ai.generateSummary(this.ym()));
+      this.reveal.set(true);
     } catch (e) {
       this.error.set(errorMessage(e));
     } finally {

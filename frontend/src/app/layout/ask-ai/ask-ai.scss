@@ -24,7 +24,26 @@
   span:nth-child(2) { animation-delay: .15s; }
   span:nth-child(3) { animation-delay: .3s; } }
 @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: .45; } 30% { transform: translateY(-4px); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .dots span { animation: none; opacity: .7; } }
+
+// Reply motion: each message springs up into place;
+// "what I'm checking" text cross-fades as it changes; streamed words fade in from a slight blur.
+.msg { transition: transform var(--spring-dur) var(--spring), opacity .25s ease; transform-origin: bottom left; }
+.msg--user { transform-origin: bottom right; }
+@starting-style { .msg { opacity: 0; transform: translateY(12px) scale(.96); } }
+.bubble { transition: opacity .25s ease, transform var(--spring-dur) var(--spring); }
+@starting-style { .bubble { opacity: .3; transform: scale(.98); } }
+.status-text { display: inline-block; animation: status-in .35s ease-out both; }
+@keyframes status-in { from { opacity: 0; transform: translateY(4px); filter: blur(2px); } }
+.chunk { animation: chunk-in .5s ease-out both; }
+@keyframes chunk-in { from { opacity: 0; filter: blur(4px); } }
+.is-streaming::after { content: ''; display: inline-block; width: 2px; height: 1.05em; margin-left: 2px; vertical-align: text-bottom;
+  border-radius: 1px; background: var(--accent); animation: caret 1s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .dots span { animation: none; opacity: .7; }
+  .msg, .bubble { transition: none; }
+  .status-text, .chunk, .is-streaming::after { animation: none; }
+}
 .foot { border-top: 1px solid var(--hair); padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
 .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
 .chip-btn { font: inherit; font-size: 13px; font-weight: 600; min-height: 36px; padding: 0 12px; border-radius: 999px; white-space: nowrap; cursor: pointer;

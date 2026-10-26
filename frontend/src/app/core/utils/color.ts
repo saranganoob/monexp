@@ -32,9 +32,10 @@ function luminance(c: Rgb) {
 const contrast = (a: Rgb, b: Rgb) => { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
 const minContrast = (c: Rgb, list: Rgb[]) => Math.min(...list.map((b) => contrast(c, b)));
 
-/** All `--accent…` CSS variables for one picked colour in one theme. */
+/** All `--accent…` (and accent-tinted `--info…`) CSS variables for one picked colour in one theme. */
 export function accentTokens(hex: string, mode: 'light' | 'dark'): Record<string, string> {
-  let acc = hexToRgb(hex);
+  const picked = hexToRgb(hex);
+  let acc = picked;
   const grad = () => [mix(acc, WHITE, 0.08), mix(acc, BLACK, 0.14)];
   // Text on accent buttons: white or ink, whichever reads better; nudge the accent until it passes.
   let [g1, g2] = grad();
@@ -48,6 +49,12 @@ export function accentTokens(hex: string, mode: 'light' | 'dark'): Record<string
   const ink = mode === 'dark' ? INK_DARK : INK_LIGHT;
   let accInk = acc;
   for (let k = 0; k < 40 && minContrast(accInk, bgs) < MIN_CONTRAST; k++) accInk = mix(accInk, ink, 0.1);
+  // Soft tinted boxes (selected choices, suggestion chips, info notes) in the same colour family.
+  const dark = mode === 'dark';
+  const infoBg = dark ? mix(picked, BACKGROUNDS.dark[0], 0.72) : mix(picked, WHITE, 0.88);
+  const infoBorder = dark ? mix(picked, BACKGROUNDS.dark[0], 0.55) : mix(picked, WHITE, 0.74);
+  let infoFg = dark ? mix(picked, WHITE, 0.7) : mix(picked, BLACK, 0.45);
+  for (let k = 0; k < 40 && contrast(infoFg, infoBg) < MIN_CONTRAST; k++) infoFg = mix(infoFg, ink, 0.1);
 
   return {
     '--accent': rgbToHex(acc),
@@ -58,5 +65,8 @@ export function accentTokens(hex: string, mode: 'light' | 'dark'): Record<string
     '--accent-glow': rgba(acc, mode === 'dark' ? 0.32 : 0.26),
     '--on-accent': rgbToHex(onAcc),
     '--on-accent-2': rgbToHex(mix(onAcc, g2, 0.22)),
+    '--info-bg': rgbToHex(infoBg),
+    '--info-fg': rgbToHex(infoFg),
+    '--info-border': rgbToHex(infoBorder),
   };
 }

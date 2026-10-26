@@ -19,7 +19,7 @@ const publicUser = (u) => ({
   email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
   prefs: {
     theme: u.prefs?.theme ?? null, accent: u.prefs?.accent ?? null, lang: u.prefs?.lang ?? null,
-    sidebar: u.prefs?.sidebar ?? null, sidebarPinned: u.prefs?.sidebarPinned ?? null,
+    sidebar: u.prefs?.sidebar ?? null, sidebarPinned: u.prefs?.sidebarPinned ?? null, aiName: u.prefs?.aiName ?? null,
   },
 });
 
@@ -156,6 +156,13 @@ router.patch('/prefs', requireAuth, async (req, res) => {
   if (req.body?.sidebarPinned !== undefined) {
     if (typeof req.body.sidebarPinned !== 'boolean') throw badRequest('Say whether the sidebar is pinned (true or false).');
     set['prefs.sidebarPinned'] = req.body.sidebarPinned;
+  }
+  if (req.body?.aiName !== undefined) {
+    // Empty or null = back to the default name.
+    const name = req.body.aiName === null ? '' : String(req.body.aiName).replace(/\s+/g, ' ').trim();
+    if (name.length > 24) throw badRequest('Keep the AI’s name to 24 characters or fewer.');
+    if (/[<>{}\[\]\\`\p{Cc}]/u.test(name)) throw badRequest('Use letters, numbers and spaces for the AI’s name.');
+    set['prefs.aiName'] = name || null;
   }
   const user = await User.findByIdAndUpdate(req.userId, { $set: set }, { new: true, runValidators: true }).lean();
   if (!user) throw notFound('Account not found.');

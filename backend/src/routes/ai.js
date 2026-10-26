@@ -5,7 +5,7 @@ import { generateSummary, getSummary } from '../services/ai/summary.js';
 import { config } from '../config.js';
 import { badRequest, HttpError } from '../lib/http.js';
 import { toYm } from '../lib/validate.js';
-import { User, canUseAi } from '../models/index.js';
+import { DEFAULT_AI_NAME, User, canUseAi } from '../models/index.js';
 
 const router = Router();
 const MAX_HISTORY = 20;
@@ -13,8 +13,9 @@ const MAX_MESSAGE_CHARS = 4000;
 
 // Only logins the admin switched AI on for. Others get a plain "not found", as if there were no AI.
 router.use(async (req, _res, next) => {
-  const me = await User.findById(req.userId).select('isAdmin aiAllowed').lean();
+  const me = await User.findById(req.userId).select('isAdmin aiAllowed prefs.aiName').lean();
   if (!canUseAi(me)) throw new HttpError(404, 'Not found.');
+  req.aiName = me.prefs?.aiName || DEFAULT_AI_NAME;
   next();
 });
 
@@ -58,7 +59,7 @@ router.post('/chat', async (req, res) => {
   res.on('close', () => { if (!res.writableEnded) abort.abort(); });
 
   try {
-    await streamChat({ history, ym, send, signal: abort.signal });
+    await streamChat({ history, ym, aiName: req.aiName, send, signal: abort.signal });
     send('done', {});
   } catch (err) {
     if (!abort.signal.aborted) {

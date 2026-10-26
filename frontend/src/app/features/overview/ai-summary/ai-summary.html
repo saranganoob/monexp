@@ -2,17 +2,21 @@
   <div class="between">
     <div class="title">
       <span class="logo" [class.is-busy]="busy()"><app-icon name="sparkle" [size]="18" /></span>
-      <h2 class="card__title">AI summary · {{ ym() | ym }}</h2>
+      <h2 class="card__title">{{ theme.aiName() }}'s take · {{ ym() | ym }}</h2>
     </div>
-    @if (view()?.enabled && view()?.summary) {
-      <button class="btn btn--ghost btn--sm" [disabled]="busy()" (click)="generate()"><app-icon name="refresh" [size]="16" />{{ busy() ? 'Writing…' : 'Refresh' }}</button>
+    @if (shown() && view()?.enabled && view()?.summary) {
+      <div class="row-flex">
+        <button class="btn btn--ghost btn--sm" [disabled]="busy()" (click)="generate()"><app-icon name="refresh" [size]="16" />{{ busy() ? 'Writing…' : 'Refresh' }}</button>
+        <button class="btn btn--ghost btn--sm" [disabled]="busy()" (click)="shown.set(false)">Hide</button>
+      </div>
     }
   </div>
 
   @if (view(); as v) {
     @if (!v.enabled) {
       <p class="muted text">Add your Claude API key to <strong>backend/.env</strong> (ANTHROPIC_API_KEY=…) and restart the backend to get an AI-written summary of each month.</p>
-    } @else if (v.summary; as s) {
+    } @else if (shown() && v.summary) {
+      @let s = v.summary;
       <!-- A fresh note fades in sentence by sentence; while refreshing, the old one dims under a sheen. -->
       <div class="text-wrap" [class.is-busy]="busy()">
         @if (reveal()) {
@@ -27,18 +31,17 @@
         } @else {
           <span>Written {{ s.createdAt | date: 'd MMM, h:mm a' }}</span>
         }
-        <button class="link-btn" (click)="openChat()">Ask a follow-up →</button>
       </div>
     } @else {
       @if (busy()) {
         <div class="writing" role="status">
-          <span class="writing__label">Reading your month…</span>
+          <span class="writing__label">{{ theme.aiName() }} is reading your month…</span>
           <span class="bar"></span><span class="bar"></span><span class="bar bar--short"></span>
         </div>
       } @else {
-        <p class="muted text">Get a short note on how {{ ym() | ym }} is going compared with last month, and anything to watch.</p>
+        <p class="muted text">Get a short note from {{ theme.aiName() }} on how {{ ym() | ym }} is going compared with last month, and anything to watch.</p>
       }
-      <div><button class="btn btn--primary btn--sm" [disabled]="busy()" (click)="generate()"><app-icon name="sparkles" [size]="16" />{{ busy() ? 'Writing…' : 'Summarise this month' }}</button></div>
+      <div><button class="btn btn--primary btn--sm" [disabled]="busy()" (click)="show()"><app-icon name="sparkles" [size]="16" />{{ busy() ? 'Writing…' : 'Summarise this month' }}</button></div>
     }
   }
   @if (error()) { <div role="alert" class="err err--sm">{{ error() }}</div> }

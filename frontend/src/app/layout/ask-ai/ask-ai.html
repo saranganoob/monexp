@@ -1,25 +1,25 @@
 @if (showFab()) {
-  <button class="btn btn--primary fab" animate.leave="is-leaving" (click)="open()" aria-label="Ask MonEXP AI">
+  <button class="btn btn--primary fab" animate.leave="is-leaving" (click)="open()" [attr.aria-label]="'Ask ' + theme.aiName()">
     <app-icon name="sparkles" [size]="20" />
-    <span class="fab__label">Ask AI</span>
+    <span class="fab__label">Ask {{ theme.aiName() }}</span>
   </button>
 }
 
 @if (store.askAiOpen()) {
-  <aside class="panel" animate.leave="is-leaving" aria-label="MonEXP AI assistant">
+  <aside class="panel" animate.leave="is-leaving" [attr.aria-label]="theme.aiName() + ', your money friend'">
     <header class="head">
       <div class="logo"><app-icon name="sparkle" [size]="20" /></div>
       <div class="grow">
-        <div class="heavy">Ask MonEXP</div>
-        <div class="tiny muted">Reads your tracker · viewing {{ store.ym() | ym }}</div>
+        <div class="heavy">{{ theme.aiName() }}</div>
+        <div class="tiny muted">Your money friend · viewing {{ store.ym() | ym }}</div>
       </div>
       @if (bubbles().length) { <button class="btn btn--ghost btn--sm" (click)="clear()">Clear</button> }
-      <button class="btn btn--ghost btn--icon" (click)="close()" aria-label="Close assistant"><app-icon name="close" [size]="20" /></button>
+      <button class="btn btn--ghost btn--icon" (click)="close()" [attr.aria-label]="'Close ' + theme.aiName()"><app-icon name="close" [size]="20" /></button>
     </header>
 
     <div class="messages" #scroller (scroll)="onScroll(scroller)" aria-live="polite">
       @if (!bubbles().length) {
-        <p class="intro">Ask about your bills, cards, EMIs, people and sudden spends. Try one of these:</p>
+        <p class="intro">Hi, I'm {{ theme.aiName() }} 👋 Ask me anything about your bills, cards, EMIs, people and sudden spends. Try one of these:</p>
       }
       @for (b of bubbles(); track $index; let last = $last) {
         <div class="msg" [class.msg--user]="b.role === 'user'">
@@ -48,7 +48,7 @@
       </div>
       <form class="ask" [formGroup]="form" (ngSubmit)="ask()">
         <label for="askAiInput" class="sr">Ask a question</label>
-        <input id="askAiInput" class="field" formControlName="question" placeholder="Ask about your money…" autocomplete="off">
+        <input id="askAiInput" class="field" formControlName="question" [placeholder]="'Ask ' + theme.aiName() + ' about your money…'" autocomplete="off">
         <button type="submit" class="btn btn--primary btn--icon" [disabled]="busy() || !form.controls.question.value.trim()" aria-label="Send"><app-icon name="send" /></button>
       </form>
       <p class="note">Answers are worked out from your MonEXP data by Claude. Not financial advice.</p>

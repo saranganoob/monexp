@@ -11,6 +11,8 @@ const ACCENT_KEY = 'monexp-accent';
 const SAVE_DELAY_MS = 400; // dragging around the colour palette fires many changes – save once it settles
 /** The design's blue. While it's picked, the hand-tuned values in styles/_tokens.scss are used. */
 export const DEFAULT_ACCENT = '#235EDF';
+/** The AI's name unless the person picks their own (Tamil for "accounts"). */
+export const DEFAULT_AI_NAME = 'Kanakku';
 
 /** Ready-made accent colours for the Appearance tab (the design's presets). */
 export const ACCENT_PRESETS = [
@@ -44,6 +46,8 @@ export class ThemeService {
   /** Web sidebar: 'classic' (« shrinks it) or 'pin' (pinned open, or a slim rail that opens on hover). */
   readonly sidebar = signal<SidebarStyle>('classic');
   readonly sidebarPinned = signal(true);
+  /** What this person calls the AI (Profile → Preferences). */
+  readonly aiName = signal(DEFAULT_AI_NAME);
 
   private appliedFor: string | null = null; // whose saved look is showing
   private pending: Partial<Prefs> = {};
@@ -72,13 +76,14 @@ export class ThemeService {
         const who = account ? account.email || account.phone : null;
         if (who === this.appliedFor) return;
         this.appliedFor = who;
-        if (!account) { this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); return; } // signed out: the sign-in page keeps the last look on this device
+        if (!account) { this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); return; } // signed out: the sign-in page keeps the last look on this device
         // Their own choice, or the default look if they haven't picked one – never the previous person's.
         this.mode.set(account.prefs?.theme ?? 'light');
         this.accent.set(account.prefs?.accent ?? DEFAULT_ACCENT);
         this.lang.set(account.prefs?.lang ?? null);
         this.sidebar.set(account.prefs?.sidebar ?? 'classic');
         this.sidebarPinned.set(account.prefs?.sidebarPinned ?? true);
+        this.aiName.set(account.prefs?.aiName || DEFAULT_AI_NAME);
       });
     });
   }
@@ -106,6 +111,13 @@ export class ThemeService {
   setSidebarPinned(pinned: boolean) {
     this.sidebarPinned.set(pinned);
     this.save({ sidebarPinned: pinned });
+  }
+
+  /** An empty name goes back to the default. */
+  setAiName(name: string) {
+    const clean = name.replace(/\s+/g, ' ').trim();
+    this.aiName.set(clean || DEFAULT_AI_NAME);
+    this.save({ aiName: clean && clean !== DEFAULT_AI_NAME ? clean : null });
   }
 
   /** Saves to the signed-in account (a moment after the last change). */

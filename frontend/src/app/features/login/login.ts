@@ -22,9 +22,10 @@ export class LoginPage implements OnInit {
   private fb = inject(NonNullableFormBuilder);
 
   protected readonly features = [
-    'Tick bills paid and watch your balance update',
-    'Track friends’ EMIs on your cards until they close',
-    'Ask the assistant about your spends in plain words',
+    'Tick bills paid and watch your balance update instantly',
+    'Card spends, EMIs and installments – yours and friends’ – until they close',
+    'Who owes you, and whom you owe, always in view',
+    'Ask Kanakku, your AI money friend, anything in plain words',
   ];
 
   protected readonly form = this.fb.group({

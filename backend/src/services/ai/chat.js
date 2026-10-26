@@ -15,7 +15,7 @@ const MAX_JSON_RETRIES = 2;
  * history: [{ role: 'user' | 'assistant', content: string }], ending with the new question.
  * send(event, data): writes one server-sent event to the browser.
  */
-export async function streamChat({ history, ym, send, signal }) {
+export async function streamChat({ history, ym, aiName = 'Kanakku', send, signal }) {
   const client = getClient();
   const context = `[Context: today is ${todayIso()}. The person is viewing ${ymLabel(ym)} (${ym}) in the app, so "this month" means ${ymLabel(ym)} unless they say otherwise.]`;
   const messages = history.map((m, i) => ({
@@ -32,7 +32,11 @@ export async function streamChat({ history, ym, send, signal }) {
       ...baseParams(),
       max_tokens: 16000,
       output_config: { effort: 'medium' },
-      system: [{ type: 'text', text: CHAT_SYSTEM, cache_control: { type: 'ephemeral' } }],
+      // The shared prompt is cached; the person's name for the assistant comes after it, so the cache still applies.
+      system: [
+        { type: 'text', text: CHAT_SYSTEM, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: `Your name is ${aiName}. If asked who you are, say you're ${aiName}, their money friend in MonEXP.` },
+      ],
       tools: TOOL_DEFINITIONS,
       messages,
     }, { signal });

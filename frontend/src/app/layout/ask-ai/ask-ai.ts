@@ -1,6 +1,7 @@
 import { AfterViewChecked, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AppStore } from '../../core/app-store';
+import { ThemeService } from '../../core/theme.service';
 import { AiService, ChatTurn } from '../../core/ai.service';
 import { YmPipe } from '../../shared/pipes/ym.pipe';
 import { Icon } from '../../shared/ui/icon/icon';
@@ -17,7 +18,7 @@ const SUGGESTIONS = [
   'Give me advice for this month',
 ];
 
-/** "Ask AI" floating button and the Ask MonEXP chat panel. */
+/** The "Ask Kanakku" floating button and the chat panel (the AI's name is each person's choice). */
 @Component({
   selector: 'app-ask-ai',
   imports: [ReactiveFormsModule, YmPipe, Icon],
@@ -27,6 +28,7 @@ const SUGGESTIONS = [
 })
 export class AskAi implements AfterViewChecked, OnDestroy {
   protected store = inject(AppStore);
+  protected theme = inject(ThemeService);
   private ai = inject(AiService);
   private scroller = viewChild<ElementRef<HTMLElement>>('scroller');
 
@@ -69,7 +71,7 @@ export class AskAi implements AfterViewChecked, OnDestroy {
       ...this.bubbles().filter((b) => !b.error && b.text).map((b) => ({ role: b.role, content: b.text })),
       { role: 'user', content: q },
     ];
-    this.bubbles.update((list) => [...list, { role: 'user', text: q }, { role: 'assistant', text: '', status: 'Thinking…' }]);
+    this.bubbles.update((list) => [...list, { role: 'user', text: q }, { role: 'assistant', text: '', status: `${this.theme.aiName()} is thinking…` }]);
     this.stickToBottom = true;
     this.busy.set(true);
     this.abort = new AbortController();

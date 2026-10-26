@@ -79,3 +79,23 @@
     @if (!theme.lang()) { <span class="small muted">No hints – English only.</span> }
   </div>
 </section>
+
+@if (auth.account()?.aiAllowed) {
+  <section class="card panel ai-panel">
+    <div>
+      <h2 class="card__title">AI name</h2>
+      <p class="card__lead">What you call your AI money friend. It answers to this name in the chat and signs your monthly summary. Saved to your account.</p>
+    </div>
+    <form class="name-row" (submit)="$event.preventDefault(); saveAiName(nameInput.value)">
+      <label class="sr" for="aiName">AI name</label>
+      <input #nameInput id="aiName" class="field" maxlength="24" autocomplete="off" [value]="theme.aiName()" [placeholder]="defaultAiName"
+        (input)="aiNameSaved.set(false)">
+      <button type="submit" class="btn btn--primary btn--sm">Save</button>
+      @if (theme.aiName() !== defaultAiName) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="nameInput.value = defaultAiName; saveAiName('')">Back to {{ defaultAiName }}</button>
+      }
+    </form>
+    @if (aiNameSaved()) { <span role="status" class="ok-text small">Saved – say hi to {{ theme.aiName() }} 👋</span> }
+    <p class="small muted hint">{{ defaultAiName }} means “accounts” in Tamil (கணக்கு). Up to 24 letters, any language.</p>
+  </section>
+}

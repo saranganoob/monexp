@@ -104,6 +104,7 @@ test('chat: Claude calls a tool, gets computed figures, and the answer streams b
   assert.ok(first.model);
   assert.deepEqual(first.tools.map((t) => t.name), ['get_month', 'get_year', 'get_installments', 'get_people', 'find_payments']);
   assert.equal(first.system[0].cache_control.type, 'ephemeral');
+  assert.match(first.system[1].text, /Your name is Kanakku\./); // the default name, after the cached prompt
   assert.match(first.messages.at(-1).content, /^\[Context: today is .*viewing October 2026/);
 
   // Second request carries the tool result – the figures come from compute.js, not the model.

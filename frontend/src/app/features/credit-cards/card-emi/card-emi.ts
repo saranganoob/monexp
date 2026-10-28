@@ -30,7 +30,7 @@ export class CardEmiItem {
   protected readonly monthly = inject(NonNullableFormBuilder).control('');
   protected readonly isFriend = computed(() => this.emi().forWho === 'friend');
   protected readonly raw = computed(() => this.store.emis().find((e) => e.id === this.emi().id) ?? null);
-  protected readonly amountLeft = computed(() => this.emi().monthly * (this.emi().total - this.emi().n + 1));
+  protected readonly amountLeft = computed(() => { const e = this.emi(); return e.total == null ? 0 : e.monthly * (e.total - e.n + 1); });
 
   constructor() {
     effect(() => this.monthly.setValue(fmtInput(this.emi().monthly), { emitEvent: false }));

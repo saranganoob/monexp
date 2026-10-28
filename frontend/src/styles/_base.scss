@@ -44,6 +44,9 @@ h1, h2, h3 { margin: 0; letter-spacing: -.02em; }
 @media (max-width: bp.$tablet) { .split { margin: 0 16px 16px 16px; } }
 @media (max-width: bp.$phone) { .hide-xs { display: none; } }
 
+// Changing the theme or accent colour: the whole page cross-fades from the old look to the new one.
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .32s; animation-timing-function: ease-in-out; }
+
 // Reduce motion: no slides, springs or squeezes – only quick cross-fades (see each component).
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }

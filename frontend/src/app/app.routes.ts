@@ -43,6 +43,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/sudden-spends/sudden-spends').then((m) => m.SuddenSpendsPage),
       },
       {
+        path: 'daily', title: 'Daily spends · MonEXP', ...page('Daily spends', 'Tea, meals & small spends – just for tracking', 'month', false),
+        loadComponent: () => import('./features/daily-spends/daily-spends').then((m) => m.DailySpendsPage),
+      },
+      {
         path: 'year', title: 'Year view · MonEXP', ...page('Year view', 'Trends across the year', 'year', false),
         loadComponent: () => import('./features/year-view/year-view').then((m) => m.YearViewPage),
       },

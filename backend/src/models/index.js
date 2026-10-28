@@ -10,6 +10,7 @@ export { CardSpend } from './CardSpend.js';
 export { User, canUseAi, DEFAULT_AI_NAME } from './User.js';
 export { Undo } from './Undo.js';
 export { AiSummary } from './AiSummary.js';
+export { DailySpend, DAILY_SLOTS } from './DailySpend.js';
 
 // Everything that belongs to one user (all but User itself).
 import { Month } from './Month.js';
@@ -23,4 +24,5 @@ import { SuddenSpend } from './SuddenSpend.js';
 import { CardSpend } from './CardSpend.js';
 import { Undo } from './Undo.js';
 import { AiSummary } from './AiSummary.js';
-export const MONEY_MODELS = [Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, Undo, AiSummary];
+import { DailySpend } from './DailySpend.js';
+export const MONEY_MODELS = [Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, Undo, AiSummary, DailySpend];

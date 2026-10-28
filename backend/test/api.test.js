@@ -143,7 +143,7 @@ test('November is empty; roll over copies bills and carries chosen people items'
   assert.equal(nov.budget, 66000);
   assert.ok(nov.bills.every((b) => b.status === 'unpaid'));
   assert.ok(!nov.bills.some((b) => b.name.startsWith('Super money')), 'closed card dropped');
-  assert.deepEqual(nov.bills.find((b) => b.name === 'Dad').inst, { n: 35, total: 40 });
+  assert.deepEqual(nov.bills.find((b) => b.name === 'Dad').inst, { n: 35, total: 40, ongoing: false });
   assert.deepEqual(nov.receivables.map((r) => r.name).sort(), ['Madhan · gym (₹3,500 total)', 'Mohan · trip advance']);
 
   // The original is marked as moved in October.
@@ -246,7 +246,7 @@ test('installment plans add, change and remove their monthly rows from the viewe
   assert.equal(add.status, 201);
   assert.equal(add.body.startYm, '2026-10');
   const billIn = async (ym) => (await agent.get(`/api/months/${ym}`)).body.bills.find((b) => b.planId === add.body.id);
-  assert.deepEqual((await billIn('2026-10')).inst, { n: 1, total: 3 });
+  assert.deepEqual((await billIn('2026-10')).inst, { n: 1, total: 3, ongoing: false });
   assert.equal((await billIn('2026-10')).amount, 5000);
   assert.equal(await billIn('2026-09'), undefined, 'earlier months untouched');
 
@@ -275,7 +275,7 @@ test('rolling over adds plans that start in the new month', async () => {
   const jan = await agent.post('/api/months/2027-01').send({ mode: 'rollover' });
   assert.equal(jan.status, 201);
   const ins = jan.body.month.bills.find((b) => b.name === 'Insurance');
-  assert.deepEqual([ins.amount, ins.category, ins.inst], [2500, 'inv', { n: 1, total: 12 }]);
+  assert.deepEqual([ins.amount, ins.category, ins.inst], [2500, 'inv', { n: 1, total: 12, ongoing: false }]);
 });
 
 test('each account only sees its own data', async () => {
@@ -456,6 +456,84 @@ test('yearly bank/cash EMI for a friend, and "I owe them" rows in Need to pay', 
   assert.equal(after.payables.find((r) => r.id === owe.body.id).status, 'done');
   await agent.delete(`/api/people-entries/${owe.body.id}`);
   await agent.delete(`/api/emis/${add.body.id}`);
+});
+
+test('a new card is in every month from the viewed one on, and in new blank months', async () => {
+  const add = await agent.post('/api/cards').send({ name: 'Test Ongoing Card', last4: '4321', network: 'Visa', addToYm: '2026-09' });
+  assert.equal(add.status, 201);
+  const hasCard = async (ym) => (await agent.get(`/api/months/${ym}`)).body.bills.some((b) => b.cardId === add.body.id);
+  assert.deepEqual([await hasCard('2026-08'), await hasCard('2026-09'), await hasCard('2026-10'), await hasCard('2027-09')], [false, true, true, true]);
+  await agent.post('/api/months/2028-01').send({ mode: 'blank' });
+  assert.ok(await hasCard('2028-01'));
+
+  // A card missing from a later month (added before this rule) is filled in on start – never earlier months.
+  const { BillItem } = await import('../src/models/index.js');
+  const { fillCardBills } = await import('../src/services/ownerMigration.js');
+  await BillItem.collection.deleteOne({ card: new mongoose.Types.ObjectId(add.body.id), ym: '2026-10' });
+  assert.equal(await hasCard('2026-10'), false);
+  assert.ok((await fillCardBills()) >= 1);
+  assert.deepEqual([await hasCard('2026-08'), await hasCard('2026-10')], [false, true]);
+  assert.equal(await fillCardBills(), 0); // nothing left to do
+  await agent.patch(`/api/cards/${add.body.id}`).send({ closed: true });
+});
+
+test('EMIs and plans can be ongoing, with no end date', async () => {
+  const emi = await agent.post('/api/emis').send({ cardId: null, item: 'House rent', monthly: 15000, ongoing: true, startYm: '2026-10' });
+  assert.equal(emi.status, 201);
+  assert.deepEqual([emi.body.totalMonths, emi.body.ongoing], [null, true]);
+  const plan = await agent.post('/api/plans').send({ name: 'Mom support', direction: 'out', monthly: 5000, ongoing: true, atYm: '2026-10' });
+  assert.equal(plan.status, 201);
+  assert.match(plan.body.source, /ongoing/);
+
+  // Years later it's still there, counting up, never "X of Y".
+  const later = (await agent.get('/api/months/2028-01')).body;
+  const rent = later.bills.find((b) => b.emiId === emi.body.id);
+  assert.deepEqual([rent.inst.n, rent.inst.total, rent.inst.ongoing], [16, null, true]);
+  assert.match(rent.note, /ongoing/);
+  const mom = later.bills.find((b) => b.planId === plan.body.id);
+  assert.deepEqual([mom.amount, mom.inst.n, mom.inst.ongoing], [5000, 16, true]);
+
+  // The Installments list keeps them (last, with no closing month).
+  const list = (await agent.get('/api/installments?at=2026-10')).body;
+  const rows = list.filter((r) => r.ongoing);
+  assert.deepEqual(rows.map((r) => [r.endYm, r.monthsLeft]), [[null, null], [null, null]]);
+  assert.ok(list.at(-1).ongoing);
+
+  await agent.delete(`/api/emis/${emi.body.id}`);
+  await agent.delete(`/api/plans/${plan.body.id}?at=2026-10`);
+});
+
+test('daily spends: today only, never part of budget or balance', async () => {
+  const { todayInIndia, addMonths } = await import('../src/lib/ym.js');
+  const today = todayInIndia();
+  const ym = today.slice(0, 7);
+  const before = (await agent.get(`/api/months/${ym}`)).body.totals;
+
+  const put = await agent.put(`/api/daily/${today}`).send({
+    teaMorning: 15, breakfast: '60', lunch: 120, snacks: 0, teaEvening: 15, dinner: '₹150',
+    others: [{ name: 'Auto', amount: 40 }, { name: 'Water bottle', amount: 20 }, { name: '', amount: '' }],
+  });
+  assert.equal(put.status, 200);
+  assert.equal(put.body.total, 420);
+  assert.equal(put.body.others.length, 2); // the empty row isn't kept
+
+  const month = (await agent.get(`/api/daily?ym=${ym}`)).body;
+  assert.deepEqual([month.today, month.monthTotal, month.days.at(-1).date], [today, 420, today]);
+
+  // Earlier and future days can't be changed; bad amounts are refused.
+  const d = new Date(`${today}T12:00:00Z`);
+  const shift = (n) => new Date(d.getTime() + n * 86400000).toISOString().slice(0, 10);
+  assert.equal((await agent.put(`/api/daily/${shift(-1)}`).send({ lunch: 100 })).status, 400);
+  assert.equal((await agent.put(`/api/daily/${shift(1)}`).send({ lunch: 100 })).status, 400);
+  assert.equal((await agent.put(`/api/daily/${today}`).send({ lunch: -5 })).status, 400);
+  assert.equal((await agent.get(`/api/daily?ym=${addMonths(ym, 1)}`)).body.days.length, 0);
+
+  // The month's budget, bills and balance don't change.
+  assert.deepEqual((await agent.get(`/api/months/${ym}`)).body.totals, before);
+
+  // Clearing everything removes the day.
+  assert.equal((await agent.put(`/api/daily/${today}`).send({})).body.total, 0);
+  assert.equal((await agent.get(`/api/daily?ym=${ym}`)).body.days.length, 0);
 });
 
 test('logout clears the session', async () => {

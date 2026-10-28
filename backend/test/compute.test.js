@@ -59,11 +59,11 @@ test('Sudden spends paid by card are not deducted twice', () => {
 
 test('Installment counters come from the start month', () => {
   const oct = run('2026-10');
-  assert.deepEqual(oct.bills.find((b) => b.name === 'Dad').inst, { n: 34, total: 40 });
-  assert.deepEqual(oct.receivables.find((r) => r.planId === 'p3').inst, { n: 5, total: 7 });
+  assert.deepEqual(oct.bills.find((b) => b.name === 'Dad').inst, { n: 34, total: 40, ongoing: false });
+  assert.deepEqual(oct.receivables.find((r) => r.planId === 'p3').inst, { n: 5, total: 7, ongoing: false });
   // Gold chit finished in June, so July's bill list doesn't show it.
   assert.ok(run('2026-06').bills.some((b) => b.name === 'Gold chit'));
-  assert.deepEqual(installmentAt('2025-08', 11, '2026-07'), { n: 12, total: 11, endYm: '2026-06', active: false });
+  assert.deepEqual(installmentAt('2025-08', 11, '2026-07'), { n: 12, total: 11, ongoing: false, endYm: '2026-06', active: false });
 });
 
 test('Skipped bills don’t count and card bills are named after the card', () => {

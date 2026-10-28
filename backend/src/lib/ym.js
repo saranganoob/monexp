@@ -31,6 +31,11 @@ export function currentYm(now = new Date()) {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
+/** Today as YYYY-MM-DD in India (the server itself may run on UTC). */
+export function todayInIndia(now = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
+
 export function todayIso(now = new Date()) {
   return `${currentYm(now)}-${String(now.getDate()).padStart(2, '0')}`;
 }

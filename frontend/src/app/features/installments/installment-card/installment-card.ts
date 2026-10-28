@@ -24,7 +24,7 @@ export class InstallmentCard {
   readonly remove = output<void>();
 
   protected readonly n = computed(() => Math.max(0, this.item().n));
-  protected readonly pct = computed(() => (this.n() / this.item().total) * 100);
+  protected readonly pct = computed(() => { const t = this.item().total; return t == null ? 100 : (this.n() / t) * 100; });
   protected readonly tone = computed(() => installmentTone(this.item()));
   /** An EMI on a card – it's managed on the Credit cards page. */
   protected readonly cardEmi = computed(() => this.item().type === 'emi' && this.item().source.startsWith('On '));

@@ -41,6 +41,7 @@ export class Sidebar implements OnDestroy {
     { path: '/installments', label: 'Installments', icon: 'calendar-check' },
     { path: '/people', label: 'People', icon: 'people' },
     { path: '/sudden', label: 'Sudden spends', icon: 'bolt' },
+    { path: '/daily', label: 'Daily spends', icon: 'cup' },
     { path: '/year', label: 'Year view', icon: 'chart' },
     { path: '/admin', label: 'Admin', icon: 'shield', admin: true },
   ];

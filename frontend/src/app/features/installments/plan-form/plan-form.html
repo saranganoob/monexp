@@ -24,7 +24,10 @@
       </label>
     }
     <label><span class="field-label">Per month (₹)</span><input class="field num" inputmode="numeric" formControlName="monthly" placeholder="0"></label>
-    <label><span class="field-label">Total months</span><input class="field num" inputmode="numeric" formControlName="totalInstallments" placeholder="e.g. 12"></label>
+    <div class="stack">
+      <label><span class="field-label">Total months</span><input class="field num" inputmode="numeric" formControlName="totalInstallments" [placeholder]="ongoing() ? 'No end date' : 'e.g. 12'"></label>
+      <label class="check"><input type="checkbox" formControlName="ongoing"> No end date (rent, support…)</label>
+    </div>
     @if (plan()) {
       <label><span class="field-label">1st month</span>
         <select class="field" formControlName="startMonth">

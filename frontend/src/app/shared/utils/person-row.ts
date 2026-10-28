@@ -29,8 +29,10 @@ export function personRow(r: Entry): PersonRow {
       sub: `Carried over to ${to} — track it there`, shortSub: `Moved to ${to}`, btnLabel: '', btnPrimary: false,
     };
   }
+  const ongoing = !!r.inst && r.inst.total == null; // no end date
+  const nOfTotal = r.inst ? (ongoing ? `month ${r.inst.n} · ongoing` : `${r.inst.n} of ${r.inst.total}`) : '';
   const instTxt = r.inst
-    ? `Installment ${r.inst.n} of ${r.inst.total} · ${inr(r.amount * (r.inst.total - r.inst.n))} left after this`
+    ? (ongoing ? `Installment ${nOfTotal}` : `Installment ${nOfTotal} · ${inr(r.amount * (r.inst.total! - r.inst.n))} left after this`)
     : r.note || 'One-time';
   return {
     ...base,
@@ -38,8 +40,8 @@ export function personRow(r: Entry): PersonRow {
     status: done ? 'paid' : 'pending',
     statusLabel: done ? (inbound ? 'Received' : 'Paid back') : 'Pending',
     sub: (r.auto ? `Auto from ${r.auto} EMI · ` : '') + instTxt,
-    shortSub: r.auto && r.inst ? `EMI on ${r.auto} · ${r.inst.n} of ${r.inst.total}`
-      : r.inst ? `Installment ${r.inst.n} of ${r.inst.total}` : r.note || 'One-time',
+    shortSub: r.auto && r.inst ? `EMI on ${r.auto} · ${nOfTotal}`
+      : r.inst ? `Installment ${nOfTotal}` : r.note || 'One-time',
     btnLabel: done ? 'Undo' : inbound ? 'Mark received' : 'Mark paid back',
     btnPrimary: !done,
   };

@@ -5,12 +5,12 @@ export const normCard = (c) => ({ id: sid(c._id), name: c.name, last4: c.last4 |
 
 export const normEmi = (e) => ({
   id: sid(e._id), cardId: sid(e.card), item: e.item, forWho: e.forWho, personId: sid(e.person),
-  monthly: e.monthly || 0, freq: e.freq || 'monthly', totalMonths: e.totalMonths, startYm: e.startYm,
+  monthly: e.monthly || 0, freq: e.freq || 'monthly', totalMonths: e.totalMonths ?? null, ongoing: e.totalMonths == null, startYm: e.startYm,
 });
 
 export const normPlan = (p) => ({
   id: sid(p._id), name: p.name, kind: p.kind || '', source: p.source || '', direction: p.direction, category: p.category || 'fam',
-  personId: sid(p.person), monthly: p.monthly || 0, totalInstallments: p.totalInstallments, startYm: p.startYm,
+  personId: sid(p.person), monthly: p.monthly || 0, totalInstallments: p.totalInstallments ?? null, ongoing: p.totalInstallments == null, startYm: p.startYm,
 });
 
 export const normPerson = (p) => ({ id: sid(p._id), name: p.name, relation: p.relation || '', phone: p.phone || '', upi: p.upi || '', note: p.note || '' });

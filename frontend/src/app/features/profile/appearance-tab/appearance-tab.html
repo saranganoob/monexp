@@ -36,6 +36,34 @@
     <h2 id="accentLbl" class="card__title">Accent colour</h2>
     <p class="card__lead">Used for buttons, the selected menu item, links and the budget card. Saved to your account, so it follows you to every device.</p>
   </div>
+  <!-- Find a colour by name: type, then pick from the list (arrow keys + Enter work too). -->
+  <div class="color-search" (focusout)="closeSearchSoon($event)">
+    <label class="sr" for="colorSearch">Find a colour by name</label>
+    <div class="search-box">
+      <app-icon name="search" [size]="18" />
+      <input #searchInput id="colorSearch" class="field" role="combobox" aria-autocomplete="list" aria-controls="colorList" autocomplete="off"
+        [attr.aria-expanded]="showList()" [attr.aria-activedescendant]="showList() && matches().length ? 'colorOpt' + active() : null"
+        placeholder="Type a colour – e.g. sky blue, carrot orange" [value]="query()"
+        (input)="search($any($event.target).value)" (keydown)="searchKey($event)" (focus)="listOpen.set(true)">
+      @if (query()) {
+        <button type="button" class="btn btn--ghost btn--icon clear" (click)="search(''); searchInput.focus()" aria-label="Clear colour search"><app-icon name="close" [size]="16" /></button>
+      }
+    </div>
+    @if (showList()) {
+      <ul id="colorList" role="listbox" class="color-list" aria-label="Matching colours">
+        @for (c of matches(); track c.hex + c.name; let i = $index) {
+          <li role="option" [id]="'colorOpt' + i" class="color-opt" [class.is-active]="i === active()" [attr.aria-selected]="i === active()"
+            (mousedown)="$event.preventDefault()" (click)="pickNamed(c)" (mouseenter)="active.set(i)">
+            <span class="dot" [style.--swatch]="c.hex" aria-hidden="true"></span>
+            <span class="grow">{{ c.name }}</span>
+            @if (theme.accent() === c.hex) { <app-icon name="check" [size]="16" [stroke]="2.6" /> }
+          </li>
+        } @empty {
+          <li class="color-none" role="option" aria-disabled="true">No colour called “{{ query() }}” – try the palette 🎨 below</li>
+        }
+      </ul>
+    }
+  </div>
   <div role="radiogroup" aria-labelledby="accentLbl" class="swatches">
     @for (p of presets; track p.hex) {
       <button type="button" role="radio" class="swatch" [style.--swatch]="p.hex" [class.is-on]="theme.accent() === p.hex"
@@ -50,7 +78,7 @@
     </label>
   </div>
   <div class="preview">
-    <span class="small muted">Preview</span>
+    <span class="small muted">Preview{{ currentName() ? ' · ' + currentName() : '' }}</span>
     <button type="button" class="btn btn--primary btn--sm" tabindex="-1">Mark paid</button>
     <span class="link-like">See all bills</span>
     @if (theme.accent() !== defaultAccent) {

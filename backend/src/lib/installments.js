@@ -7,6 +7,12 @@
 
 export const step = (e) => (e.freq === 'yearly' ? 12 : 1);
 
+// Ongoing plans (house rent, Dad's support…) have no end date: they're stored with no total and,
+// for the counting rules below, treated as a very long plan so they never close.
+export const ONGOING_TOTAL = 1200;
+/** The number of payments to count with: the plan's own, or ONGOING_TOTAL when it has no end. */
+export const totalOf = (total) => total ?? ONGOING_TOTAL;
+
 /** Month index of the last payment. */
 export const endIdx = (e) => e.startIdx + (e.total - 1) * step(e);
 

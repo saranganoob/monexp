@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import authRoutes from './routes/auth.js';
 import monthRoutes from './routes/months.js';
+import dailyRoutes from './routes/daily.js';
 import itemRoutes from './routes/items.js';
 import setupRoutes from './routes/setup.js';
 import reportRoutes from './routes/reports.js';
@@ -56,6 +57,7 @@ export function createApp() {
   app.use('/api', requireAuth);
   app.use('/api', notifyOnChange); // live updates to the user's other open pages
   app.use('/api/months', monthRoutes);
+  app.use('/api/daily', dailyRoutes);
   app.use('/api', itemRoutes);
   app.use('/api', setupRoutes);
   app.use('/api', reportRoutes);

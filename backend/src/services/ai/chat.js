@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { baseParams, getClient } from './client.js';
 import { CHAT_SYSTEM } from './prompts.js';
 import { TOOL_DEFINITIONS, runTool, toolStatus } from './tools.js';
-import { todayIso, ymLabel } from '../../lib/ym.js';
+import { todayInIndia, ymLabel } from '../../lib/ym.js';
 
 const MAX_TURNS = 8; // tool round-trips per question
 
@@ -17,7 +17,7 @@ const MAX_JSON_RETRIES = 2;
  */
 export async function streamChat({ history, ym, aiName = 'Kanakku', send, signal }) {
   const client = getClient();
-  const context = `[Context: today is ${todayIso()}. The person is viewing ${ymLabel(ym)} (${ym}) in the app, so "this month" means ${ymLabel(ym)} unless they say otherwise.]`;
+  const context = `[Context: today is ${todayInIndia()} (India). The person is viewing ${ymLabel(ym)} (${ym}) in the app, so "this month" means ${ymLabel(ym)} unless they say otherwise.]`;
   const messages = history.map((m, i) => ({
     role: m.role,
     content: i === history.length - 1 ? `${context}\n\n${m.content}` : m.content,

@@ -1,0 +1,149 @@
+<div class="page">
+  <!-- The month at a glance -->
+  <section class="stats">
+    <div class="card card--navy stat hero">
+      <div class="label">Daily spends · {{ ym() | ym }}</div>
+      <div class="stat__value stat__value--xl num">{{ monthTotal() | inr }}</div>
+      <div class="stat__note on-accent">Just for tracking – not taken from your budget or balance.</div>
+    </div>
+    <div class="card stat">
+      <div class="label">{{ isCurrentMonth() ? 'Today' : 'Days logged' }}</div>
+      <div class="stat__value num">{{ isCurrentMonth() ? (todayTotal() | inr) : (data()?.days?.length ?? 0) }}</div>
+      <div class="stat__note">{{ isCurrentMonth() ? 'Updates as you type' : 'Days with any spends' }}</div>
+    </div>
+    <div class="card stat">
+      <div class="label">Daily average</div>
+      <div class="stat__value num">{{ average() | inr }}</div>
+      <div class="stat__note">{{ isFutureMonth() ? 'This month hasn’t started yet' : 'Across the days so far' }}</div>
+    </div>
+    <div class="card stat">
+      <div class="label">Highest day</div>
+      <div class="stat__value num">{{ highest() ? (highest()!.total | inr) : '—' }}</div>
+      <div class="stat__note">{{ highest() ? highestLabel() : 'Nothing logged yet' }}</div>
+    </div>
+  </section>
+
+  @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
+
+  <section class="main">
+    <!-- One day: today (fill in) or an earlier day (view only) -->
+    <article class="card day" [class.is-today]="editing()" aria-live="polite">
+      @if (editing()) {
+        <header class="day__head">
+          <div>
+            <div class="kicker">Today</div>
+            <h2>{{ selectedLabel() }}</h2>
+          </div>
+          <span class="save-state" [class]="'save-state save-state--' + saveState()" role="status">
+            @switch (saveState()) {
+              @case ('saving') { Saving… }
+              @case ('saved') { <app-icon name="check" [size]="14" [stroke]="2.6" /> Saved }
+              @case ('error') { Not saved – check your connection }
+              @default { Saves by itself }
+            }
+          </span>
+        </header>
+
+        <div class="rows">
+          @for (s of slots; track s.key) {
+            <label class="row" [class.has-value]="draft().slots[s.key]">
+              <span class="emoji" aria-hidden="true">{{ s.emoji }}</span>
+              <span class="row__label">{{ s.label }}</span>
+              <span class="amount">
+                <span class="rupee" aria-hidden="true">₹</span>
+                <input class="num" inputmode="numeric" placeholder="0" autocomplete="off" [attr.aria-label]="s.label + ' amount'"
+                  [value]="draft().slots[s.key]" (input)="setSlot(s.key, digits($event))" (blur)="tidy($event)"
+                  (keydown.enter)="$any($event.target).blur()">
+              </span>
+            </label>
+          }
+        </div>
+
+        <div class="others">
+          <div class="others__title">Others</div>
+          @for (o of draft().others; track $index; let i = $index) {
+            <div class="row row--other">
+              <span class="emoji" aria-hidden="true">🛍️</span>
+              <input class="other-name" placeholder="What? e.g. Auto, Water" maxlength="60" autocomplete="off" [attr.aria-label]="'Other expense ' + (i + 1) + ' – what'"
+                [value]="o.name" (input)="setOther(i, 'name', $any($event.target).value)">
+              <span class="amount">
+                <span class="rupee" aria-hidden="true">₹</span>
+                <input class="num" inputmode="numeric" placeholder="0" autocomplete="off" [attr.aria-label]="'Other expense ' + (i + 1) + ' – amount'"
+                  [value]="o.amount" (input)="setOther(i, 'amount', digits($event))" (blur)="tidy($event)"
+                  (keydown.enter)="$any($event.target).blur()">
+              </span>
+              <button type="button" class="btn btn--ghost btn--icon remove" (click)="removeOther(i)" [attr.aria-label]="'Remove ' + (o.name || 'this expense')">
+                <app-icon name="close" [size]="16" />
+              </button>
+            </div>
+          }
+          <button type="button" class="btn btn--ghost btn--sm add-other" (click)="addOther()"><app-icon name="plus" [size]="16" />Add another expense</button>
+        </div>
+
+        <footer class="day__total">
+          <span>Total today</span>
+          <strong class="num">{{ draftTotal() | inr }}</strong>
+        </footer>
+      } @else if (selected(); as date) {
+        <header class="day__head">
+          <div>
+            <div class="kicker">View only</div>
+            <h2>{{ selectedLabel() }}</h2>
+          </div>
+          @if (today()) { <button type="button" class="btn btn--primary btn--sm" (click)="goToToday()">Back to today</button> }
+        </header>
+        @if (selectedDay(); as d) {
+          <div class="rows rows--view">
+            @for (s of slots; track s.key) {
+              @if (d[s.key]) {
+                <div class="row"><span class="emoji" aria-hidden="true">{{ s.emoji }}</span><span class="row__label">{{ s.label }}</span><span class="num strong">{{ d[s.key] | inr }}</span></div>
+              }
+            }
+            @for (o of d.others; track $index) {
+              <div class="row"><span class="emoji" aria-hidden="true">🛍️</span><span class="row__label">{{ o.name || 'Other' }}</span><span class="num strong">{{ o.amount | inr }}</span></div>
+            }
+          </div>
+          <footer class="day__total"><span>Total</span><strong class="num">{{ d.total | inr }}</strong></footer>
+        } @else {
+          <p class="empty">Nothing was logged on this day.</p>
+        }
+        <p class="hint">Only today’s spends can be added or changed.</p>
+      } @else {
+        <div class="empty empty--big">
+          <span class="emoji emoji--big" aria-hidden="true">🗓️</span>
+          @if (isFutureMonth()) {
+            <p><strong>{{ ym() | ym }} hasn’t started yet.</strong><br>You can add spends on the day itself.</p>
+          } @else {
+            <p><strong>Nothing logged in {{ ym() | ym }}.</strong><br>Daily spends can only be added on the day.</p>
+          }
+          @if (today()) { <button type="button" class="btn btn--primary btn--sm" (click)="goToToday()">Go to today</button> }
+        </div>
+      }
+    </article>
+
+    <!-- The month as a calendar: each day's total -->
+    <article class="card cal">
+      <header class="cal__head">
+        <h2>{{ monthName() }}</h2>
+        <span class="muted small">Tap a day to see what you spent</span>
+      </header>
+      <div class="cal__grid" role="grid" [attr.aria-label]="'Daily totals for ' + monthName()">
+        @for (w of weekdays; track w) { <div class="cal__wd" role="columnheader">{{ w }}</div> }
+        @for (c of cells(); track $index) {
+          @if (c) {
+            <button type="button" class="cell" role="gridcell" [class]="'cell cell--l' + c.level" [class.is-today]="c.isToday" [class.is-sel]="c.selected"
+              [class.is-future]="c.future" [disabled]="c.future" [attr.aria-label]="c.label" [attr.aria-pressed]="c.selected" (click)="pick(c.date)">
+              <span class="cell__day">{{ c.day }}</span>
+              @if (!c.future) { <span class="cell__amt num"><span class="full">{{ c.total ? (c.total | inr) : '–' }}</span><span class="short">{{ c.total ? c.short : '–' }}</span></span> }
+            </button>
+          } @else {
+            <span class="cell cell--blank" aria-hidden="true"></span>
+          }
+        }
+      </div>
+      <div class="legend small muted" aria-hidden="true">
+        <span>Less</span><i class="cell--l1"></i><i class="cell--l2"></i><i class="cell--l3"></i><i class="cell--l4"></i><span>More</span>
+      </div>
+    </article>
+  </section>
+</div>

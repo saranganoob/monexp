@@ -62,9 +62,12 @@
       <div class="seg-group" role="radiogroup">
         <button type="button" role="radio" class="seg seg--sm" [class.is-on]="form.controls.howLong.value === 'count'" [attr.aria-checked]="form.controls.howLong.value === 'count'" (click)="set('howLong', 'count')">Number of payments</button>
         <button type="button" role="radio" class="seg seg--sm" [class.is-on]="form.controls.howLong.value === 'until'" [attr.aria-checked]="form.controls.howLong.value === 'until'" (click)="set('howLong', 'until')">Until an end date</button>
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="ongoing()" [attr.aria-checked]="ongoing()" (click)="set('howLong', 'ongoing')">No end date</button>
       </div>
     </fieldset>
-    @if (form.controls.howLong.value === 'count') {
+    @if (ongoing()) {
+      <p class="field-hint">For things that just keep going – house rent, support for Dad or Mom. It's added every {{ yearly() ? 'year' : 'month' }} until you remove it.</p>
+    } @else if (form.controls.howLong.value === 'count') {
       <label class="count"><span class="field-label">Number of payments</span><input class="field num" inputmode="numeric" formControlName="count" placeholder="e.g. 12"></label>
     } @else {
       <div class="two">

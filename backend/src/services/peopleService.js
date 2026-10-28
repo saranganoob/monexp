@@ -24,7 +24,8 @@ export async function peopleStats(at) {
     const running = setup.emis.filter((e) => e.personId === p.id && leftFrom(emiPlan(e), I) > 0);
     const leftToRecover = running.reduce((s, e) => {
       const plan = emiPlan(e);
-      let left = leftFrom(plan, I);
+      // Ongoing EMIs have no end, so only this month's payment counts as still to recover.
+      let left = e.totalMonths == null ? (instAt(plan, I).due ? 1 : 0) : leftFrom(plan, I);
       if (instAt(plan, I).due && now?.receivables.some((r) => r.emiId === e.id && r.status === 'done')) left -= 1;
       return s + (e.monthly || 0) * left;
     }, 0);

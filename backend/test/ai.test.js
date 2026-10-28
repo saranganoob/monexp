@@ -102,7 +102,7 @@ test('chat: Claude calls a tool, gets computed figures, and the answer streams b
   // First request: model, tools, cached system prompt, and today's context on the question.
   const first = calls[0];
   assert.ok(first.model);
-  assert.deepEqual(first.tools.map((t) => t.name), ['get_month', 'get_year', 'get_installments', 'get_people', 'find_payments']);
+  assert.deepEqual(first.tools.map((t) => t.name), ['get_month', 'get_year', 'get_installments', 'get_people', 'get_daily_spends', 'find_payments']);
   assert.equal(first.system[0].cache_control.type, 'ephemeral');
   assert.match(first.system[1].text, /Your name is Kanakku\./); // the default name, after the cached prompt
   assert.match(first.messages.at(-1).content, /^\[Context: today is .*viewing October 2026/);
@@ -139,6 +139,25 @@ test('find_payments adds up a name across months', async () => {
   assert.equal(r.matches.length, 10);
   assert.equal(r.totalPaid, 499 * 9); // October is still unpaid
   assert.equal(r.totalUnpaid, 499);
+});
+
+test('get_daily_spends: items per day, totals per item, and the name search finds them', async () => {
+  const { DailySpend } = await import('../src/models/index.js');
+  await runAsOwner(owner, () => DailySpend.create([
+    { date: '2026-10-27', ym: '2026-10', teaMorning: 15, lunch: 120, others: [{ name: 'Auto', amount: 60 }] },
+    { date: '2026-10-28', ym: '2026-10', teaMorning: 32, snacks: 20, teaEvening: 40, dinner: 61 },
+  ]));
+  const yday = JSON.parse((await runTool('get_daily_spends', { from_date: '2026-10-28', to_date: '2026-10-28' })).content);
+  assert.equal(yday.total, 153);
+  assert.deepEqual(yday.days[0].items.map((i) => i.item), ['Morning tea', 'Snacks', 'Evening tea', 'Dinner']);
+  const both = JSON.parse((await runTool('get_daily_spends', { from_date: '2026-10-01', to_date: '2026-10-31' })).content);
+  assert.deepEqual([both.total, both.daysLogged, both.totalsByItem['Morning tea'], both.totalsByItem['Other: Auto']], [348, 2, 47, 60]);
+  assert.equal((await runTool('get_daily_spends', { from_date: '28-10-2026', to_date: '2026-10-28' })).isError, true);
+
+  // "tea" is found in daily spends, kept apart from bill totals.
+  const tea = JSON.parse((await runTool('find_payments', { query: 'tea', from_ym: '2026-10', to_ym: '2026-10' })).content);
+  assert.deepEqual([tea.dailySpends.length, tea.dailySpendsTotal], [3, 87]); // morning 15 + 32, evening 40
+  await runAsOwner(owner, () => DailySpend.deleteMany({}).exec());
 });
 
 test('get_year gives yearly totals for EMI questions', async () => {

@@ -11,7 +11,7 @@ const cardEmiSchema = new Schema({
   person: { type: ObjectId, ref: 'Person', default: null },
   monthly: amountField(), // amount per payment (per month, or per year for yearly plans)
   freq: { type: String, enum: ['monthly', 'yearly'], default: 'monthly' },
-  totalMonths: { type: Number, required: true, min: 1, max: 600, validate: Number.isInteger }, // number of payments
+  totalMonths: { type: Number, default: null, min: 1, max: 600, validate: (v) => v == null || Number.isInteger(v) }, // number of payments; null = ongoing, no end date
   startYm: ymField({ required: true }), // month of payment 1
 }, { timestamps: true });
 

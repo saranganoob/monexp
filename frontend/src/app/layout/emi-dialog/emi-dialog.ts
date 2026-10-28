@@ -5,7 +5,7 @@ import { AppStore } from '../../core/app-store';
 import { Api } from '../../core/api.service';
 import { Freq } from '../../core/models';
 import { FULL_MONTHS, MONTHS, inr, parseNum, ymIndex, ymLabel } from '../../core/utils/format';
-import { PlanShape, alreadyPaidBefore, leftFrom, nextDueIdx, paymentsBetween } from '../../core/utils/installments';
+import { ONGOING_TOTAL, PlanShape, alreadyPaidBefore, leftFrom, nextDueIdx, paymentsBetween } from '../../core/utils/installments';
 import { Busy } from '../../shared/directives/busy';
 import { Icon } from '../../shared/ui/icon/icon';
 
@@ -18,8 +18,8 @@ const idxLabel = (i: number, short = true) => `${(short ? MONTHS : FULL_MONTHS)[
 
 /**
  * "Add EMI / installment": for me or a friend, paid from the bank / cash or a card, monthly or
- * yearly, with a first payment that may be in the past and either a number of payments or an
- * end date. The summary works out what's already paid and what's left (core/utils/installments).
+ * yearly, with a first payment that may be in the past and a number of payments, an end date,
+ * or no end at all (rent, support…). The summary works out what's already paid and what's left (core/utils/installments).
  */
 @Component({
   selector: 'app-emi-dialog',
@@ -50,7 +50,7 @@ export class EmiDialog implements AfterViewInit {
     freq: ['monthly' as Freq],
     startMonth: [this.I % 12],
     startYear: [Math.floor(this.I / 12)],
-    howLong: ['count' as 'count' | 'until'],
+    howLong: ['count' as 'count' | 'until' | 'ongoing'],
     count: [''],
     endMonth: [(this.I + 11) % 12],
     endYear: [Math.floor((this.I + 11) / 12)],
@@ -63,10 +63,12 @@ export class EmiDialog implements AfterViewInit {
   protected readonly yearly = computed(() => this.v().freq === 'yearly');
   protected readonly amountLabel = computed(() => (this.yearly() ? 'Amount per year (₹)' : 'Amount per month (₹)'));
   protected readonly startIdx = computed(() => Number(this.v().startYear) * 12 + Number(this.v().startMonth));
+  protected readonly ongoing = computed(() => this.v().howLong === 'ongoing');
 
   /** Number of payments from the "How long" answer, or a reason it can't be worked out. */
   private readonly total = computed<{ total: number } | { problem: string } | null>(() => {
     const v = this.v();
+    if (v.howLong === 'ongoing') return { total: ONGOING_TOTAL }; // counted as a very long plan, saved with no end
     if (v.howLong === 'count') {
       const raw = String(v.count ?? '').trim();
       if (!raw) return null;
@@ -95,6 +97,14 @@ export class EmiDialog implements AfterViewInit {
     if (!p) return { problem: '', lines: [] as string[] };
     const I = this.I;
     const amount = parseNum(this.v().amount);
+    if (this.ongoing()) {
+      const next = nextDueIdx(p, I)!;
+      const paid = alreadyPaidBefore(p, I);
+      const lines = [`${p.freq === 'yearly' ? 'Yearly' : 'Monthly'} from ${idxLabel(p.startIdx)} · ongoing, no end date`];
+      if (paid) lines.push(`${paid} already paid before ${idxLabel(I)}`);
+      lines.push(`Next due ${idxLabel(next, false)}` + (amount ? ` · ${inr(amount)} each time, until you remove it` : ''));
+      return { problem: '', lines };
+    }
     const end = p.startIdx + (p.total - 1) * (p.freq === 'yearly' ? 12 : 1);
     if (end < I) return { problem: `This plan finished before ${idxLabel(I, false)} – there's nothing left to track.`, lines: [] };
     const paid = alreadyPaidBefore(p, I);
@@ -138,7 +148,7 @@ export class EmiDialog implements AfterViewInit {
     const p = this.plan()!;
     const body = {
       cardId: v.paidFrom || null, item: v.item.trim(), forWho: v.forWho, personId: v.forWho === 'friend' ? v.personId : null,
-      monthly: parseNum(v.amount), freq: v.freq, totalMonths: p.total,
+      monthly: parseNum(v.amount), freq: v.freq, ...(this.ongoing() ? { ongoing: true } : { totalMonths: p.total }),
       startYm: `${Math.floor(p.startIdx / 12)}-${String((p.startIdx % 12) + 1).padStart(2, '0')}`,
     };
     const err = await this.store.run(() => this.api.addEmi(body), { quiet: true, key: SAVE_KEY });

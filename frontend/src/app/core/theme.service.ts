@@ -55,19 +55,7 @@ export class ThemeService {
 
   constructor() {
     // Paint the page with the current choice.
-    effect(() => {
-      const mode = this.mode();
-      const accent = this.accent();
-      const root = this.doc.documentElement;
-      root.dataset['theme'] = mode;
-      if (accent === DEFAULT_ACCENT) {
-        for (const name of ACCENT_VARS) root.style.removeProperty(name);
-      } else {
-        for (const [name, value] of Object.entries(accentTokens(accent, mode))) root.style.setProperty(name, value);
-      }
-      this.write(STORAGE_KEY, mode);
-      this.write(ACCENT_KEY, accent);
-    });
+    effect(() => this.paint(this.mode(), this.accent()));
 
     // Someone signed in: switch to their own saved look (once per sign-in).
     effect(() => {
@@ -89,13 +77,41 @@ export class ThemeService {
   }
 
   setMode(mode: ThemeMode) {
-    this.mode.set(mode);
+    this.fade(() => this.mode.set(mode));
     this.save({ theme: mode });
   }
 
-  setAccent(hex: string) {
-    this.accent.set(hex.toUpperCase());
+  /** `fade: false` while dragging in the colour palette – a fade on every tiny move would feel laggy. */
+  setAccent(hex: string, { fade = true } = {}) {
+    const change = () => this.accent.set(hex.toUpperCase());
+    if (fade) this.fade(change); else change();
     this.save({ accent: hex.toUpperCase() });
+  }
+
+  private paint(mode: ThemeMode, accent: string) {
+    const root = this.doc.documentElement;
+    root.dataset['theme'] = mode;
+    if (accent === DEFAULT_ACCENT) {
+      for (const name of ACCENT_VARS) root.style.removeProperty(name);
+    } else {
+      for (const [name, value] of Object.entries(accentTokens(accent, mode))) root.style.setProperty(name, value);
+    }
+    this.write(STORAGE_KEY, mode);
+    this.write(ACCENT_KEY, accent);
+  }
+
+  /**
+   * Gently cross-fades the whole page to the new look (styles.scss sets the timing). Browsers without
+   * view transitions, and people who asked for less motion, get the change straight away.
+   */
+  private fade(change: () => void) {
+    const doc = this.doc as Document & { startViewTransition?: (update: () => void) => unknown };
+    const reduce = this.doc.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!doc.startViewTransition || reduce) return change();
+    doc.startViewTransition(() => {
+      change();
+      this.paint(this.mode(), this.accent()); // paint now, inside the transition (the effect would run a moment later)
+    });
   }
 
   setLang(lang: HomeLang | null) {

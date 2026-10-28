@@ -1,19 +1,24 @@
 @let i = item();
 <article class="card box">
   <div class="head">
-    <app-progress-ring [value]="pct()" [tone]="tone()" [text]="n() + '/' + i.total" />
+    <app-progress-ring [value]="pct()" [tone]="tone()" [text]="i.total == null ? n() + '/∞' : n() + '/' + i.total" />
     <div class="grow">
       <div class="kind" [class]="'kind kind--' + tone()">{{ i.kind }}</div>
       <h3>{{ i.name }}</h3>
       <div class="small muted">{{ i.source }}</div>
     </div>
   </div>
-  <div class="freq small">{{ i.freq === 'yearly' ? 'Yearly' : 'Monthly' }} · {{ i.total }} payments</div>
+  <div class="freq small">{{ i.freq === 'yearly' ? 'Yearly' : 'Monthly' }} · {{ i.total == null ? 'ongoing, no end date' : i.total + ' payments' }}</div>
   <dl>
     <div><dt>{{ i.freq === 'yearly' ? 'Per year' : 'Per month' }}</dt><dd class="num">{{ i.monthly ? (i.monthly | inr) : 'Not entered yet' }}</dd></div>
-    <div><dt>Payments left</dt><dd class="num">{{ i.monthsLeft === 1 ? 'Just the last one' : i.monthsLeft + (i.due ? ' incl. this month' : '') }}</dd></div>
-    <div><dt>Amount left</dt><dd class="num">{{ i.monthly ? (i.amountLeft | inr) : '—' }}</dd></div>
-    <div><dt>Closes</dt><dd>{{ i.endYm | ym }}</dd></div>
+    @if (i.endYm) {
+      <div><dt>Payments left</dt><dd class="num">{{ i.monthsLeft === 1 ? 'Just the last one' : i.monthsLeft + (i.due ? ' incl. this month' : '') }}</dd></div>
+      <div><dt>Amount left</dt><dd class="num">{{ i.monthly ? (i.amountLeft | inr) : '—' }}</dd></div>
+      <div><dt>Closes</dt><dd>{{ i.endYm | ym }}</dd></div>
+    } @else {
+      <div><dt>Running for</dt><dd class="num">{{ n() }} {{ i.freq === 'yearly' ? (n() === 1 ? 'year' : 'years') : (n() === 1 ? 'month' : 'months') }}</dd></div>
+      <div><dt>Closes</dt><dd>Never – ongoing</dd></div>
+    }
   </dl>
   <div class="foot">
     @if (plan(); as p) {

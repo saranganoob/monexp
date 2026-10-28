@@ -5,18 +5,20 @@
 
 import { CATEGORIES } from '../lib/categories.js';
 import { ymToIndex, indexToYm, ymLabel } from '../lib/ym.js';
-import { instAt, leftFrom, endIdx } from '../lib/installments.js';
+import { instAt, leftFrom, endIdx, totalOf } from '../lib/installments.js';
 
 const sum = (list) => list.reduce((s, x) => s + (x.amount || 0), 0);
 
 /** An EMI in the shared installment shape (see lib/installments.js). */
-export const emiPlan = (e) => ({ startIdx: ymToIndex(e.startYm), total: e.totalMonths, freq: e.freq || 'monthly' });
+export const emiPlan = (e) => ({ startIdx: ymToIndex(e.startYm), total: totalOf(e.totalMonths), freq: e.freq || 'monthly' });
 
 // Where a monthly installment plan (Dad, gold chit…) stands. n < 1 = not started yet, n > total = finished.
+// total null = ongoing (no end date): it never finishes, and total / endYm stay null.
 export function installmentAt(startYm, total, ym) {
   const start = ymToIndex(startYm);
   const n = ymToIndex(ym) - start + 1;
-  return { n, total, endYm: indexToYm(start + total - 1), active: n >= 1 && n <= total };
+  const ongoing = total == null;
+  return { n, total: ongoing ? null : total, ongoing, endYm: ongoing ? null : indexToYm(start + total - 1), active: n >= 1 && n <= totalOf(total) };
 }
 
 export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: spendItems = [], cards, emis, plans, people }) {
@@ -37,7 +39,8 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
         personId: e.personId, personName: personName.get(e.personId) || '',
         monthly: e.monthly,
         amount: o && o.amount != null ? o.amount : e.monthly || 0, // this payment's amount
-        n: at.n, total: e.totalMonths, left: leftFrom(plan, I), startYm: e.startYm, endYm: indexToYm(endIdx(plan)), active: at.due,
+        n: at.n, total: e.totalMonths ?? null, ongoing: e.totalMonths == null, startYm: e.startYm, active: at.due,
+        left: e.totalMonths == null ? null : leftFrom(plan, I), endYm: e.totalMonths == null ? null : indexToYm(endIdx(plan)),
         received: (o && o.received) || 'pending',
         paid: (o && o.paid) || 'unpaid',
       };
@@ -68,7 +71,7 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
     const p = planById.get(planId);
     return p ? installmentAt(p.startYm, p.totalInstallments, ym) : null;
   };
-  const inPlanRange = (x) => !x.inst || (x.inst.n >= 1 && x.inst.n <= x.inst.total);
+  const inPlanRange = (x) => !x.inst || (x.inst.n >= 1 && (x.inst.ongoing || x.inst.n <= x.inst.total));
 
   // ---- bills ----
   const billViews = bills
@@ -82,7 +85,7 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
         card.billStatus = b.status;
       }
       const at = b.planId && planAt(b.planId);
-      if (at) v.inst = { n: at.n, total: at.total };
+      if (at) v.inst = { n: at.n, total: at.total, ongoing: at.ongoing };
       return v;
     })
     .filter(inPlanRange);
@@ -93,14 +96,14 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
     id: `emi:${e.id}`, kind: 'emi', emiId: e.id, ym,
     name: e.item + (e.forWho === 'friend' ? ` · ${e.personName || 'friend'}` : ''),
     category: 'emi', amount: e.amount, status: e.paid, dueDay: null,
-    note: `${freqLabel(e)} · paid from bank / cash · closes ${ymLabel(e.endYm, { short: true })}`,
-    cardId: null, planId: null, forWho: e.forWho, inst: { n: e.n, total: e.total, left: e.left }, sortOrder: 0,
+    note: `${freqLabel(e)} · paid from bank / cash · ${e.ongoing ? 'ongoing' : `closes ${ymLabel(e.endYm, { short: true })}`}`,
+    cardId: null, planId: null, forWho: e.forWho, inst: { n: e.n, total: e.total, left: e.left, ongoing: e.ongoing }, sortOrder: 0,
   }));
 
   // ---- people ----
   const withInst = (r) => {
     const at = r.planId && planAt(r.planId);
-    return { ...r, inst: at ? { n: at.n, total: at.total } : null, auto: null };
+    return { ...r, inst: at ? { n: at.n, total: at.total, ongoing: at.ongoing } : null, auto: null };
   };
   const payables = entries.filter((r) => r.direction === 'out').map(withInst);
   // "I owe them" is money to pay too: it's listed (and counted) in Need to pay under "Money I owe".
@@ -121,7 +124,7 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
     .map((e) => ({
       id: `emi:${e.id}`, emiId: e.id, direction: 'in', personId: e.personId,
       name: `${e.personName || 'Friend'} · ${e.item} EMI`, amount: e.amount, status: e.received,
-      inst: { n: e.n, total: e.total }, auto: e.cardId ? cardById.get(e.cardId)?.name || 'card' : 'bank / cash',
+      inst: { n: e.n, total: e.total, ongoing: e.ongoing }, auto: e.cardId ? cardById.get(e.cardId)?.name || 'card' : 'bank / cash',
     }));
   const receivables = entries.filter((r) => r.direction === 'in').map(withInst).filter(inPlanRange).concat(friendEmiRows);
 
@@ -189,33 +192,34 @@ export function listInstallments({ ym, emis, plans, cards, people }) {
       const who = personName.get(e.personId) || 'Friend';
       const plan = emiPlan(e);
       const at = instAt(plan, I);
-      const left = leftFrom(plan, I); // payments left, this month's included if it's due
+      const ongoing = e.totalMonths == null;
+      const left = ongoing ? null : leftFrom(plan, I); // payments left, this month's included if it's due
       return {
         id: e.id, type: 'emi', name: e.item + (friend ? ` · ${who}` : ''),
         kind: (friend ? 'For a friend' : 'Mine') + (e.cardId ? ' · card EMI' : ' · bank / cash'),
         source: e.cardId ? `On ${cardName.get(e.cardId) || 'card'}` : 'Paid from bank / cash',
-        friend, incoming: false, freq: plan.freq, monthly: e.monthly || 0, startYm: e.startYm, total: e.totalMonths,
-        n: I < plan.startIdx ? 0 : at.n, due: at.due, endYm: indexToYm(endIdx(plan)),
-        monthsLeft: left, amountLeft: (e.monthly || 0) * left,
+        friend, incoming: false, freq: plan.freq, monthly: e.monthly || 0, startYm: e.startYm, total: e.totalMonths ?? null, ongoing,
+        n: I < plan.startIdx ? 0 : at.n, due: at.due, endYm: ongoing ? null : indexToYm(endIdx(plan)),
+        monthsLeft: left, amountLeft: ongoing ? null : (e.monthly || 0) * left,
       };
     })
-    .filter((r) => r.monthsLeft > 0);
+    .filter((r) => r.ongoing || r.monthsLeft > 0);
 
   const planRows = plans
     .map((p) => {
       const at = installmentAt(p.startYm, p.totalInstallments, ym);
-      const left = p.totalInstallments - Math.max(at.n - 1, 0); // including this month
+      const left = at.ongoing ? null : p.totalInstallments - Math.max(at.n - 1, 0); // including this month
       return {
         id: p.id, type: 'plan', name: p.name, kind: p.kind, source: p.source,
-        friend: false, incoming: p.direction === 'in', freq: 'monthly', monthly: p.monthly || 0, startYm: p.startYm, total: p.totalInstallments,
-        n: at.n, due: at.active, endYm: at.endYm, monthsLeft: left, amountLeft: (p.monthly || 0) * left,
+        friend: false, incoming: p.direction === 'in', freq: 'monthly', monthly: p.monthly || 0, startYm: p.startYm, total: at.total, ongoing: at.ongoing,
+        n: at.n, due: at.active, endYm: at.endYm, monthsLeft: left, amountLeft: at.ongoing ? null : (p.monthly || 0) * left,
       };
     })
-    .filter((r) => r.n <= r.total);
+    .filter((r) => r.ongoing || r.n <= r.total);
 
   const rows = emiRows.concat(planRows);
 
-  return rows.sort((a, b) => a.endYm.localeCompare(b.endYm));
+  return rows.sort((a, b) => (a.endYm ?? '9999-12').localeCompare(b.endYm ?? '9999-12')); // ongoing ones last
 }
 
 // Year view: budget vs spent per month, plus where the money went.

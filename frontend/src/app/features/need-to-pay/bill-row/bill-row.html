@@ -14,7 +14,7 @@
       <div class="name" [class.is-skipped]="b.status === 'skipped'">{{ b.name }}</div>
       <div class="sub" [class]="'sub sub--' + (card() || b.status === 'skipped' ? 'normal' : due().tone)">{{ sub() }}</div>
     </div>
-    @if (b.inst) { <span class="inst-pill">{{ b.inst.n }} of {{ b.inst.total }} · {{ b.inst.total - b.inst.n }} left</span> }
+    @if (b.inst) { <span class="inst-pill">@if (b.inst.total == null) { Month {{ b.inst.n }} · ongoing } @else { {{ b.inst.n }} of {{ b.inst.total }} · {{ b.inst.total - b.inst.n }} left }</span> }
     <span class="chip" [class]="'chip chip--' + status()">{{ b.kind === 'owe' && b.status === 'paid' ? 'Paid back' : statusLabel() }}</span>
     <div class="num amount" [class.is-skipped]="b.status === 'skipped'">{{ b.status === 'skipped' ? '—' : (b.amount | inr) }}</div>
     <div class="actions">
@@ -55,7 +55,7 @@
       <div class="split breakdown">
         @for (e of c.emis; track e.id) {
           <div class="kv" [class.kv--friend]="e.forWho === 'friend'">
-            <span>{{ e.item }} EMI · {{ e.forWho === 'friend' ? e.personName + '’s' : 'mine' }} · {{ e.n }} of {{ e.total }}</span>
+            <span>{{ e.item }} EMI · {{ e.forWho === 'friend' ? e.personName + '’s' : 'mine' }} · {{ e.total == null ? 'ongoing' : e.n + ' of ' + e.total }}</span>
             <span class="num">{{ e.amount ? (e.amount | inr) : 'amount not set' }}</span>
           </div>
         }

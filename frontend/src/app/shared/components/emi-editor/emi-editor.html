@@ -14,7 +14,8 @@
       </label>
     }
     <label><span class="lbl">EMI per month (₹)</span><input class="field field--sm num" inputmode="numeric" formControlName="monthly"></label>
-    <label><span class="lbl">Total months</span><input class="field field--sm num" inputmode="numeric" formControlName="totalMonths"></label>
+    <label><span class="lbl">Total months</span><input class="field field--sm num" inputmode="numeric" formControlName="totalMonths" [placeholder]="value().ongoing ? 'No end' : ''"></label>
+    <label class="check span-all"><input type="checkbox" formControlName="ongoing"> No end date (ongoing – e.g. rent, support)</label>
     <label><span class="lbl">1st EMI month</span>
       <select class="field field--sm" formControlName="startMonth">
         @for (mn of months; track $index) { <option [ngValue]="$index">{{ mn }}</option> }

@@ -40,7 +40,7 @@
         <div class="between wrap">
           <div class="grow">
             <div class="strong">{{ u.e.item }} <span class="tiny muted">· {{ u.who }}</span></div>
-            <div class="num small muted">Starts {{ u.e.startYm | ym: 'short' }} · {{ u.e.monthly ? (u.e.monthly | inr) + '/mo' : 'amount not set' }} · {{ u.e.totalMonths }} months</div>
+            <div class="num small muted">Starts {{ u.e.startYm | ym: 'short' }} · {{ u.e.monthly ? (u.e.monthly | inr) + '/mo' : 'amount not set' }} · {{ u.e.totalMonths == null ? 'ongoing' : u.e.totalMonths + ' months' }}</div>
           </div>
           <div class="row-flex">
             <button class="btn btn--ghost btn--sm" (click)="editEmi(u.e.id)" [attr.aria-label]="'Edit ' + u.e.item + ' EMI details'">Edit</button>

@@ -13,7 +13,7 @@ const planSchema = new Schema({
   category: { type: String, enum: CATEGORY_KEYS, default: 'fam' }, // group of the monthly bill (out plans)
   person: { type: ObjectId, ref: 'Person', default: null },
   monthly: amountField(),
-  totalInstallments: { type: Number, required: true, min: 1, validate: Number.isInteger },
+  totalInstallments: { type: Number, default: null, min: 1, validate: (v) => v == null || Number.isInteger(v) }, // null = ongoing, no end date
   startYm: ymField({ required: true }),
 }, { timestamps: true });
 

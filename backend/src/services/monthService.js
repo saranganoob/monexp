@@ -84,7 +84,11 @@ export async function getMonthView(ym) {
 // Creates a month: "rollover" copies the latest earlier month, "blank" starts empty.
 export async function createMonth(ym, { mode, carryIds = [] }) {
   if (await Month.exists({ ym })) throw conflict(`${ymLabel(ym)} is already set up.`);
-  if (mode === 'blank') return Month.create({ ym, budget: 0, createdHow: 'blank' });
+  if (mode === 'blank') {
+    const month = await Month.create({ ym, budget: 0, createdHow: 'blank' });
+    await addCardBills(ym); // cards from Profile belong to every month
+    return month;
+  }
 
   const prev = await findPrevMonth(ym);
   if (!prev) throw badRequest('There is no earlier month to roll over from. Start a blank month instead.');
@@ -131,6 +135,7 @@ export async function createMonth(ym, { mode, carryIds = [] }) {
   if (carried.length) {
     await PeopleEntry.updateMany({ _id: { $in: carried.map((r) => r._id) } }, { status: 'moved', movedTo: ym });
   }
+  await addCardBills(ym); // a card added after the last month was set up
   // Plans that start this month (or weren't in the last one) get their row too.
   for (const p of plans) {
     if (!installmentAt(p.startYm, p.totalInstallments, ym).active) continue;
@@ -138,6 +143,16 @@ export async function createMonth(ym, { mode, carryIds = [] }) {
     if (!(await Model.exists({ ym, plan: p._id }))) await addPlanRow(p, ym);
   }
   return month;
+}
+
+/** Gives every open card a bill row in `ym` if it doesn't have one yet. */
+export async function addCardBills(ym) {
+  const [cards, have] = await Promise.all([Card.find({ closedOn: '' }).sort(byOrder).lean(), BillItem.distinct('card', { ym, card: { $ne: null } })]);
+  const haveIds = new Set(have.map(String));
+  for (const c of cards) {
+    if (haveIds.has(String(c._id))) continue;
+    await BillItem.create({ ym, name: `${c.name} credit card`, category: 'cc', status: 'unpaid', card: c._id, sortOrder: await nextSortOrder(BillItem, ym) });
+  }
 }
 
 // Used when something is added to a month that isn't set up yet (the "Add expense" dialog).

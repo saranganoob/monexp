@@ -5,7 +5,7 @@
       <div class="strong">{{ e.item }}</div>
       <div class="row-flex tags">
         <span class="tag" [class.tag--friend]="isFriend()">{{ isFriend() ? 'For ' + e.personName : 'Mine' }}</span>
-        <span class="inst-pill">{{ e.n }} of {{ e.total }}</span>
+        <span class="inst-pill">{{ e.total == null ? 'Month ' + e.n + ' · ongoing' : e.n + ' of ' + e.total }}</span>
       </div>
     </div>
     <div class="row-flex actions">
@@ -16,7 +16,7 @@
 
   @if (editing() && raw(); as r) { <app-emi-editor [emi]="r" (done)="closed.emit()" /> }
 
-  <app-progress-bar [value]="(e.n / e.total) * 100" [tone]="isFriend() ? 'friend' : 'navy'" size="sm" />
+  <app-progress-bar [value]="e.total == null ? 100 : (e.n / e.total) * 100" [tone]="isFriend() ? 'friend' : 'navy'" size="sm" />
 
   <div class="grid-2 bottom">
     <label>
@@ -24,8 +24,12 @@
       <input class="field field--sm num" inputmode="numeric" [formControl]="monthly" (change)="saveMonthly()" (keydown.enter)="$any($event.target).blur()" placeholder="Enter amount">
     </label>
     <div class="small left">
-      <div>Left: <strong class="num">{{ e.monthly ? (amountLeft() | inr) : '—' }}</strong></div>
-      <div>Closes: <strong>{{ e.endYm | ym: 'short' }}</strong></div>
+      @if (e.endYm) {
+        <div>Left: <strong class="num">{{ e.monthly ? (amountLeft() | inr) : '—' }}</strong></div>
+        <div>Closes: <strong>{{ e.endYm | ym: 'short' }}</strong></div>
+      } @else {
+        <div><strong>Ongoing</strong> – no end date</div>
+      }
     </div>
   </div>
 

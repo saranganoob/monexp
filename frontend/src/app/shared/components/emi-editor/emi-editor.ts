@@ -31,24 +31,32 @@ export class EmiEditor implements OnInit {
     item: ['', notBlank],
     monthly: ['', rupees(0)],
     totalMonths: ['', [Validators.required, wholeNumber(1, 600)]],
+    ongoing: [false], // no end date (rent, support…) – then Total months isn't needed
     startMonth: [0],
     startYear: [new Date().getFullYear()],
   });
-  private readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+  protected readonly value = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
   protected readonly isFriend = computed(() => this.value().forWho === 'friend');
   protected readonly years = computed(() => yearOptions(Number(this.value().startYear), 2, 1));
   protected readonly summary = computed(() => {
     const v = this.value(), t = Number(v.totalMonths), m = parseNum(v.monthly);
+    if (v.ongoing) return `From ${ymLabel(makeYm(Number(v.startYear), Number(v.startMonth)))} · ongoing, no end date`;
     if (!Number.isInteger(t) || t < 1) return '';
     const start = makeYm(Number(v.startYear), Number(v.startMonth));
     return `${ymLabel(start)} → ${ymLabel(addMonths(start, t - 1))}` + (m ? ` · ${inr(m * t)} in total` : '');
   });
 
+  constructor() {
+    const total = this.form.controls.totalMonths;
+    this.form.controls.ongoing.valueChanges.subscribe((on) => (on ? total.disable() : total.enable()));
+  }
+
   ngOnInit() {
     const e = this.emi();
     this.form.setValue({
       forWho: e.forWho, personId: e.personId ?? '', item: e.item, monthly: fmtInput(e.monthly),
-      totalMonths: String(e.totalMonths), startMonth: ymMonth0(e.startYm), startYear: ymYear(e.startYm),
+      totalMonths: e.totalMonths == null ? '' : String(e.totalMonths), ongoing: e.totalMonths == null,
+      startMonth: ymMonth0(e.startYm), startYear: ymYear(e.startYm),
     });
   }
 
@@ -65,7 +73,7 @@ export class EmiEditor implements OnInit {
     if (this.error()) return;
     const id = this.emi().id, body = {
       item: v.item.trim(), forWho: v.forWho, personId: v.forWho === 'friend' ? v.personId : null,
-      monthly: parseNum(v.monthly), totalMonths: Number(v.totalMonths), startYm: makeYm(Number(v.startYear), Number(v.startMonth)),
+      monthly: parseNum(v.monthly), ...(v.ongoing ? { ongoing: true } : { totalMonths: Number(v.totalMonths) }), startYm: makeYm(Number(v.startYear), Number(v.startMonth)),
     };
     const err = await this.store.run(() => this.api.updateEmi(id, body), { quiet: true, key: `emi:${id}` });
     if (err) return this.error.set(err);

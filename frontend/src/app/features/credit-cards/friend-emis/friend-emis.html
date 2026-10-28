@@ -10,13 +10,13 @@
         <div class="strong">{{ f.who }} · {{ f.item }}</div>
         <div class="small muted">
           {{ f.from }} ·
-          @if (f.n >= 1) { payment {{ f.n }} of {{ f.total }} } @else { starts {{ f.startYm | ym: 'short' }} }
+          @if (f.n < 1) { starts {{ f.startYm | ym: 'short' }} } @else if (f.total == null) { payment {{ f.n }} · ongoing } @else { payment {{ f.n }} of {{ f.total }} }
           · {{ f.monthly ? (f.monthly | inr) + (f.yearly ? '/yr' : '/mo') : 'amount not set' }}
         </div>
       </div>
       <div class="num text-right">
         <div class="heavy">{{ f.monthly ? (f.left | inr) : '—' }}</div>
-        <div class="tiny muted">left · closes {{ f.endYm | ym: 'short' }}</div>
+        <div class="tiny muted">@if (f.endYm) { left · closes {{ f.endYm | ym: 'short' }} } @else { this month · ongoing }</div>
       </div>
     </div>
   } @empty {

@@ -44,6 +44,7 @@ export class PlanForm implements OnInit {
     category: ['fam'],
     monthly: ['', rupees(1)],
     totalInstallments: ['', [Validators.required, wholeNumber(1, 600)]],
+    ongoing: [false], // no end date (house rent, Dad / Mom support…) – then Total months isn't needed
     alreadyPaid: ['0', wholeNumber(0, 600)],
     startMonth: [0],
     startYear: [new Date().getFullYear()],
@@ -57,8 +58,10 @@ export class PlanForm implements OnInit {
     const v = this.v();
     return this.plan() ? makeYm(Number(v.startYear), Number(v.startMonth)) : addMonths(this.store.ym(), -parseNum(v.alreadyPaid));
   });
+  protected readonly ongoing = computed(() => this.v().ongoing);
   protected readonly summary = computed(() => {
     const t = Number(this.v().totalInstallments), m = parseNum(this.v().monthly);
+    if (this.v().ongoing) return `From ${ymLabel(this.startYm())} · ongoing, no end date` + (m ? ` · ${inr(m)} a month` : '');
     if (!Number.isInteger(t) || t < 1) return '';
     const start = this.startYm();
     return `${ymLabel(start)} → ${ymLabel(addMonths(start, t - 1))}` + (m ? ` · ${inr(m)} × ${t} = ${inr(m * t)}` : '');
@@ -66,6 +69,8 @@ export class PlanForm implements OnInit {
 
   constructor() {
     this.form.valueChanges.subscribe(() => this.error.set(''));
+    const total = this.form.controls.totalInstallments;
+    this.form.controls.ongoing.valueChanges.subscribe((on) => (on ? total.disable() : total.enable()));
   }
 
   ngOnInit() {
@@ -73,7 +78,7 @@ export class PlanForm implements OnInit {
     if (!p) return;
     this.form.patchValue({
       direction: p.direction, personId: p.personId ?? '', name: p.name, category: p.category, monthly: fmtInput(p.monthly),
-      totalInstallments: String(p.totalInstallments), startMonth: ymMonth0(p.startYm), startYear: ymYear(p.startYm), kind: p.kind,
+      totalInstallments: p.totalInstallments == null ? '' : String(p.totalInstallments), ongoing: p.totalInstallments == null, startMonth: ymMonth0(p.startYm), startYear: ymYear(p.startYm), kind: p.kind,
     });
   }
 
@@ -89,11 +94,11 @@ export class PlanForm implements OnInit {
         totalInstallments: { required: 'Add the total number of months.', range: 'Total months must be a whole number.' },
         alreadyPaid: { range: 'Already paid must be a whole number.' },
       })
-      || (!this.plan() && parseNum(v.alreadyPaid) >= total ? 'Already-paid months must be fewer than the total.' : '');
+      || (!this.plan() && !v.ongoing && parseNum(v.alreadyPaid) >= total ? 'Already-paid months must be fewer than the total.' : '');
     if (problem) return this.error.set(problem);
 
     const body: Record<string, unknown> = {
-      name: v.name.trim(), monthly: parseNum(v.monthly), totalInstallments: total, kind: v.kind.trim(), atYm: this.store.ym(),
+      name: v.name.trim(), monthly: parseNum(v.monthly), ...(v.ongoing ? { ongoing: true } : { totalInstallments: total }), kind: v.kind.trim(), atYm: this.store.ym(),
       ...(v.direction === 'in' ? { personId: v.personId } : { category: v.category }),
     };
     const p = this.plan();
@@ -105,7 +110,7 @@ export class PlanForm implements OnInit {
     );
     if (err) return this.error.set(err);
     if (!p) {
-      this.form.reset({ direction: v.direction, category: v.category, alreadyPaid: '0', startYear: new Date().getFullYear() });
+      this.form.reset({ direction: v.direction, category: v.category, alreadyPaid: '0', startYear: new Date().getFullYear(), ongoing: false });
     }
     this.saved.emit();
   }

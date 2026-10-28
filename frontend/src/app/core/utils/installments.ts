@@ -6,6 +6,10 @@ export interface PlanShape { startIdx: number; total: number; freq: Freq; }
 
 export const step = (e: PlanShape) => (e.freq === 'yearly' ? 12 : 1);
 
+/** Ongoing plans (rent, support…) have no end date; for counting they're treated as a very long plan. */
+export const ONGOING_TOTAL = 1200;
+export const totalOf = (total: number | null | undefined) => total ?? ONGOING_TOTAL;
+
 /** Month index of the last payment. */
 export const endIdx = (e: PlanShape) => e.startIdx + (e.total - 1) * step(e);
 

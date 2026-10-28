@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, NETWORKS, RELATIONS } from '../models/index.js';
 import { withUndo } from '../services/undo.js';
-import { loadSetup, nextSortOrder } from '../services/monthService.js';
+import { addCardBills, loadSetup } from '../services/monthService.js';
 import { syncPlanRows, detachPlanRows, planYms } from '../services/planService.js';
 import { peopleStats } from '../services/peopleService.js';
 import { CATEGORY_KEYS } from '../lib/categories.js';
@@ -40,15 +40,12 @@ router.get('/cards', async (_req, res) => {
 // POST /api/cards { name, last4, network, addToYm? } – addToYm adds the card's bill to that month
 router.post('/cards', async (req, res) => {
   const fields = cardFields(req.body || {}, { partial: false });
+  // The card's bill is added to the month being viewed and every later month (earlier months keep their history).
   const addToYm = req.body?.addToYm ? toYm(req.body.addToYm, 'addToYm') : null;
-  res.status(201).json(await withUndo({ yms: addToYm ? [addToYm] : [], global: ['Card'] }, async () => {
+  const yms = addToYm ? await Month.distinct('ym', { ym: { $gte: addToYm } }) : [];
+  res.status(201).json(await withUndo({ yms, global: ['Card'] }, async () => {
     const card = await Card.create({ ...fields, sortOrder: ((await Card.findOne().sort({ sortOrder: -1 }).lean())?.sortOrder ?? 0) + 1 });
-    if (addToYm && (await Month.exists({ ym: addToYm }))) {
-      await BillItem.create({
-        ym: addToYm, name: `${card.name} credit card`, category: 'cc', status: 'unpaid', card: card._id,
-        sortOrder: await nextSortOrder(BillItem, addToYm),
-      });
-    }
+    for (const ym of yms) await addCardBills(ym);
     return N.normCard(card.toObject());
   }, `${fields.name} added`));
 });
@@ -90,7 +87,9 @@ async function emiFields(b, { partial }) {
   if (!partial || b.personId !== undefined) out.person = toOptionalId(b.personId, 'person');
   if (!partial || b.monthly !== undefined) out.monthly = toAmount(b.monthly, 'Amount per payment');
   if (!partial || b.freq !== undefined) out.freq = toEnum(b.freq ?? 'monthly', ['monthly', 'yearly'], 'How often');
-  if (!partial || b.totalMonths !== undefined) out.totalMonths = toInt(b.totalMonths, 'Number of payments', { min: 1, max: 600 });
+  // ongoing: true = no end date (rent, support…); otherwise the number of payments.
+  if (b.ongoing === true) out.totalMonths = null;
+  else if (!partial || b.totalMonths !== undefined) out.totalMonths = toInt(b.totalMonths, 'Number of payments', { min: 1, max: 600 });
   if (b.startYm !== undefined) out.startYm = toYm(b.startYm, 'startYm');
   return out;
 }
@@ -99,7 +98,7 @@ router.get('/emis', async (_req, res) => {
   res.json((await loadSetup()).emis);
 });
 
-// POST /api/emis { cardId|null, item, forWho, personId?, monthly, freq, totalMonths, startYm }
+// POST /api/emis { cardId|null, item, forWho, personId?, monthly, freq, totalMonths | ongoing: true, startYm }
 //   or instead of startYm: { atYm, alreadyPaid } – "Already paid before Oct" (monthly)
 router.post('/emis', async (req, res) => {
   const b = req.body || {};
@@ -108,7 +107,7 @@ router.post('/emis', async (req, res) => {
   if (!fields.startYm) {
     const atYm = toYm(b.atYm, 'atYm');
     const alreadyPaid = toInt(b.alreadyPaid ?? 0, 'Already paid', { min: 0 });
-    if (alreadyPaid >= fields.totalMonths) throw badRequest('Already-paid installments must be fewer than the total.');
+    if (fields.totalMonths != null && alreadyPaid >= fields.totalMonths) throw badRequest('Already-paid installments must be fewer than the total.');
     fields.startYm = addMonths(atYm, -alreadyPaid);
   }
   if (fields.forWho === 'friend') {
@@ -156,7 +155,8 @@ function planFields(b, { partial }) {
     out.monthly = toAmount(b.monthly, 'Per month');
     if (!out.monthly) throw badRequest('Add the amount per month.');
   }
-  if (!partial || b.totalInstallments !== undefined) out.totalInstallments = toInt(b.totalInstallments, 'Total months', { min: 1, max: 600 });
+  if (b.ongoing === true) out.totalInstallments = null; // no end date
+  else if (!partial || b.totalInstallments !== undefined) out.totalInstallments = toInt(b.totalInstallments, 'Total months', { min: 1, max: 600 });
   if (b.startYm !== undefined) out.startYm = toYm(b.startYm, 'Start month');
   return out;
 }
@@ -167,14 +167,14 @@ router.get('/plans', async (_req, res) => {
   res.json((await loadSetup()).plans);
 });
 
-// POST /api/plans { name, direction, monthly, totalInstallments, startYm | alreadyPaid, category?, personId?, kind?, source?, atYm }
+// POST /api/plans { name, direction, monthly, totalInstallments | ongoing: true, startYm | alreadyPaid, category?, personId?, kind?, source?, atYm }
 router.post('/plans', async (req, res) => {
   const b = req.body || {};
   const atYm = atYmOf(req);
   const fields = planFields(b, { partial: false });
   if (!fields.startYm) {
     const alreadyPaid = toInt(b.alreadyPaid ?? 0, 'Already paid', { min: 0 });
-    if (alreadyPaid >= fields.totalInstallments) throw badRequest('Already-paid months must be fewer than the total.');
+    if (fields.totalInstallments != null && alreadyPaid >= fields.totalInstallments) throw badRequest('Already-paid months must be fewer than the total.');
     fields.startYm = addMonths(atYm, -alreadyPaid);
   }
   if (fields.direction === 'in') {
@@ -182,7 +182,7 @@ router.post('/plans', async (req, res) => {
     if (!(await Person.exists({ _id: fields.person }))) throw notFound('Person not found.');
   }
   fields.kind ||= fields.direction === 'in' ? 'Paying you back' : 'Monthly payment';
-  fields.source ||= `${inr(fields.monthly)} a month for ${fields.totalInstallments} months`;
+  fields.source ||= fields.totalInstallments == null ? `${inr(fields.monthly)} a month, ongoing` : `${inr(fields.monthly)} a month for ${fields.totalInstallments} months`;
 
   const yms = await Month.distinct('ym', { ym: { $gte: atYm } });
   res.status(201).json(await withUndo({ yms, global: ['Plan'] }, async () => {

@@ -4,10 +4,24 @@ import { loadSetup, computeMonths } from '../monthService.js';
 import { computeYear, listInstallments } from '../compute.js';
 import { peopleStats } from '../peopleService.js';
 import { CATEGORIES } from '../../lib/categories.js';
-import { addMonths, currentYm, isYm, ymLabel, ymToIndex } from '../../lib/ym.js';
+import { addMonths, isYm, todayInIndia, ymLabel, ymToIndex } from '../../lib/ym.js';
+import { DailySpend, DAILY_SLOTS } from '../../models/index.js';
+
+/** This month, in India. */
+const currentYm = () => todayInIndia().slice(0, 7);
 
 const groupLabel = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label]));
 const sum = (rows, f = (r) => r.amount) => rows.reduce((s, r) => s + (f(r) || 0), 0);
+/** "5 of 40", or for an ongoing one (rent, support…) "payment 5, ongoing – no end date". */
+const instLabel = (n, total) => (total == null ? `payment ${n}, ongoing – no end date` : `${n} of ${total}`);
+const closesLabel = (endYm) => (endYm ? ymLabel(endYm) : 'never – ongoing, no end date');
+const SLOT_LABELS = { teaMorning: 'Morning tea', breakfast: 'Breakfast', lunch: 'Lunch', snacks: 'Snacks', teaEvening: 'Evening tea', dinner: 'Dinner' };
+const isDate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+/** A logged day's items as [{ item, amount }] – the fixed slots, then "Others". */
+const dayItems = (d) => [
+  ...DAILY_SLOTS.filter((k) => d[k]).map((k) => ({ item: SLOT_LABELS[k], amount: d[k] })),
+  ...(d.others || []).filter((o) => o.amount || o.name).map((o) => ({ item: o.name || 'Other', amount: o.amount || 0, other: true })),
+];
 
 // ---------- tool definitions (sent to Claude) ----------
 // eager_input_streaming: inputs stream as generated; we validate them ourselves below.
@@ -39,8 +53,21 @@ export const TOOL_DEFINITIONS = [
     eager_input_streaming: true,
   },
   {
+    name: 'get_daily_spends',
+    description: 'Daily spends between two dates: tea, breakfast, lunch, snacks, dinner and other small everyday spends the person logs day by day. Returns each logged day with its items and total, totals per item (e.g. all Morning tea + Evening tea), the grand total, days logged and the average per logged day. These are tracked separately and are NOT part of the month\'s budget, bills or balance. Use for any question about food, tea, snacks, meals or "daily spends", e.g. "what did I spend on tea yesterday".',
+    input_schema: {
+      type: 'object',
+      properties: {
+        from_date: { type: 'string', description: 'First day, YYYY-MM-DD (e.g. "2026-10-28").' },
+        to_date: { type: 'string', description: 'Last day, YYYY-MM-DD. Same as from_date for one day.' },
+      },
+      required: ['from_date', 'to_date'],
+    },
+    eager_input_streaming: true,
+  },
+  {
     name: 'find_payments',
-    description: 'Search bills, sudden spends and itemised card spends by name (case-insensitive, partial match, e.g. "netflix", "dad", "petrol") across a range of months. Returns each match per month and the totals. Use for "how much did I pay for X".',
+    description: 'Search bills, sudden spends, itemised card spends and daily spends (meals, tea, other items) by name (case-insensitive, partial match, e.g. "netflix", "dad", "petrol") across a range of months. Returns each match per month and the totals. Use for "how much did I pay for X".',
     input_schema: {
       type: 'object',
       properties: {
@@ -90,7 +117,7 @@ export function monthView(c) {
     bills: c.bills.map((b) => ({
       name: b.name, group: groupLabel[b.category], amount: b.status === 'skipped' ? 0 : b.amount, status: b.status,
       ...(b.dueDay ? { dueDay: b.dueDay } : {}),
-      ...(b.inst ? { installment: `${b.inst.n} of ${b.inst.total}` } : {}),
+      ...(b.inst ? { installment: instLabel(b.inst.n, b.inst.total) } : {}),
       ...(b.note ? { note: b.note } : {}),
     })),
     creditCards: c.cards.filter((x) => x.billId || x.emis.length || x.spends).map((x) => ({
@@ -99,14 +126,14 @@ export function monthView(c) {
       ...(x.closedOn ? { closedOn: x.closedOn } : {}),
       emis: x.emis.map((e) => ({
         item: e.item, for: e.forWho === 'friend' ? e.personName : 'me', thisMonth: e.amount,
-        installment: `${e.n} of ${e.total}`, closes: ymLabel(e.endYm),
+        installment: instLabel(e.n, e.total), closes: closesLabel(e.endYm),
         ...(e.forWho === 'friend' ? { friendPaidThisMonth: e.received === 'done' } : {}),
       })),
       itemisedSpends: x.items.map((i) => ({ name: i.name, amount: i.amount, date: i.date })),
     })),
     peopleOweMe: c.receivables.map((r) => ({
       name: r.name, amount: r.amount, status: r.status === 'done' ? 'received' : r.status,
-      ...(r.inst ? { installment: `${r.inst.n} of ${r.inst.total}` } : {}),
+      ...(r.inst ? { installment: instLabel(r.inst.n, r.inst.total) } : {}),
       ...(r.auto ? { source: `friend's EMI on ${r.auto}` } : {}),
     })),
     iOwe: c.payables.map((r) => ({ name: r.name, amount: r.amount, status: r.status === 'done' ? 'paid back' : r.status })),
@@ -167,8 +194,8 @@ const RUNNERS = {
     const ym = readYm(input, 'ym');
     return listInstallments({ ym, ...(await loadSetup()) }).map((i) => ({
       name: i.name, kind: i.kind, perMonth: i.monthly,
-      installment: i.n >= 1 ? `${i.n} of ${i.total}` : `starts ${ymLabel(i.startYm)}`,
-      monthsLeftInclThisMonth: i.monthsLeft, amountLeft: i.amountLeft, closes: ymLabel(i.endYm),
+      installment: i.n >= 1 ? instLabel(i.n, i.total) : `starts ${ymLabel(i.startYm)}`,
+      ...(i.ongoing ? { ongoing: true } : { monthsLeftInclThisMonth: i.monthsLeft, amountLeft: i.amountLeft }), closes: closesLabel(i.endYm),
     }));
   },
 
@@ -179,6 +206,29 @@ const RUNNERS = {
       owesMeThisMonth: p.owed, iOweThisMonth: p.iOwe, runningEmisOnMyCards: p.runningEmis,
       leftToRecoverFromEmis: p.leftToRecover, receivedSoFarAllMonths: p.receivedSoFar,
     }));
+  },
+
+  async get_daily_spends(input) {
+    const from = input?.from_date, to = input?.to_date;
+    if (!isDate(from) || !isDate(to)) throw new ToolInputError('from_date and to_date must look like "2026-10-28".');
+    if (from > to) throw new ToolInputError('from_date must not be after to_date.');
+    if ((Date.parse(to) - Date.parse(from)) / 86400000 > 400) throw new ToolInputError('Ask for at most about a year at a time.');
+    const days = await DailySpend.find({ date: { $gte: from, $lte: to } }).sort({ date: 1 }).lean();
+    const byItem = {};
+    const out = days.map((d) => {
+      const items = dayItems(d);
+      for (const i of items) {
+        const key = i.other ? `Other: ${i.item}` : i.item;
+        byItem[key] = (byItem[key] || 0) + i.amount;
+      }
+      return { date: d.date, items: items.map(({ item, amount }) => ({ item, amount })), total: sum(items) };
+    });
+    const total = sum(out, (d) => d.total);
+    return {
+      from, to, today: todayInIndia(), note: 'Daily spends are tracked separately – not part of the budget, bills or balance.',
+      days: out, totalsByItem: byItem, total, daysLogged: out.length,
+      averagePerLoggedDay: out.length ? Math.round(total / out.length) : 0,
+    };
   },
 
   async find_payments(input) {
@@ -207,10 +257,18 @@ const RUNNERS = {
         }
       }
     }
+    // Daily spends (tracked separately – listed, but not in totalPaid / totalUnpaid).
+    const dailyMatches = [];
+    for (const d of await DailySpend.find({ ym: { $gte: from, $lte: to } }).sort({ date: 1 }).lean()) {
+      for (const i of dayItems(d).filter((x) => x.item.toLowerCase().includes(query))) {
+        dailyMatches.push({ date: d.date, name: i.item, amount: i.amount });
+      }
+    }
     return {
       query, from: ymLabel(from), to: ymLabel(to), matches,
       totalPaid: sum(matches.filter((m) => m.status === 'paid' || m.status === 'on card bill')),
       totalUnpaid: sum(matches.filter((m) => m.status === 'unpaid')),
+      ...(dailyMatches.length ? { dailySpends: dailyMatches, dailySpendsTotal: sum(dailyMatches), dailyNote: 'Daily spends are tracked separately, not part of the budget or balance.' } : {}),
     };
   },
 };
@@ -236,6 +294,7 @@ export function toolStatus(name, input) {
     case 'get_installments': return 'Checking your EMIs and plans…';
     case 'get_people': return 'Checking who owes whom…';
     case 'find_payments': return `Searching for “${String(input?.query ?? '').slice(0, 30)}”…`;
+    case 'get_daily_spends': return 'Checking your daily spends…';
     default: return 'Looking things up…';
   }
 }

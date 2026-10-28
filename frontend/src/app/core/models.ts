@@ -4,7 +4,8 @@ export type BillStatus = 'paid' | 'unpaid' | 'skipped';
 export type EntryStatus = 'pending' | 'done' | 'moved';
 /** emi / owe are filled by the app (bank-cash EMIs, money I owe) and can't be picked for a bill. */
 export type CategoryKey = 'cc' | 'fam' | 'house' | 'sub' | 'inv' | 'emi' | 'owe';
-export interface Inst { n: number; total: number; left?: number; }
+/** Where an installment stands. total null + ongoing = no end date (rent, support…). */
+export interface Inst { n: number; total: number | null; left?: number | null; ongoing?: boolean; }
 export type Freq = 'monthly' | 'yearly';
 
 /**
@@ -19,7 +20,7 @@ export interface Bill {
 
 export interface EmiView {
   id: string; cardId: string | null; item: string; forWho: 'me' | 'friend'; freq: Freq; personId: string | null; personName: string;
-  monthly: number; amount: number; n: number; total: number; startYm: string; endYm: string; received: 'pending' | 'done';
+  monthly: number; amount: number; n: number; total: number | null; ongoing?: boolean; startYm: string; endYm: string | null; received: 'pending' | 'done';
 }
 
 export interface CardView {
@@ -58,19 +59,25 @@ export interface MissingMonth { exists: false; ym: string; rolloverFrom: string 
 export type MonthView = MonthData | MissingMonth;
 
 export interface Card { id: string; name: string; last4: string; network: string; closedOn: string; }
-/** An EMI / installment. cardId null = paid from the bank / cash. monthly = amount per payment; totalMonths = number of payments. */
-export interface CardEmi { id: string; cardId: string | null; item: string; forWho: 'me' | 'friend'; personId: string | null; monthly: number; freq: Freq; totalMonths: number; startYm: string; }
+/** An EMI / installment. cardId null = paid from the bank / cash. monthly = amount per payment; totalMonths = number of payments (null = ongoing). */
+export interface CardEmi { id: string; cardId: string | null; item: string; forWho: 'me' | 'friend'; personId: string | null; monthly: number; freq: Freq; totalMonths: number | null; ongoing?: boolean; startYm: string; }
 export interface Plan {
   id: string; name: string; kind: string; source: string; direction: 'out' | 'in'; category: CategoryKey;
-  personId: string | null; monthly: number; totalInstallments: number; startYm: string;
+  personId: string | null; monthly: number; totalInstallments: number | null; ongoing?: boolean; startYm: string;
 }
 export interface Person { id: string; name: string; relation: string; phone: string; upi: string; note: string; }
 export interface PersonStats extends Person { owed: number; iOwe: number; runningEmis: number; leftToRecover: number; receivedSoFar: number; }
 
 export interface Installment {
   id: string; type: 'emi' | 'plan'; name: string; kind: string; source: string; friend: boolean; incoming: boolean;
-  freq: Freq; monthly: number; startYm: string; total: number; n: number; due: boolean; endYm: string; monthsLeft: number; amountLeft: number;
+  freq: Freq; monthly: number; startYm: string; total: number | null; ongoing?: boolean; n: number; due: boolean; endYm: string | null; monthsLeft: number | null; amountLeft: number | null;
 }
+
+/** Daily spends – only for tracking, never part of the budget or balance. */
+export type DailySlot = 'teaMorning' | 'breakfast' | 'lunch' | 'snacks' | 'teaEvening' | 'dinner';
+export interface DailyOther { name: string; amount: number; }
+export type DailyDay = Record<DailySlot, number> & { date: string; others: DailyOther[]; total: number };
+export interface DailyMonth { ym: string; today: string; days: DailyDay[]; monthTotal: number; }
 
 export interface YearView {
   year: number; trackedCount: number; budget: number; spent: number; leftOver: number;

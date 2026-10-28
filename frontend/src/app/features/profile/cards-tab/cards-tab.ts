@@ -40,7 +40,7 @@ export class CardsTab {
       c,
       networkClass: 'face--' + (c.network || 'none').toLowerCase(),
       bill: this.store.month()?.cards.find((x) => x.id === c.id)?.total ?? 0,
-      running: this.store.emis().filter((e) => e.cardId === c.id && ymIndex(e.startYm) <= I && ymIndex(e.startYm) + e.totalMonths - 1 >= I).length,
+      running: this.store.emis().filter((e) => e.cardId === c.id && ymIndex(e.startYm) <= I && (e.totalMonths == null || ymIndex(e.startYm) + e.totalMonths - 1 >= I)).length,
     }));
   });
 

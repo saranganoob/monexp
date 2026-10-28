@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { Account, AdminUser, Card, CardEmi, ChangeResult, Installment, MonthView, Person, PersonStats, Plan, Prefs, YearView } from './models';
+import { Account, AdminUser, Card, CardEmi, ChangeResult, Installment, MonthView, Person, PersonStats, Plan, Prefs, YearView, DailyDay, DailyMonth } from './models';
 
 /** True when the request never got an answer (offline, server down, timed out) – worth a Retry. */
 export const isConnectionError = (err: unknown) => err instanceof HttpErrorResponse && err.status === 0;
@@ -92,5 +92,7 @@ export class Api {
   // reports
   installments(at: string) { return this.get<Installment[]>(`/installments?at=${at}`); }
   year(year: number) { return this.get<YearView>(`/years/${year}`); }
+  dailyMonth(ym: string) { return this.get<DailyMonth>(`/daily?ym=${ym}`); }
+  saveDaily(date: string, body: Record<string, unknown>) { return this.put<DailyDay>(`/daily/${date}`, body); }
   undo(token: string) { return this.post<{ message: string }>(`/undo/${token}`); }
 }

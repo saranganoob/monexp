@@ -64,6 +64,21 @@
   &:active { transform: scale(.92); } // a small target gets a slightly bigger squeeze so it's visible
   &.is-paid { background: var(--ok); border-color: var(--ok); }
   &.is-skipped { border-style: dashed; }
+  // Your theme colour shows what you can tap; green stays the meaning of "paid".
+  @media (hover: hover) {
+    &:not(.is-paid):hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--field)); }
+  }
+  &:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); border-color: var(--accent); }
+  // Just marked paid: pops in the theme colour, then settles into green.
+  &.just-paid { animation: tick-pop .6s var(--spring) both; }
+}
+@keyframes tick-pop {
+  0% { background: var(--accent); border-color: var(--accent); transform: scale(.82); box-shadow: 0 0 0 0 var(--accent-ring); }
+  40% { background: var(--accent); border-color: var(--accent); transform: scale(1.1); box-shadow: 0 0 0 8px transparent; }
+  100% { background: var(--ok); border-color: var(--ok); transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes tick-pop { 0% { background: var(--accent); border-color: var(--accent); } 100% { background: var(--ok); border-color: var(--ok); } }
 }
 
 // Loading state (see shared/directives/busy.ts): disabled at once, spinner after 300ms.

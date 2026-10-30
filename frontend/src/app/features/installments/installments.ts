@@ -3,13 +3,12 @@ import { AppStore } from '../../core/app-store';
 import { Api, errorMessage } from '../../core/api.service';
 import { Installment, Plan } from '../../core/models';
 import { InstallmentCard } from './installment-card/installment-card';
-import { PlanForm } from './plan-form/plan-form';
 import { Icon } from '../../shared/ui/icon/icon';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 
 @Component({
   selector: 'app-installments',
-  imports: [InstallmentCard, PlanForm, Icon, Skeleton],
+  imports: [InstallmentCard, Icon, Skeleton],
   templateUrl: './installments.html',
   styleUrl: './installments.scss',
 })

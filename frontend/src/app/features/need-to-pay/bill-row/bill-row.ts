@@ -49,7 +49,17 @@ export class BillRow {
     return b.status === 'skipped' ? b.note || 'Skipped this month' : this.due().label;
   });
 
-  toggle() { this.store.togglePaid(this.bill(), this.ym()); }
+  /** Briefly true after a bill is marked paid: the tick pops in the theme colour, then settles to green. */
+  protected readonly justPaid = signal(false);
+
+  async toggle() {
+    const paying = this.bill().status !== 'paid';
+    const err = await this.store.togglePaid(this.bill(), this.ym());
+    if (paying && !err) {
+      this.justPaid.set(true);
+      setTimeout(() => this.justPaid.set(false), 700);
+    }
+  }
   skip() { const b = this.bill(); this.store.run(() => this.api.updateBill(b.id, { status: b.status === 'skipped' ? 'unpaid' : 'skipped' }), { key: this.key() }); }
   remove() { const b = this.bill(); this.store.run(() => this.api.deleteBill(b.id), { key: this.key() }); }
   edit() { this.editing.set(this.bill().id); }

@@ -1,6 +1,6 @@
 <div class="page">
   <div class="intro">
-    <p class="lead">Every installment in one place, sorted by when it closes — EMIs and yearly payments (yours and friends'), money you send on a schedule, and people paying you back.</p>
+    <p class="lead">Every installment in one place, sorted by when it closes — EMIs and yearly payments (yours and friends'), money you send on a schedule, and people paying you back. Add any of them with <strong>Add installment</strong>.</p>
     <button type="button" class="btn btn--primary" (click)="store.openEmi()"><app-icon name="plus" [stroke]="2.2" />Add installment</button>
   </div>
   @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
@@ -17,12 +17,4 @@
       }
     </section>
   }
-
-  <section class="card card--pad">
-    <div>
-      <h2 class="card__title">Add a plan with its own group</h2>
-      <p class="card__lead">For someone paying you back in parts, or a monthly payment you want listed under a group in Need to pay (like Family). For EMIs and yearly payments, use <strong>Add installment</strong> above.</p>
-    </div>
-    <app-plan-form />
-  </section>
 </div>

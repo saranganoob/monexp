@@ -13,11 +13,20 @@ const FIRST_YEAR = 2015;
 const LAST_YEAR = 2045;
 const MAX_PAYMENTS = 600;
 const SAVE_KEY = 'add-emi';
+/** Where a monthly bank / cash payment shows in Need to pay. 'emi' = a normal EMI; the rest become a plan in that group. */
+const GROUPS = [
+  { key: 'emi', label: 'EMIs & installments' },
+  { key: 'fam', label: 'Family & personal' },
+  { key: 'inv', label: 'Investments & savings' },
+  { key: 'house', label: 'Housing' },
+  { key: 'sub', label: 'Subscriptions' },
+];
 
 const idxLabel = (i: number, short = true) => `${(short ? MONTHS : FULL_MONTHS)[i % 12]} ${Math.floor(i / 12)}`;
 
 /**
- * "Add EMI / installment": for me or a friend, paid from the bank / cash or a card, monthly or
+ * "Add installment": money I pay (EMI for me or a friend, from the bank / cash or a card, or a monthly
+ * payment listed under a group like Family), or money someone pays me back in parts. Monthly or
  * yearly, with a first payment that may be in the past and a number of payments, an end date,
  * or no end at all (rent, support…). The summary works out what's already paid and what's left (core/utils/installments).
  */
@@ -35,6 +44,7 @@ export class EmiDialog implements AfterViewInit {
   private fb = inject(NonNullableFormBuilder);
 
   protected readonly saveKey = SAVE_KEY;
+  protected readonly groups = GROUPS;
   protected readonly months = FULL_MONTHS;
   protected readonly years = Array.from({ length: LAST_YEAR - FIRST_YEAR + 1 }, (_, i) => FIRST_YEAR + i);
   protected readonly error = signal('');
@@ -42,6 +52,8 @@ export class EmiDialog implements AfterViewInit {
   private readonly I = ymIndex(this.store.ym());
 
   protected readonly form = this.fb.group({
+    direction: ['out' as 'out' | 'in'], // I pay, or someone pays me back
+    group: ['emi'],
     forWho: ['me' as 'me' | 'friend'],
     personId: [''],
     item: ['', Validators.maxLength(120)],
@@ -59,7 +71,12 @@ export class EmiDialog implements AfterViewInit {
   private readonly v = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
 
   protected readonly openCards = computed(() => this.store.cards().filter((c) => !c.closedOn));
-  protected readonly isFriend = computed(() => this.v().forWho === 'friend');
+  protected readonly isIn = computed(() => this.v().direction === 'in');
+  protected readonly isFriend = computed(() => !this.isIn() && this.v().forWho === 'friend');
+  /** A monthly bank / cash payment of my own can be listed under a group instead of EMIs. */
+  protected readonly canGroup = computed(() => !this.isIn() && !this.isFriend() && !this.v().paidFrom && this.v().freq === 'monthly');
+  /** Saved as an installment plan (someone paying me back, or listed under a group) rather than an EMI. */
+  private readonly asPlan = computed(() => this.isIn() || (this.canGroup() && this.v().group !== 'emi'));
   protected readonly yearly = computed(() => this.v().freq === 'yearly');
   protected readonly amountLabel = computed(() => (this.yearly() ? 'Amount per year (₹)' : 'Amount per month (₹)'));
   protected readonly startIdx = computed(() => Number(this.v().startYear) * 12 + Number(this.v().startMonth));
@@ -101,7 +118,7 @@ export class EmiDialog implements AfterViewInit {
       const next = nextDueIdx(p, I)!;
       const paid = alreadyPaidBefore(p, I);
       const lines = [`${p.freq === 'yearly' ? 'Yearly' : 'Monthly'} from ${idxLabel(p.startIdx)} · ongoing, no end date`];
-      if (paid) lines.push(`${paid} already paid before ${idxLabel(I)}`);
+      if (paid) lines.push(`${paid} already ${this.isIn() ? 'received' : 'paid'} before ${idxLabel(I)}`);
       lines.push(`Next due ${idxLabel(next, false)}` + (amount ? ` · ${inr(amount)} each time, until you remove it` : ''));
       return { problem: '', lines };
     }
@@ -111,8 +128,8 @@ export class EmiDialog implements AfterViewInit {
     const left = leftFrom(p, I);
     const next = nextDueIdx(p, I);
     const lines = [`${p.total} ${p.freq} payment${p.total === 1 ? '' : 's'} · ${idxLabel(p.startIdx)} → ${idxLabel(end)}`];
-    if (paid) lines.push(`${paid} already paid before ${idxLabel(I)} (counted automatically)`);
-    if (next !== null) lines.push(`Next due ${idxLabel(next, false)} · ${left} left` + (amount ? ` · ${inr(amount * left)} remaining` : ''));
+    if (paid) lines.push(`${paid} already ${this.isIn() ? 'received' : 'paid'} before ${idxLabel(I)} (counted automatically)`);
+    if (next !== null) lines.push(`Next due ${idxLabel(next, false)} · ${left} left` + (amount ? ` · ${inr(amount * left)} ${this.isIn() ? 'still to come back' : 'remaining'}` : ''));
     if (amount) lines.push(`Total ${inr(amount * p.total)}`);
     return { problem: '', lines };
   });
@@ -123,18 +140,21 @@ export class EmiDialog implements AfterViewInit {
 
   close() { this.store.emiDialog.set(null); }
   backdrop(e: MouseEvent) { if (e.target === e.currentTarget) this.close(); }
-  protected set<K extends 'forWho' | 'freq' | 'howLong'>(name: K, value: string) {
+  protected set<K extends 'direction' | 'forWho' | 'freq' | 'howLong'>(name: K, value: string) {
     this.form.controls[name].setValue(value as never);
+    if (name === 'direction' && value === 'in') this.form.controls.freq.setValue('monthly'); // paying back is monthly
+    if (name === 'direction') this.focusFirst();
   }
 
   private focusFirst() {
-    setTimeout(() => this.host.nativeElement.querySelector<HTMLElement>(this.isFriend() ? '#ePerson' : '#eItem')?.focus());
+    setTimeout(() => this.host.nativeElement.querySelector<HTMLElement>(this.isFriend() || this.isIn() ? '#ePerson' : '#eItem')?.focus());
   }
 
   private validate(): string {
     const v = this.form.getRawValue();
-    if (v.forWho === 'friend' && !v.personId) return 'Choose which friend it’s for.';
-    if (!v.item.trim()) return 'Add what it is, e.g. Insurance or iPhone.';
+    if (this.isIn() && !v.personId) return 'Choose who is paying you back.';
+    if (this.isFriend() && !v.personId) return 'Choose which friend it’s for.';
+    if (!v.item.trim()) return this.isIn() ? 'Add what it’s for, e.g. Loan or Gym money.' : 'Add what it is, e.g. Insurance or iPhone.';
     if (!parseNum(v.amount)) return 'Add the amount per payment.';
     if (v.howLong === 'count' && !String(v.count).trim()) return 'Add the number of payments, or pick an end date.';
     return this.summary().problem;
@@ -146,14 +166,33 @@ export class EmiDialog implements AfterViewInit {
     if (problem) return this.error.set(problem);
     const v = this.form.getRawValue();
     const p = this.plan()!;
+    const startYm = `${Math.floor(p.startIdx / 12)}-${String((p.startIdx % 12) + 1).padStart(2, '0')}`;
+    const length = this.ongoing() ? { ongoing: true } : null;
+    if (this.asPlan()) return this.savePlan(v, startYm, length ?? { totalInstallments: p.total });
     const body = {
       cardId: v.paidFrom || null, item: v.item.trim(), forWho: v.forWho, personId: v.forWho === 'friend' ? v.personId : null,
       monthly: parseNum(v.amount), freq: v.freq, ...(this.ongoing() ? { ongoing: true } : { totalMonths: p.total }),
-      startYm: `${Math.floor(p.startIdx / 12)}-${String((p.startIdx % 12) + 1).padStart(2, '0')}`,
+      startYm,
     };
     const err = await this.store.run(() => this.api.addEmi(body), { quiet: true, key: SAVE_KEY });
     if (err) return this.error.set(err);
-    if (v.again) {
+    this.after(v.again);
+  }
+
+  /** Someone paying me back, or a monthly payment listed under a group: saved as an installment plan. */
+  private async savePlan(v: ReturnType<typeof this.form.getRawValue>, startYm: string, length: Record<string, unknown>) {
+    const body: Record<string, unknown> = {
+      name: v.item.trim(), monthly: parseNum(v.amount), startYm, atYm: this.store.ym(), ...length,
+      direction: this.isIn() ? 'in' : 'out',
+      ...(this.isIn() ? { personId: v.personId } : { category: v.group }),
+    };
+    const err = await this.store.run(() => this.api.addPlan(body), { quiet: true, key: SAVE_KEY });
+    if (err) return this.error.set(err);
+    this.after(v.again);
+  }
+
+  private after(again: boolean) {
+    if (again) {
       // Ready for the next one: keep who / paid from / how often / dates, clear what and how much.
       this.form.patchValue({ item: '', amount: '' });
       this.form.controls.item.markAsUntouched();

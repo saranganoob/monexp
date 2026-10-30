@@ -6,7 +6,7 @@
     <app-icon [name]="b.status === 'paid' ? 'refresh' : 'check'" [stroke]="2.6" />{{ b.status === 'paid' ? 'Unpaid' : 'Paid' }}
   </div>
   <div class="main" appSwipeAction [swipeEnabled]="b.status !== 'skipped' && !isEditing()" (swiped)="toggle()">
-    <button class="tick" [class.is-paid]="b.status === 'paid'" [class.is-skipped]="b.status === 'skipped'" (click)="toggle()" [appBusy]="key()"
+    <button class="tick" [class.is-paid]="b.status === 'paid'" [class.just-paid]="justPaid() && b.status === 'paid'" [class.is-skipped]="b.status === 'skipped'" (click)="toggle()" [appBusy]="key()"
       [attr.aria-label]="(b.kind === 'owe' ? (b.status === 'paid' ? 'Mark ' + b.name + ' not paid back' : 'Mark ' + b.name + ' paid back') : (b.status === 'paid' ? 'Mark ' + b.name + ' unpaid' : 'Mark ' + b.name + ' paid'))">
       @if (b.status === 'paid') { <app-icon name="check" [stroke]="3" /> }
     </button>

@@ -2,23 +2,33 @@
   <form role="dialog" aria-modal="true" aria-labelledby="emiTitle" class="card dialog" [formGroup]="form" (ngSubmit)="save()">
     <div class="between top">
       <div>
-        <h2 id="emiTitle">Add EMI / installment</h2>
-        <p class="hint">Monthly or yearly, from your bank or a card. It can have started already – earlier payments are counted for you.</p>
+        <h2 id="emiTitle">Add installment</h2>
+        <p class="hint">EMIs, monthly payments, or money someone pays you back in parts. It can have started already – earlier payments are counted for you.</p>
       </div>
       <button type="button" class="btn btn--ghost btn--icon" (click)="close()" aria-label="Close"><app-icon name="close" [size]="20" /></button>
     </div>
 
     <fieldset class="group">
-      <legend class="field-label">Who is it for?</legend>
+      <legend class="field-label">Which way does the money go?</legend>
       <div class="seg-group" role="radiogroup">
-        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="!isFriend()" [attr.aria-checked]="!isFriend()" (click)="set('forWho', 'me')">Me</button>
-        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="isFriend()" [attr.aria-checked]="isFriend()" (click)="set('forWho', 'friend')">A friend</button>
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="!isIn()" [attr.aria-checked]="!isIn()" (click)="set('direction', 'out')">I pay</button>
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="isIn()" [attr.aria-checked]="isIn()" (click)="set('direction', 'in')">Someone pays me back</button>
       </div>
     </fieldset>
 
+    @if (!isIn()) {
+      <fieldset class="group">
+        <legend class="field-label">Who is it for?</legend>
+        <div class="seg-group" role="radiogroup">
+          <button type="button" role="radio" class="seg seg--sm" [class.is-on]="!isFriend()" [attr.aria-checked]="!isFriend()" (click)="set('forWho', 'me')">Me</button>
+          <button type="button" role="radio" class="seg seg--sm" [class.is-on]="isFriend()" [attr.aria-checked]="isFriend()" (click)="set('forWho', 'friend')">A friend</button>
+        </div>
+      </fieldset>
+    }
+
     <div class="form-grid form-grid--wide">
-      @if (isFriend()) {
-        <label><span class="field-label">Which friend</span>
+      @if (isFriend() || isIn()) {
+        <label><span class="field-label">{{ isIn() ? 'Who pays you back' : 'Which friend' }}</span>
           <select id="ePerson" class="field" formControlName="personId">
             <option value="">Choose a person…</option>
             @for (p of store.people(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
@@ -26,26 +36,42 @@
           @if (!store.people().length) { <span class="field-hint">Add people first under Profile → People (on the website).</span> }
         </label>
       }
-      <label><span class="field-label">What is it?</span><input id="eItem" class="field" formControlName="item" placeholder="e.g. Insurance, iPhone, Bike loan"></label>
+      <label><span class="field-label">{{ isIn() ? 'What for?' : 'What is it?' }}</span>
+        <input id="eItem" class="field" formControlName="item" [placeholder]="isIn() ? 'e.g. Loan, Gym money' : 'e.g. Insurance, iPhone, Bike loan, House rent'"></label>
       <label><span class="field-label">{{ amountLabel() }}</span><input class="field num" inputmode="numeric" formControlName="amount" placeholder="0"></label>
-      <label><span class="field-label">Paid from</span>
-        <select class="field" formControlName="paidFrom">
-          <option value="">Bank / cash (not on a card)</option>
-          @for (c of openCards(); track c.id) { <option [value]="c.id">{{ c.name }} credit card</option> }
-        </select>
-      </label>
+      @if (!isIn()) {
+        <label><span class="field-label">Paid from</span>
+          <select class="field" formControlName="paidFrom">
+            <option value="">Bank / cash (not on a card)</option>
+            @for (c of openCards(); track c.id) { <option [value]="c.id">{{ c.name }} credit card</option> }
+          </select>
+        </label>
+      }
+      @if (canGroup()) {
+        <label><span class="field-label">Show in Need to pay under</span>
+          <select class="field" formControlName="group">
+            @for (g of groups; track g.key) { <option [value]="g.key">{{ g.label }}</option> }
+          </select>
+        </label>
+      }
     </div>
 
-    <fieldset class="group">
-      <legend class="field-label">How often?</legend>
-      <div class="seg-group" role="radiogroup">
-        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="!yearly()" [attr.aria-checked]="!yearly()" (click)="set('freq', 'monthly')">Monthly</button>
-        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="yearly()" [attr.aria-checked]="yearly()" (click)="set('freq', 'yearly')">Yearly</button>
-      </div>
-    </fieldset>
+    @if (!isIn()) {
+      <fieldset class="group">
+        <legend class="field-label">How often?</legend>
+        <div class="seg-group" role="radiogroup">
+          <button type="button" role="radio" class="seg seg--sm" [class.is-on]="!yearly()" [attr.aria-checked]="!yearly()" (click)="set('freq', 'monthly')">Monthly</button>
+          <button type="button" role="radio" class="seg seg--sm" [class.is-on]="yearly()" [attr.aria-checked]="yearly()" (click)="set('freq', 'yearly')">Yearly</button>
+        </div>
+      </fieldset>
+    }
+
+    @if (isIn()) {
+      <p class="field-hint">Each month it shows under People → They owe me, ready to mark received.</p>
+    }
 
     <div class="two">
-      <label><span class="field-label">First payment · month</span>
+      <label><span class="field-label">{{ isIn() ? 'First repayment · month' : 'First payment · month' }}</span>
         <select class="field" formControlName="startMonth">
           @for (mn of months; track $index) { <option [ngValue]="$index">{{ mn }}</option> }
         </select>

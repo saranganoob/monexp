@@ -16,7 +16,7 @@
   </section>
 
   <main class="form-side">
-    <form class="card panel" [formGroup]="form" (ngSubmit)="submit()">
+    <form class="card panel" [formGroup]="form" (ngSubmit)="submit()" [class.shake-a]="shake() % 2 === 1" [class.shake-b]="shake() > 0 && shake() % 2 === 0">
       <div>
         <h2>Sign in</h2>
         <p class="welcome">Welcome back. Pick up where you left off.</p>
@@ -41,8 +41,8 @@
               <label for="lPw" class="label">Password</label>
               <button type="button" class="link-btn" (click)="showHelp.set(!showHelp())">Forgot password?</button>
             </div>
-            <div class="pw">
-              <input id="lPw" [type]="showPw() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" placeholder="At least 8 characters">
+            <div class="pw" [class.is-bad]="pwBad()">
+              <input id="lPw" [attr.aria-invalid]="pwBad()" aria-describedby="loginError" [type]="showPw() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" placeholder="At least 8 characters">
               <button type="button" class="toggle" (click)="showPw.set(!showPw())" [attr.aria-pressed]="showPw()">{{ showPw() ? 'Hide' : 'Show' }}</button>
             </div>
           </div>
@@ -66,7 +66,14 @@
         <div role="status" class="notice notice--info">To set a new password, run <strong>npm run create-user</strong> in the MonEXP folder and enter the same email.</div>
       }
       @if (info()) { <div role="status" class="notice notice--info">{{ info() }}</div> }
-      @if (error()) { <div role="alert" class="notice notice--error">{{ error() }}</div> }
+      @if (error()) {
+        <div id="loginError" role="alert" class="notice notice--error login-error">
+          <app-icon name="close" [size]="16" [stroke]="2.6" /><span>{{ error() }}</span>
+        </div>
+      }
+      @if (slow()) {
+        <div role="status" class="notice notice--info waking">Waking up the server… the first sign-in after a break can take up to a minute.</div>
+      }
 
       <button type="submit" class="btn btn--primary btn--block btn--tall" [appBusy]="busy()">{{ submitLabel() }}</button>
 

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../core/auth/auth.service';
 import { Api, errorMessage } from '../../core/api.service';
 import { emailOrMobile, firstError } from '../../core/forms/validators';
@@ -8,6 +9,8 @@ import { Icon } from '../../shared/ui/icon/icon';
 import { Busy } from '../../shared/directives/busy';
 
 type Mode = 'pw' | 'otp';
+/** After this long, say the server may be waking up. */
+const SLOW_MS = 4000;
 
 @Component({
   selector: 'app-login',
@@ -44,9 +47,14 @@ export class LoginPage implements OnInit {
   protected readonly error = signal('');
   protected readonly info = signal('');
   protected readonly busy = signal(false);
+  /** Still signing in after a few seconds – the free server is probably waking up. */
+  protected readonly slow = signal(false);
+  /** The password was wrong: the box turns red (until they type again) and the form gives a little shake. */
+  protected readonly pwBad = signal(false);
+  protected readonly shake = signal(0);
 
   constructor() {
-    this.form.valueChanges.subscribe(() => this.error.set(''));
+    this.form.valueChanges.subscribe(() => { this.error.set(''); this.pwBad.set(false); });
     // A different email/mobile needs a new OTP.
     this.form.controls.identifier.valueChanges.subscribe(() => {
       if (this.otpSent()) { this.otpSent.set(false); this.info.set(''); this.form.controls.otp.setValue(''); }
@@ -90,8 +98,13 @@ export class LoginPage implements OnInit {
     if (!id) return;
     const { password, remember } = this.form.getRawValue();
     if (!password) return this.error.set('Enter your password.');
-    await this.attempt(() => this.auth.login(id, password, remember));
-    this.form.controls.password.setValue('');
+    const failed = await this.attempt(() => this.auth.login(id, password, remember));
+    if (failed === 401) {
+      // Wrong password: clear the box (without wiping the message) so they can type it again straight away.
+      this.form.controls.password.setValue('', { emitEvent: false });
+      this.pwBad.set(true);
+      setTimeout(() => document.getElementById('lPw')?.focus());
+    }
   }
 
   async sendOtp() {
@@ -122,14 +135,22 @@ export class LoginPage implements OnInit {
     await this.attempt(() => this.auth.loginWithOtp(id, otp, remember));
   }
 
-  private async attempt(signIn: () => Promise<void>) {
+  /** Returns the failed request's status (0 = no connection), or null when signed in. */
+  private async attempt(signIn: () => Promise<void>): Promise<number | null> {
     this.busy.set(true);
+    const slowTimer = setTimeout(() => this.slow.set(true), SLOW_MS);
     try {
       await signIn();
       this.router.navigateByUrl('/');
+      return null;
     } catch (e) {
-      this.error.set(errorMessage(e));
+      const status = e instanceof HttpErrorResponse ? e.status : -1;
+      this.error.set(status === 0 ? 'Can’t reach MonEXP right now. Check your internet and try again.' : errorMessage(e));
+      this.shake.update((n) => n + 1);
+      return status;
     } finally {
+      clearTimeout(slowTimer);
+      this.slow.set(false);
       this.busy.set(false);
     }
   }

@@ -32,6 +32,19 @@
   input { font: inherit; font-size: 14px; flex: 1; min-width: 0; min-height: 44px; border: none; outline: none; padding: 0 14px; background: transparent; color: var(--ink); } }
 .toggle { font: inherit; font-size: 13px; font-weight: 700; color: var(--ink-2); background: none; border: none; cursor: pointer; min-height: 36px; padding: 0 10px; border-radius: 8px; }
 .otp-meta { margin-top: 8px; font-size: 13px; color: var(--muted); flex-wrap: wrap; .link-btn { padding: 0; } }
+// Wrong password: red box, a short shake, and the message slides in.
+.pw.is-bad { border-color: var(--bad-fg); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad-fg) 18%, transparent); }
+.login-error { display: flex; align-items: flex-start; gap: 8px;
+  app-icon { flex: none; margin-top: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--bad-fg); color: var(--bad-bg); display: inline-flex; align-items: center; justify-content: center; }
+  animation: msg-in .25s ease-out both; }
+.waking { animation: msg-in .25s ease-out both; }
+@keyframes msg-in { from { opacity: 0; transform: translateY(-4px); } }
+// Two identical animations, swapped on each failure, so the shake replays every time.
+.shake-a { animation: shake-a .4s cubic-bezier(.36, .07, .19, .97); }
+.shake-b { animation: shake-b .4s cubic-bezier(.36, .07, .19, .97); }
+@keyframes shake-a { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@keyframes shake-b { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) { .shake-a, .shake-b, .login-error, .waking { animation: none; } }
 .demo { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--hair); padding-top: 14px; }
 
 @media (max-width: bp.$tablet) {

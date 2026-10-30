@@ -30,7 +30,8 @@ const ACCENT_VARS = Object.keys(accentTokens(DEFAULT_ACCENT, 'light'));
 
 /**
  * Light / dark look and the accent colour. Each person's choice is saved in their account, so it
- * follows them to every device; this browser also remembers the last one for the sign-in page.
+ * follows them to every device; this browser also remembers it so the app opens in it straight away.
+ * The sign-in page always uses the default look.
  * Sets <html data-theme="…"> plus the accent CSS variables.
  */
 @Injectable({ providedIn: 'root' })
@@ -49,7 +50,7 @@ export class ThemeService {
   /** What this person calls the AI (Profile → Preferences). */
   readonly aiName = signal(DEFAULT_AI_NAME);
 
-  private appliedFor: string | null = null; // whose saved look is showing
+  private appliedFor: string | null | undefined = undefined; // whose saved look is showing (null = signed out, undefined = none yet)
   private pending: Partial<Prefs> = {};
   private saveTimer?: ReturnType<typeof setTimeout>;
 
@@ -60,11 +61,18 @@ export class ThemeService {
     // Someone signed in: switch to their own saved look (once per sign-in).
     effect(() => {
       const account = this.auth.account();
+      if (account === undefined) return; // not checked yet – keep the remembered look for the first paint
       untracked(() => {
         const who = account ? account.email || account.phone : null;
         if (who === this.appliedFor) return;
         this.appliedFor = who;
-        if (!account) { this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); return; } // signed out: the sign-in page keeps the last look on this device
+        if (!account) {
+          // Signed out: the sign-in page always shows MonEXP's own look (light, blue) – never the last person's colours.
+          this.mode.set('light');
+          this.accent.set(DEFAULT_ACCENT);
+          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME);
+          return;
+        }
         // Their own choice, or the default look if they haven't picked one – never the previous person's.
         this.mode.set(account.prefs?.theme ?? 'light');
         this.accent.set(account.prefs?.accent ?? DEFAULT_ACCENT);
@@ -96,8 +104,11 @@ export class ThemeService {
     } else {
       for (const [name, value] of Object.entries(accentTokens(accent, mode))) root.style.setProperty(name, value);
     }
-    this.write(STORAGE_KEY, mode);
-    this.write(ACCENT_KEY, accent);
+    // Remembered for a quick first paint when the signed-in app opens again (not for the sign-in page's default look).
+    if (untracked(() => this.auth.account()) !== null) {
+      this.write(STORAGE_KEY, mode);
+      this.write(ACCENT_KEY, accent);
+    }
   }
 
   /**

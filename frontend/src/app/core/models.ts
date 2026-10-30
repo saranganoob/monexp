@@ -88,7 +88,7 @@ export interface YearView {
 /** Look & feel saved in the account (null = not chosen yet). */
 export type HomeLang = 'ta' | 'te' | 'hi';
 export type SidebarStyle = 'classic' | 'pin';
-export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; sidebar?: SidebarStyle | null; sidebarPinned?: boolean | null; aiName?: string | null; }
+export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; sidebar?: SidebarStyle | null; sidebarPinned?: boolean | null; aiName?: string | null; calculator?: boolean | null; }
 export interface Account { email: string; phone: string; isAdmin?: boolean; aiAllowed?: boolean; prefs?: Prefs; }
 /** A login as the Admin page shows it – never any money data. */
 export interface AdminUser { id: string; email: string; phone: string; isAdmin: boolean; aiAllowed: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }

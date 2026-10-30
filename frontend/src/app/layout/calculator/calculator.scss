@@ -1,0 +1,47 @@
+@use 'styles/breakpoints' as bp;
+
+// Floating glass card; bottom right until it's dragged somewhere.
+.calc { position: fixed; right: 24px; bottom: 96px; z-index: 25; width: 280px;
+  background: var(--surface-strong); -webkit-backdrop-filter: var(--blur-lg); backdrop-filter: var(--blur-lg);
+  border: 1px solid var(--stroke); border-radius: var(--radius-lg); box-shadow: var(--lift-lg), var(--spec);
+  overflow: hidden; display: flex; flex-direction: column;
+  transition: transform var(--spring-dur) var(--spring), opacity .2s ease, box-shadow .2s ease; }
+.calc.is-placed { right: auto; bottom: auto; }
+.calc.is-dragging { transition: none; box-shadow: var(--lift-lg), 0 18px 40px rgba(0, 0, 0, .18); user-select: none; }
+@starting-style { .calc { opacity: 0; transform: translateY(10px) scale(.94); } }
+:host(.is-leaving) .calc { opacity: 0; transform: translateY(8px) scale(.95); transition-duration: .16s; }
+
+.bar { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; border-bottom: 1px solid var(--hair);
+  cursor: grab; touch-action: none; color: var(--ink-2); font-size: 13px; }
+.is-dragging .bar { cursor: grabbing; }
+.bar .btn--icon { width: 32px; height: 32px; min-height: 32px; }
+
+.screen { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+.history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 92px; overflow-x: hidden; overflow-y: auto; }
+.hist { all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 100%; text-align: right; font-size: 12px; color: var(--muted); padding: 1px 2px; border-radius: 6px;
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+  &:hover, &:focus-visible { background: var(--sub); color: var(--ink); } }
+.link-btn { all: unset; cursor: pointer; align-self: flex-end; color: var(--muted); font-size: 11px; &:hover { color: var(--accent-ink); text-decoration: underline; } }
+.sum { width: 100%; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 24px; font-weight: 700; text-align: right; padding: 2px 0; outline: none;
+  font-variant-numeric: tabular-nums;
+  &::placeholder { color: var(--muted); opacity: .6; font-weight: 600; }
+  &.is-bad { color: var(--bad-fg); } }
+.answer { min-height: 22px; text-align: right; font-size: 15px; font-weight: 700; color: var(--ink); }
+.bad { color: var(--bad-fg); }
+.copy { align-self: flex-end; gap: 6px; transition: background .2s ease, color .2s ease, border-color .2s ease;
+  &.is-done { background: var(--ok-bg); color: var(--ok-fg); border-color: transparent; } }
+
+.keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 12px 12px; }
+.key { font: inherit; font-size: 17px; font-weight: 700; height: 42px; border-radius: 12px; cursor: pointer; border: 1px solid var(--hair);
+  background: var(--sel); color: var(--ink); touch-action: manipulation; transition: transform var(--press) ease-out, background .15s ease;
+  &:hover { background: var(--sub); }
+  &:active { transform: scale(.95); } }
+.key--soft { color: var(--ink-2); font-size: 15px; }
+.key--op { background: var(--info-bg); color: var(--info-fg); border-color: var(--info-border); }
+.key--eq { background: var(--accent-grad); color: var(--on-accent); border-color: transparent; &:hover { background: var(--accent-grad); filter: brightness(1.05); } }
+.key--wide { grid-column: span 4; height: 34px; }
+
+// Web only.
+@media (max-width: bp.$tablet) { :host { display: none; } }
+@media (prefers-reduced-motion: reduce) { .calc, :host(.is-leaving) .calc { transition: opacity .15s ease; transform: none; } }
+@media (prefers-reduced-transparency: reduce) { .calc { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }

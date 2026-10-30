@@ -58,6 +58,7 @@ export class AppStore {
   /** The "Add EMI / installment" dialog; cardId pre-selects "Paid from" (null = bank / cash). */
   readonly emiDialog = signal<{ cardId: string | null } | null>(null);
   readonly askAiOpen = signal(false);
+  readonly calcOpen = signal(false);
 
   /** The month's data, or null if it isn't set up yet / still loading. */
   readonly month = computed(() => { const v = this.view(); return v && v.exists ? (v as MonthData) : null; });
@@ -102,6 +103,7 @@ export class AppStore {
     this.dialog.set(null);
     this.emiDialog.set(null);
     this.askAiOpen.set(false);
+    this.calcOpen.set(false);
   }
 
   private async load(ym: string) {

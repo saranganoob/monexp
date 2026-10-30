@@ -10,7 +10,7 @@ How to get numbers:
 What the figures mean:
 - Amounts are whole Indian rupees. Write them like ₹1,00,000 (Indian digit grouping).
 - "My share of bills" = all bills to pay minus friends' EMIs on the person's credit cards (friends repay those).
-- "Balance left" = budget − my share of bills − sudden spends that weren't paid by card.
+- "Balance left" = budget − my share of bills. Sudden spends are a note only: they are listed for reference but NOT taken off the balance or counted as spent against the budget.
 - "Balance incl. people" = balance left + money people owe the person. (Money the person owes others is already a bill in "to pay", under "Money I owe".)
 - A credit card bill = my spends + my EMIs + friends' EMIs on that card. A sudden spend paid by card is already inside that card's bill.
 - Daily spends (tea, meals, snacks, other small everyday spends logged day by day) are tracked on their own: they are NOT part of the budget, bills, sudden spends or balance. Use get_daily_spends for them; "yesterday" and "today" are counted from today's date in the context.

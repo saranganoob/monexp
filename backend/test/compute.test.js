@@ -37,8 +37,9 @@ test('January: friends’ card EMIs are in the card bill but not in my share', (
   assert.equal(c.cards.find((x) => x.id === 'c2').total, 11062);
   assert.equal(c.totals.toPay, 116097); // sheet: PAID SPENDS
   assert.equal(c.totals.friendEmi, 12317); // sheet: TOTAL RECEIVABLES (EMIs)
-  // Sudden spends not paid by card come out of the balance.
-  assert.equal(c.totals.balance, 66000 - 103780 - 50085);
+  // Sudden spends are a note only: they never come out of the balance.
+  assert.equal(c.totals.sudden, 50085);
+  assert.equal(c.totals.balance, 66000 - 103780);
   // Friend EMIs show up as money owed to me, already received.
   const auto = c.receivables.filter((r) => r.auto);
   assert.deepEqual(auto.map((r) => [r.amount, r.status, r.inst.n]), [[1255, 'done', 4], [11062, 'done', 6]]);
@@ -86,7 +87,7 @@ test('Year view adds up tracked months only', () => {
   assert.equal(y.trackedCount, 10);
   assert.equal(y.months[10].exists, false);
   assert.equal(y.budget, 66000 * 9 + 65000);
-  const spent = computed.reduce((s, c) => s + c.totals.ownPay + c.totals.sudden, 0);
+  const spent = computed.reduce((s, c) => s + c.totals.ownPay, 0);
   assert.equal(y.spent, spent);
   assert.equal(y.leftOver, y.budget - spent);
   assert.equal(y.categories.at(-1).key, 'sudden');

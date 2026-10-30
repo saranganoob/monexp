@@ -34,6 +34,8 @@ const PATHS = {
   cup: 'M4 9h13v4a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6zM17 10h1a3 3 0 0 1 0 6h-1.5M8 3v3M12 3v3',
   pin: 'M9 3h6l-1 6 3 3v2H7v-2l3-3zM12 14v7',
   'sidebar-left': 'M3 4h18v16H3zM9 4v16',
+  calculator: 'M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM8 6h8v4H8zM8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
 } as const;
 
 export type IconName = keyof typeof PATHS;

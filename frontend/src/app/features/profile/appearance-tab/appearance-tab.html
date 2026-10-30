@@ -33,6 +33,20 @@
 
 <section class="card panel">
   <div>
+    <h2 id="calcLbl" class="card__title">Calculator</h2>
+    <p class="card__lead">A calculator button at the top of every page, on a computer. Type a sum like 23+22, then copy the answer into any amount box. Saved to your account.</p>
+  </div>
+  <div role="radiogroup" aria-labelledby="calcLbl" class="seg-group">
+    <button type="button" role="radio" class="seg option" [class.is-on]="theme.calculator()" [attr.aria-checked]="theme.calculator()"
+      (click)="theme.setCalculator(true)"><app-icon name="calculator" />Show</button>
+    <button type="button" role="radio" class="seg option" [class.is-on]="!theme.calculator()" [attr.aria-checked]="!theme.calculator()"
+      (click)="theme.setCalculator(false)"><app-icon name="eye-off" />Hide</button>
+  </div>
+  <p class="small muted hint">Not shown on phones. Drag it anywhere by its top bar; double-click the bar to put it back in the corner.</p>
+</section>
+
+<section class="card panel">
+  <div>
     <h2 id="accentLbl" class="card__title">Accent colour</h2>
     <p class="card__lead">Used for buttons, the selected menu item, links and the budget card. Saved to your account, so it follows you to every device.</p>
   </div>

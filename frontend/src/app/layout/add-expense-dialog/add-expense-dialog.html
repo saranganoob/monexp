@@ -72,7 +72,7 @@
     </div>
 
     @if (type() === 'sudden' && form.controls.mode.value.startsWith('card:')) {
-      <div class="notice notice--info notice--sm">Paid by credit card, so this will show up in that card's bill. It's logged here but not deducted from your balance twice.</div>
+      <div class="notice notice--info notice--sm">Paid by credit card, so it's already in that card's bill. Here it's just a note.</div>
     }
     @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
 

@@ -28,5 +28,6 @@
   <div class="sr" role="status" aria-live="polite">{{ store.loading.anySlow() ? 'Saving…' : '' }}</div>
   <!-- Ask AI only for logins the admin switched AI on for – others never see it. -->
   @if (auth.account()?.aiAllowed) { <app-ask-ai /> }
+  @if (store.calcOpen() && theme.calculator()) { <app-calculator animate.leave="is-leaving" /> }
   <app-undo-toast />
 </div>

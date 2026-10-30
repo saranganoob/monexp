@@ -49,6 +49,8 @@ export class ThemeService {
   readonly sidebarPinned = signal(true);
   /** What this person calls the AI (Profile → Preferences). */
   readonly aiName = signal(DEFAULT_AI_NAME);
+  /** Calculator button in the top bar (web only). On unless turned off in Profile → Preferences. */
+  readonly calculator = signal(true);
 
   private appliedFor: string | null | undefined = undefined; // whose saved look is showing (null = signed out, undefined = none yet)
   private pending: Partial<Prefs> = {};
@@ -70,7 +72,7 @@ export class ThemeService {
           // Signed out: the sign-in page always shows MonEXP's own look (light, blue) – never the last person's colours.
           this.mode.set('light');
           this.accent.set(DEFAULT_ACCENT);
-          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME);
+          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); this.calculator.set(true);
           return;
         }
         // Their own choice, or the default look if they haven't picked one – never the previous person's.
@@ -80,6 +82,7 @@ export class ThemeService {
         this.sidebar.set(account.prefs?.sidebar ?? 'classic');
         this.sidebarPinned.set(account.prefs?.sidebarPinned ?? true);
         this.aiName.set(account.prefs?.aiName || DEFAULT_AI_NAME);
+        this.calculator.set(account.prefs?.calculator ?? true);
       });
     });
   }
@@ -138,6 +141,11 @@ export class ThemeService {
   setSidebarPinned(pinned: boolean) {
     this.sidebarPinned.set(pinned);
     this.save({ sidebarPinned: pinned });
+  }
+
+  setCalculator(on: boolean) {
+    this.calculator.set(on);
+    this.save({ calculator: on });
   }
 
   /** An empty name goes back to the default. */

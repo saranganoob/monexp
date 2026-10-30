@@ -138,9 +138,10 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
   const friendEmi = cardViews.reduce((s, c) => s + c.friendEmis, 0)
     + sum(emiBillRows.filter((b) => b.forWho === 'friend' && b.status !== 'skipped'));
   const ownPay = toPay - friendEmi;
-  // Spends paid by card are already inside that card's bill – don't count them twice.
+  // Sudden spends are a note only – listed, but never taken off the balance.
+  // (Card-paid ones are left out of the total: they're already inside that card's bill.)
   const suddenTotal = sum(sudden.filter((s) => !s.cardId));
-  const balance = month.budget - ownPay - suddenTotal;
+  const balance = month.budget - ownPay;
   const recvOther = sum(receivables.filter((r) => !r.auto && notMoved(r)));
   const payTotal = sum(payables.filter(notMoved));
 
@@ -230,7 +231,7 @@ export function computeYear(year, computedMonths) {
     const c = byYm.get(ym);
     if (!c) return { ym, exists: false };
     return {
-      ym, exists: true, budget: c.budget, spent: c.totals.ownPay + c.totals.sudden,
+      ym, exists: true, budget: c.budget, spent: c.totals.ownPay, // sudden spends are a note, not spending against the budget
       sudden: c.totals.sudden, categories: c.categories,
     };
   });
@@ -241,6 +242,6 @@ export function computeYear(year, computedMonths) {
     key: c.key, label: c.label,
     total: tracked.reduce((s, m) => s + m.categories.find((x) => x.key === c.key).total, 0),
   }));
-  categories.push({ key: 'sudden', label: 'Sudden spends', total: tracked.reduce((s, m) => s + m.sudden, 0) });
+  categories.push({ key: 'sudden', label: 'Sudden spends (note only)', total: tracked.reduce((s, m) => s + m.sudden, 0) });
   return { year, months, trackedCount: tracked.length, budget, spent, leftOver: budget - spent, categories };
 }

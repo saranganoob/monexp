@@ -1,6 +1,12 @@
 <div class="topbar">
   <div class="today">Today · {{ today }}</div>
   <div class="row-flex">
+    @if (theme.calculator()) {
+      <button type="button" class="btn btn--ghost btn--sm calc-btn" [class.is-on]="store.calcOpen()" [attr.aria-pressed]="store.calcOpen()"
+        (click)="store.calcOpen.set(!store.calcOpen())" title="Calculator">
+        <app-icon name="calculator" [size]="16" /><span>Calculator</span>
+      </button>
+    }
     @if (!inApp) {
       <a routerLink="/profile" routerLinkActive="is-on" class="profile-btn" aria-label="Open profile">
         <app-avatar [name]="who()" tone="navy" size="sm" />

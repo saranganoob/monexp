@@ -1,0 +1,43 @@
+<section #panel class="calc" role="dialog" aria-label="Calculator"
+  [class.is-placed]="pos()" [class.is-dragging]="dragging()"
+  [style.left.px]="pos()?.x" [style.top.px]="pos()?.y">
+  <header class="bar" title="Drag to move · double-click to send back to the corner"
+    (pointerdown)="dragStart($event)" (pointermove)="dragMove($event)" (pointerup)="dragEnd()" (pointercancel)="dragEnd()" (dblclick)="resetPos()">
+    <app-icon name="calculator" [size]="16" />
+    <span class="strong grow">Calculator</span>
+    <button type="button" class="btn btn--ghost btn--icon" (click)="close()" aria-label="Close calculator"><app-icon name="close" [size]="16" /></button>
+  </header>
+
+  <div class="screen">
+    @if (history().length) {
+      <ul class="history" aria-label="Recent sums">
+        @for (h of history(); track $index) {
+          <li><button type="button" class="hist" (click)="reuse(h)" title="Use this answer">{{ h.sum }} = <b>{{ label(h.result) }}</b></button></li>
+        }
+      </ul>
+      <button type="button" class="link-btn small" (click)="clearHistory()">Clear history</button>
+    }
+    <label class="sr" for="calcSum">Type a sum, e.g. 23+22</label>
+    <input #sumInput id="calcSum" class="sum num" autocomplete="off" inputmode="decimal" placeholder="e.g. 23+22"
+      [class.is-bad]="invalid()" (input)="onInput(sumInput)" (keydown)="onKey($event)">
+    <div class="answer num" aria-live="polite">
+      @if (invalid()) { <span class="bad small">Check the sum</span> }
+      @else if (preview() !== null) { <span class="muted">= {{ label(preview()!) }}</span> }
+      @else if (result() !== null) { <span>₹{{ label(result()!) }}</span> }
+    </div>
+    <button type="button" class="btn btn--sm copy" [class.is-done]="copied()" [disabled]="copyValue() === null" (click)="copy()"
+      [attr.aria-label]="copied() ? 'Copied' : 'Copy the answer'">
+      <app-icon [name]="copied() ? 'check' : 'copy'" [size]="15" [stroke]="2.2" />{{ copied() ? 'Copied' : 'Copy' }}
+    </button>
+  </div>
+
+  <div class="keys">
+    @for (row of keys; track $index) {
+      @for (k of row; track k) {
+        <button type="button" class="key" [class.key--op]="'÷×−+'.includes(k)" [class.key--eq]="k === '='" [class.key--soft]="k === 'C' || k === '(' || k === ')' || k === '%'"
+          (mousedown)="$event.preventDefault()" (click)="press(k)">{{ k }}</button>
+      }
+    }
+    <button type="button" class="key key--soft key--wide" (mousedown)="$event.preventDefault()" (click)="backspace()" aria-label="Delete last">⌫</button>
+  </div>
+</section>

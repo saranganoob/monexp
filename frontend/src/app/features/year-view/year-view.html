@@ -5,7 +5,7 @@
   } @else if (data(); as d) {
     <section class="grid-220">
       <div class="card stat"><div class="label">Budgeted in {{ d.year }}</div><div class="stat__value">{{ d.budget | inr }}</div><div class="stat__note">{{ d.trackedCount }} month{{ d.trackedCount === 1 ? '' : 's' }} tracked</div></div>
-      <div class="card stat"><div class="label">Spent in {{ d.year }}</div><div class="stat__value">{{ d.spent | inr }}</div><div class="stat__note">Bills + sudden spends</div></div>
+      <div class="card stat"><div class="label">Spent in {{ d.year }}</div><div class="stat__value">{{ d.spent | inr }}</div><div class="stat__note">Your share of bills (sudden spends not included)</div></div>
       <div class="card stat"><div class="label">Left over</div><div class="stat__value" [class.neg]="d.leftOver < 0" [class.pos]="d.leftOver >= 0">{{ d.leftOver | inr }}</div><div class="stat__note">Across tracked months</div></div>
     </section>
     <app-month-bars [data]="d" [selected]="selectedMonth()" (open)="open($event)" />

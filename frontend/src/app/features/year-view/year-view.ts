@@ -28,6 +28,8 @@ export class YearViewPage {
   /** Loading a year has taken over 300ms – show placeholders instead of the previous year. */
   protected readonly slow = signal(false);
   protected readonly showSkeleton = computed(() => this.slow() && this.data()?.year !== this.year());
+  /** Daily spends were counted as spending in some month of this year. */
+  protected readonly hasDaily = computed(() => !!this.data()?.categories.some((c) => c.key === 'daily'));
 
   constructor() {
     effect(async () => {

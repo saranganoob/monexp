@@ -302,14 +302,14 @@ test('each account only sees its own data', async () => {
 });
 
 test('look & feel is saved per account', async () => {
-  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null });
+  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
   assert.equal((await agent.patch('/api/auth/prefs').send({ theme: 'purple' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ accent: 'red' })).status, 400);
   const res = await agent.patch('/api/auth/prefs').send({ theme: 'dark', accent: '#10b981' });
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null });
+  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
   // Changing one leaves the other as it was.
-  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null });
+  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
   // Home language: Tamil / Telugu / Hindi or none.
   assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'fr' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'ta' })).body.prefs.lang, 'ta');
@@ -317,10 +317,10 @@ test('look & feel is saved per account', async () => {
   // A fresh sign-in (another device) gets them back; another account has its own.
   const other = request.agent(app);
   await other.post('/api/auth/login').send(LOGIN);
-  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null });
+  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
   const friend = request.agent(app);
   await friend.post('/api/auth/login').send({ identifier: 'friend@example.com', password: 'friend-password-1' });
-  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null });
+  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
 });
 
 test('web sidebar style and pin are saved per account', async () => {
@@ -505,7 +505,7 @@ test('EMIs and plans can be ongoing, with no end date', async () => {
   await agent.delete(`/api/plans/${plan.body.id}?at=2026-10`);
 });
 
-test('daily spends: today and earlier days, never part of budget or balance', async () => {
+test('daily spends: today and earlier days, taken off the balance unless switched off', async () => {
   const { todayInIndia, addMonths } = await import('../src/lib/ym.js');
   const today = todayInIndia();
   const ym = today.slice(0, 7);
@@ -534,8 +534,18 @@ test('daily spends: today and earlier days, never part of budget or balance', as
   assert.equal((await agent.put(`/api/daily/${today}`).send({ lunch: -5 })).status, 400);
   assert.equal((await agent.get(`/api/daily?ym=${addMonths(ym, 1)}`)).body.days.length, 0);
 
-  // The month's budget, bills and balance don't change.
-  assert.deepEqual((await agent.get(`/api/months/${ym}`)).body.totals, before);
+  // On by default: the month's daily spends come off the balance (bills don't change).
+  const on = (await agent.get(`/api/months/${ym}`)).body.totals;
+  assert.equal(on.daily, 420);
+  assert.equal(on.dailyInBudget, true);
+  assert.equal(on.balance, before.balance - 420);
+  assert.equal(on.ownPay, before.ownPay);
+  // Switched off in Profile: only for tracking again.
+  assert.equal((await agent.patch('/api/auth/prefs').send({ dailyInBudget: 'no' })).status, 400);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ dailyInBudget: false })).body.prefs.dailyInBudget, false);
+  const off = (await agent.get(`/api/months/${ym}`)).body.totals;
+  assert.deepEqual([off.daily, off.dailyInBudget, off.balance], [420, false, before.balance]);
+  await agent.patch('/api/auth/prefs').send({ dailyInBudget: true });
 
   // Clearing everything removes the day.
   assert.equal((await agent.put(`/api/daily/${today}`).send({})).body.total, 0);

@@ -51,6 +51,8 @@ export class ThemeService {
   readonly aiName = signal(DEFAULT_AI_NAME);
   /** Calculator button in the top bar (web only). On unless turned off in Profile → Preferences. */
   readonly calculator = signal(true);
+  /** Daily spends come off the month's balance. On unless turned off in Profile → Preferences. */
+  readonly dailyInBudget = signal(true);
 
   private appliedFor: string | null | undefined = undefined; // whose saved look is showing (null = signed out, undefined = none yet)
   private pending: Partial<Prefs> = {};
@@ -72,7 +74,7 @@ export class ThemeService {
           // Signed out: the sign-in page always shows MonEXP's own look (light, blue) – never the last person's colours.
           this.mode.set('light');
           this.accent.set(DEFAULT_ACCENT);
-          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); this.calculator.set(true);
+          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); this.calculator.set(true); this.dailyInBudget.set(true);
           return;
         }
         // Their own choice, or the default look if they haven't picked one – never the previous person's.
@@ -83,6 +85,7 @@ export class ThemeService {
         this.sidebarPinned.set(account.prefs?.sidebarPinned ?? true);
         this.aiName.set(account.prefs?.aiName || DEFAULT_AI_NAME);
         this.calculator.set(account.prefs?.calculator ?? true);
+        this.dailyInBudget.set(account.prefs?.dailyInBudget ?? true);
       });
     });
   }
@@ -146,6 +149,18 @@ export class ThemeService {
   setCalculator(on: boolean) {
     this.calculator.set(on);
     this.save({ calculator: on });
+  }
+
+  /** Saved straight away (the balance is worked out on the server); resolves once saved. */
+  async setDailyInBudget(on: boolean) {
+    const was = this.dailyInBudget();
+    this.dailyInBudget.set(on);
+    try {
+      await this.api.updatePrefs({ dailyInBudget: on });
+    } catch (e) {
+      this.dailyInBudget.set(was);
+      throw e;
+    }
   }
 
   /** An empty name goes back to the default. */

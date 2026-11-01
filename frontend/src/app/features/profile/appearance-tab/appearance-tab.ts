@@ -2,6 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { COLOR_NAMES, NamedColor, searchColors } from '../../../core/utils/color-names';
 import { ACCENT_PRESETS, DEFAULT_ACCENT, DEFAULT_AI_NAME, ThemeMode, ThemeService } from '../../../core/theme.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { AppStore } from '../../../core/app-store';
+import { errorMessage } from '../../../core/api.service';
 import { SidebarStyle } from '../../../core/models';
 import { Icon, IconName } from '../../../shared/ui/icon/icon';
 import { LangHint } from '../../../shared/ui/lang-hint/lang-hint';
@@ -18,6 +20,9 @@ import { HomeLang } from '../../../core/models';
 export class AppearanceTab {
   protected theme = inject(ThemeService);
   protected auth = inject(AuthService);
+  private store = inject(AppStore);
+  protected readonly dailySaving = signal(false);
+  protected readonly dailyError = signal('');
   protected readonly defaultAiName = DEFAULT_AI_NAME;
   protected readonly aiNameSaved = signal(false);
   protected readonly options: { mode: ThemeMode; label: string; icon: IconName }[] = [
@@ -49,6 +54,21 @@ export class AppearanceTab {
   protected readonly previewKeys = Object.keys(HINT_LABELS) as HintKey[];
   protected readonly hintLabels = HINT_LABELS;
   protected pickLang(code: HomeLang | null) { this.theme.setLang(code); }
+
+  /** Daily spends in / out of the balance: saved, then every total reloads. */
+  protected async setDaily(on: boolean) {
+    if (on === this.theme.dailyInBudget() || this.dailySaving()) return;
+    this.dailySaving.set(true);
+    this.dailyError.set('');
+    try {
+      await this.theme.setDailyInBudget(on);
+      this.store.reload();
+    } catch (e) {
+      this.dailyError.set(errorMessage(e));
+    } finally {
+      this.dailySaving.set(false);
+    }
+  }
   protected saveAiName(name: string) {
     this.theme.setAiName(name);
     this.aiNameSaved.set(true);

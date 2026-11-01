@@ -5,7 +5,7 @@
       <div class="card stat">
         <div class="label">Balance left</div>
         <div class="stat__value stat__value--xl" [class.neg]="m.totals.balance < 0" [class.pos]="m.totals.balance >= 0">{{ m.totals.balance | inr }}</div>
-        <div class="stat__note">Budget − your share of bills (friends’ card EMIs are left out, since they pay those). Sudden spends are a note only</div>
+        <div class="stat__note">Budget − your share of bills{{ m.totals.dailyInBudget ? ' − daily spends' : '' }} (friends’ card EMIs are left out, since they pay those). Sudden spends are a note only</div>
       </div>
       <div class="card stat">
         <div class="label">Balance incl. people</div>

@@ -19,7 +19,7 @@ const publicUser = (u) => ({
   email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
   prefs: {
     theme: u.prefs?.theme ?? null, accent: u.prefs?.accent ?? null, lang: u.prefs?.lang ?? null,
-    sidebar: u.prefs?.sidebar ?? null, sidebarPinned: u.prefs?.sidebarPinned ?? null, aiName: u.prefs?.aiName ?? null, calculator: u.prefs?.calculator ?? null,
+    sidebar: u.prefs?.sidebar ?? null, sidebarPinned: u.prefs?.sidebarPinned ?? null, aiName: u.prefs?.aiName ?? null, calculator: u.prefs?.calculator ?? null, dailyInBudget: u.prefs?.dailyInBudget ?? null,
   },
 });
 
@@ -167,6 +167,10 @@ router.patch('/prefs', requireAuth, async (req, res) => {
   if (req.body?.calculator !== undefined) {
     if (typeof req.body.calculator !== 'boolean') throw badRequest('Say whether the calculator is on (true or false).');
     set['prefs.calculator'] = req.body.calculator;
+  }
+  if (req.body?.dailyInBudget !== undefined) {
+    if (typeof req.body.dailyInBudget !== 'boolean') throw badRequest('Say whether daily spends come off the budget (true or false).');
+    set['prefs.dailyInBudget'] = req.body.dailyInBudget;
   }
   const user = await User.findByIdAndUpdate(req.userId, { $set: set }, { new: true, runValidators: true }).lean();
   if (!user) throw notFound('Account not found.');

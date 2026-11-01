@@ -4,7 +4,7 @@
     <div class="card card--navy stat hero">
       <div class="label">Daily spends · {{ ym() | ym }}</div>
       <div class="stat__value stat__value--xl num">{{ monthTotal() | inr }}</div>
-      <div class="stat__note on-accent">Just for tracking – not taken from your budget or balance.</div>
+      <div class="stat__note on-accent">{{ theme.dailyInBudget() ? 'Taken off this month’s balance.' : 'Just for tracking – not taken from your budget or balance.' }}</div>
     </div>
     <div class="card stat">
       <div class="label">{{ isCurrentMonth() ? 'Today' : 'Days logged' }}</div>

@@ -1,16 +1,14 @@
 // Daily spends: tea, meals, snacks and other small everyday spends, one record per day.
-// Only for tracking – they're never part of the month's budget, bills or balance.
+// Taken off the month's balance unless the person turned that off in Profile (then only for tracking).
 // Today (India time) and any earlier day can be filled in (for days you forgot); future days don't exist yet.
 import { Router } from 'express';
-import { DailySpend, DAILY_SLOTS } from '../models/index.js';
+import { DailySpend, DAILY_SLOTS, dailyDayTotal as dayTotal } from '../models/index.js';
 import { badRequest } from '../lib/http.js';
 import { toAmount, toText, toYm } from '../lib/validate.js';
 import { todayInIndia } from '../lib/ym.js';
 
 const router = Router();
 const MAX_OTHERS = 20;
-
-const dayTotal = (d) => DAILY_SLOTS.reduce((s, k) => s + (d[k] || 0), 0) + (d.others || []).reduce((s, o) => s + (o.amount || 0), 0);
 
 const normDay = (d) => ({
   date: d.date,

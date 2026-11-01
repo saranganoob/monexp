@@ -10,7 +10,7 @@ export { CardSpend } from './CardSpend.js';
 export { User, canUseAi, DEFAULT_AI_NAME } from './User.js';
 export { Undo } from './Undo.js';
 export { AiSummary } from './AiSummary.js';
-export { DailySpend, DAILY_SLOTS } from './DailySpend.js';
+export { DailySpend, DAILY_SLOTS, dailyDayTotal } from './DailySpend.js';
 
 // Everything that belongs to one user (all but User itself).
 import { Month } from './Month.js';

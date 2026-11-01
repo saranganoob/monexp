@@ -46,6 +46,8 @@ export interface Sudden {
 export interface Totals {
   toPay: number; paid: number; unpaid: number; paidCount: number; unpaidCount: number; skippedCount: number;
   paidPct: number; friendEmi: number; ownPay: number; sudden: number; balance: number; balanceInclPeople: number;
+  /** The month's daily spends, and whether they come off the balance (Profile → Preferences). */
+  daily: number; dailyInBudget: boolean;
   recvTotal: number; recvPending: number; recvDone: number; payTotal: number; payPending: number; payDone: number;
 }
 
@@ -81,14 +83,14 @@ export interface DailyMonth { ym: string; today: string; days: DailyDay[]; month
 
 export interface YearView {
   year: number; trackedCount: number; budget: number; spent: number; leftOver: number;
-  months: ({ ym: string; exists: false } | { ym: string; exists: true; budget: number; spent: number; sudden: number })[];
+  months: ({ ym: string; exists: false } | { ym: string; exists: true; budget: number; spent: number; sudden: number; daily: number })[];
   categories: { key: string; label: string; total: number }[];
 }
 
 /** Look & feel saved in the account (null = not chosen yet). */
 export type HomeLang = 'ta' | 'te' | 'hi';
 export type SidebarStyle = 'classic' | 'pin';
-export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; sidebar?: SidebarStyle | null; sidebarPinned?: boolean | null; aiName?: string | null; calculator?: boolean | null; }
+export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; sidebar?: SidebarStyle | null; sidebarPinned?: boolean | null; aiName?: string | null; calculator?: boolean | null; dailyInBudget?: boolean | null; }
 export interface Account { email: string; phone: string; isAdmin?: boolean; aiAllowed?: boolean; prefs?: Prefs; }
 /** A login as the Admin page shows it – never any money data. */
 export interface AdminUser { id: string; email: string; phone: string; isAdmin: boolean; aiAllowed: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }

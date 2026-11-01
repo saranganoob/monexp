@@ -21,7 +21,8 @@ export function installmentAt(startYm, total, ym) {
   return { n, total: ongoing ? null : total, ongoing, endYm: ongoing ? null : indexToYm(start + total - 1), active: n >= 1 && n <= totalOf(total) };
 }
 
-export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: spendItems = [], cards, emis, plans, people }) {
+// `daily` = the month's daily spends (tea, meals…); taken off the balance when `dailyInBudget`.
+export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: spendItems = [], cards, emis, plans, people, daily = 0, dailyInBudget = false }) {
   const personName = new Map(people.map((p) => [p.id, p.name]));
   const planById = new Map(plans.map((p) => [p.id, p]));
   const overrides = new Map((month.emiOverrides || []).map((o) => [o.emiId, o]));
@@ -141,7 +142,7 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
   // Sudden spends are a note only – listed, but never taken off the balance.
   // (Card-paid ones are left out of the total: they're already inside that card's bill.)
   const suddenTotal = sum(sudden.filter((s) => !s.cardId));
-  const balance = month.budget - ownPay;
+  const balance = month.budget - ownPay - (dailyInBudget ? daily : 0);
   const recvOther = sum(receivables.filter((r) => !r.auto && notMoved(r)));
   const payTotal = sum(payables.filter(notMoved));
 
@@ -161,6 +162,8 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
       friendEmi,
       ownPay,
       sudden: suddenTotal,
+      daily,
+      dailyInBudget,
       balance,
       // What I owe is already inside "to pay" (Money I owe), so it isn't taken off a second time.
       balanceInclPeople: balance + recvOther,
@@ -231,8 +234,9 @@ export function computeYear(year, computedMonths) {
     const c = byYm.get(ym);
     if (!c) return { ym, exists: false };
     return {
-      ym, exists: true, budget: c.budget, spent: c.totals.ownPay, // sudden spends are a note, not spending against the budget
-      sudden: c.totals.sudden, categories: c.categories,
+      // Sudden spends are a note, not spending against the budget; daily spends count when they're in the budget.
+      ym, exists: true, budget: c.budget, spent: c.totals.ownPay + (c.totals.dailyInBudget ? c.totals.daily : 0),
+      sudden: c.totals.sudden, daily: c.totals.dailyInBudget ? c.totals.daily : 0, categories: c.categories,
     };
   });
   const tracked = months.filter((m) => m.exists);
@@ -242,6 +246,7 @@ export function computeYear(year, computedMonths) {
     key: c.key, label: c.label,
     total: tracked.reduce((s, m) => s + m.categories.find((x) => x.key === c.key).total, 0),
   }));
+  if (tracked.some((m) => m.daily)) categories.push({ key: 'daily', label: 'Daily spends', total: tracked.reduce((s, m) => s + m.daily, 0) });
   categories.push({ key: 'sudden', label: 'Sudden spends (note only)', total: tracked.reduce((s, m) => s + m.sudden, 0) });
   return { year, months, trackedCount: tracked.length, budget, spent, leftOver: budget - spent, categories };
 }

@@ -54,7 +54,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'get_daily_spends',
-    description: 'Daily spends between two dates: tea, breakfast, lunch, snacks, dinner and other small everyday spends the person logs day by day. Returns each logged day with its items and total, totals per item (e.g. all Morning tea + Evening tea), the grand total, days logged and the average per logged day. These are tracked separately and are NOT part of the month\'s budget, bills or balance. Use for any question about food, tea, snacks, meals or "daily spends", e.g. "what did I spend on tea yesterday".',
+    description: 'Daily spends between two dates: tea, breakfast, lunch, snacks, dinner and other small everyday spends the person logs day by day. Returns each logged day with its items and total, totals per item (e.g. all Morning tea + Evening tea), the grand total, days logged and the average per logged day. Unless the person switched it off, each month\'s daily spends come off that month\'s balance (see get_month: dailySpendsTakenOffBalance). Use for any question about food, tea, snacks, meals or "daily spends", e.g. "what did I spend on tea yesterday".',
     input_schema: {
       type: 'object',
       properties: {
@@ -107,6 +107,8 @@ export function monthView(c) {
       billsUnpaid: c.totals.unpaidCount,
       billsSkipped: c.totals.skippedCount,
       suddenSpendsNotOnCards: c.totals.sudden,
+      dailySpends: c.totals.daily,
+      dailySpendsTakenOffBalance: c.totals.dailyInBudget,
       balanceLeft: c.totals.balance,
       balanceInclPeople: c.totals.balanceInclPeople,
       peopleOweMePending: c.totals.recvPending,
@@ -151,7 +153,7 @@ function yearView(year, months) {
     const c = byYm.get(m.ym);
     const live = c.bills.filter((b) => b.status !== 'skipped');
     return {
-      month: ymLabel(m.ym), ym: m.ym, budget: c.budget, myShareOfBills: c.totals.ownPay, suddenSpends: c.totals.sudden,
+      month: ymLabel(m.ym), ym: m.ym, budget: c.budget, myShareOfBills: c.totals.ownPay, suddenSpends: c.totals.sudden, dailySpendsInBudget: m.daily,
       spent: m.spent, leftOver: c.budget - m.spent,
       cardBills: sum(c.cards, (x) => (x.billId ? x.total : 0)),
       myCardEmis: sum(c.cards, (x) => x.myEmis), friendsCardEmis: sum(c.cards, (x) => x.friendEmis),
@@ -268,7 +270,7 @@ const RUNNERS = {
       query, from: ymLabel(from), to: ymLabel(to), matches,
       totalPaid: sum(matches.filter((m) => m.status === 'paid' || m.status === 'on card bill')),
       totalUnpaid: sum(matches.filter((m) => m.status === 'unpaid')),
-      ...(dailyMatches.length ? { dailySpends: dailyMatches, dailySpendsTotal: sum(dailyMatches), dailyNote: 'Daily spends are tracked separately, not part of the budget or balance.' } : {}),
+      ...(dailyMatches.length ? { dailySpends: dailyMatches, dailySpendsTotal: sum(dailyMatches), dailyNote: 'Daily spends come off the month\'s balance unless the person switched that off.' } : {}),
     };
   },
 };

@@ -1,4 +1,5 @@
-import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend } from '../models/index.js';
+import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, DailySpend, User, dailyDayTotal } from '../models/index.js';
+import { currentOwner, isUnscoped } from '../lib/owner.js';
 import * as N from './normalize.js';
 import { computeMonth, installmentAt } from './compute.js';
 import { addPlanRow } from './planService.js';
@@ -28,17 +29,28 @@ export async function findPrevMonth(ym) {
   return Month.findOne({ ym: { $lt: ym } }).sort({ ym: -1 }).lean();
 }
 
-// Computes several months in one go (4 queries total, whatever the number of months).
+/** Whether this person's daily spends come off the month's balance (Profile → Preferences; on unless turned off). */
+async function dailyInBudget() {
+  if (isUnscoped()) return true;
+  const me = await User.findById(currentOwner()).select('prefs.dailyInBudget').lean();
+  return me?.prefs?.dailyInBudget ?? true;
+}
+
+// Computes several months in one go (a fixed number of queries, whatever the number of months).
 export async function computeMonths(yms, setup) {
   setup ??= await loadSetup();
   const filter = yms ? { ym: { $in: yms } } : {};
-  const [months, bills, entries, sudden, spends] = await Promise.all([
+  const [months, bills, entries, sudden, spends, daily, inBudget] = await Promise.all([
     Month.find(filter).sort({ ym: 1 }).lean(),
     BillItem.find(filter).sort(byOrder).lean(),
     PeopleEntry.find(filter).sort(byOrder).lean(),
     SuddenSpend.find(filter).sort(suddenOrder).lean(),
     CardSpend.find(filter).sort(suddenOrder).lean(),
+    DailySpend.find(filter).lean(),
+    dailyInBudget(),
   ]);
+  const dailyBy = new Map();
+  for (const d of daily) dailyBy.set(d.ym, (dailyBy.get(d.ym) || 0) + dailyDayTotal(d));
   const group = (rows, norm) => {
     const map = new Map();
     for (const r of rows) {
@@ -62,6 +74,8 @@ export async function computeMonths(yms, setup) {
         entries: entriesBy.get(m.ym) || [],
         sudden: suddenBy.get(m.ym) || [],
         cardSpends: spendsBy.get(m.ym) || [],
+        daily: dailyBy.get(m.ym) || 0,
+        dailyInBudget: inBudget,
       }),
     };
   });

@@ -6,6 +6,7 @@ import { FULL_MONTHS, MONTHS, fmtInput, inr, lastDay, parseNum, ymMonth0, ymYear
 import { InrPipe } from '../../shared/pipes/inr.pipe';
 import { YmPipe } from '../../shared/pipes/ym.pipe';
 import { Icon } from '../../shared/ui/icon/icon';
+import { ThemeService } from '../../core/theme.service';
 
 /** The fixed slots of a day, in the order they happen. */
 const SLOTS: { key: DailySlot; label: string; emoji: string }[] = [
@@ -39,7 +40,7 @@ const longDay = (date: string) => {
 /**
  * Daily spends: tea, meals, snacks and other small spends, one card per day. Today, or any earlier day
  * picked on the calendar (for days you forgot), can be filled in – it saves itself. Future days don't exist yet.
- * Just for tracking – never part of the month's budget or balance.
+ * They come off the month's balance unless that's turned off in Profile → Preferences.
  */
 @Component({
   selector: 'app-daily-spends',
@@ -49,7 +50,10 @@ const longDay = (date: string) => {
 })
 export class DailySpendsPage implements OnDestroy {
   protected store = inject(AppStore);
+  protected theme = inject(ThemeService);
   private api = inject(Api);
+  /** Something was saved here – the month's balance elsewhere needs a refresh when leaving. */
+  private savedAny = false;
 
   protected readonly slots = SLOTS;
   protected readonly weekdays = WEEKDAYS;
@@ -207,10 +211,10 @@ export class DailySpendsPage implements OnDestroy {
   }
 
   /** Saves straight away if there's anything waiting (e.g. before switching day). */
-  private flush() {
-    if (!this.dirty) return;
+  private flush(): Promise<void> {
+    if (!this.dirty) return Promise.resolve();
     clearTimeout(this.saveTimer);
-    this.save();
+    return this.save();
   }
 
   private async save() {
@@ -231,6 +235,7 @@ export class DailySpendsPage implements OnDestroy {
         days.sort((a, b) => a.date.localeCompare(b.date));
         return { ...m, days, monthTotal: days.reduce((s, x) => s + x.total, 0) };
       });
+      this.savedAny = true;
       if (!this.dirty) this.saveState.set('saved');
     } catch (e) {
       this.dirty = true;
@@ -239,5 +244,8 @@ export class DailySpendsPage implements OnDestroy {
     }
   }
 
-  ngOnDestroy() { this.flush(); }
+  ngOnDestroy() {
+    // Overview's balance includes daily spends: refresh it once the last change is saved.
+    void this.flush().then(() => { if (this.savedAny) this.store.reload(); });
+  }
 }

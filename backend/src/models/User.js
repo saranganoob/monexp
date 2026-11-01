@@ -10,6 +10,7 @@ const prefsSchema = new Schema({
   sidebarPinned: { type: Boolean, default: null },
   aiName: { type: String, trim: true, maxlength: 24, default: null }, // what this person calls the AI; null = the default name // 'pin' style: stays open (true) or opens on hover (false); null = pinned
   calculator: { type: Boolean, default: null }, // calculator button in the top bar (web); null = on
+  dailyInBudget: { type: Boolean, default: null }, // daily spends come off the month's balance; null = yes
 }, { _id: false });
 
 const userSchema = new Schema({

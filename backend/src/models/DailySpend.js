@@ -10,8 +10,8 @@ const otherSchema = new Schema({
   amount: amountField(),
 }, { _id: false });
 
-// One day of everyday spends (food, tea, small things). Only for tracking: it never touches the
-// month's budget or balance.
+// One day of everyday spends (food, tea, small things). Taken off the month's balance unless the
+// person turned that off in Profile (prefs.dailyInBudget = false); then it's only for tracking.
 const dailySpendSchema = new Schema({
   date: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
   ym: ymField({ required: true }),
@@ -21,5 +21,8 @@ const dailySpendSchema = new Schema({
 
 dailySpendSchema.plugin(ownerPlugin);
 dailySpendSchema.index({ owner: 1, date: 1 }, { unique: true }); // one per day, per user
+
+/** A day's total: the fixed slots plus the other expenses. */
+export const dailyDayTotal = (d) => DAILY_SLOTS.reduce((s, k) => s + (d[k] || 0), 0) + (d.others || []).reduce((s, o) => s + (o.amount || 0), 0);
 
 export const DailySpend = mongoose.model('DailySpend', dailySpendSchema);

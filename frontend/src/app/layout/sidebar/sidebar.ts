@@ -3,15 +3,17 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AppStore } from '../../core/app-store';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/theme.service';
-import { Icon, IconName } from '../../shared/ui/icon/icon';
+import { Icon } from '../../shared/ui/icon/icon';
 import { isInstalledApp } from '../../core/utils/platform';
-
-interface NavItem { path: string; label: string; icon: IconName; exact?: boolean; badge?: boolean; admin?: boolean; }
+import { ADMIN_ITEM, MenuItem, OVERVIEW_ITEM, menuItem } from '../../core/nav';
 
 /** How long the pointer can leave the hover sidebar before it closes (so it doesn't flicker). */
 const CLOSE_DELAY_MS = 120;
 
-/** Left navigation (a scrolling top bar on phones). Two web styles, saved per user: classic, or pin & hover. */
+/**
+ * Left navigation; a bottom bar on phones. Two web styles, saved per user: classic, or pin & hover.
+ * Sections and their order come from Profile → Menu (same on phone and computer).
+ */
 @Component({
   selector: 'app-sidebar',
   imports: [RouterLink, RouterLinkActive, Icon],
@@ -34,20 +36,17 @@ export class Sidebar implements OnDestroy {
   /** How much room the page leaves for the menu: a slim strip for the rail or a shrunk classic menu. */
   protected readonly narrow = computed(() => this.rail() || this.classicCollapsed());
   private closeTimer?: ReturnType<typeof setTimeout>;
-  private readonly allNav: NavItem[] = [
-    { path: '/', label: 'Overview', icon: 'overview', exact: true },
-    { path: '/pay', label: 'Need to pay', icon: 'checklist', badge: true },
-    { path: '/cards', label: 'Credit cards', icon: 'card' },
-    { path: '/installments', label: 'Installments', icon: 'calendar-check' },
-    { path: '/people', label: 'People', icon: 'people' },
-    { path: '/sudden', label: 'Sudden spends', icon: 'bolt' },
-    { path: '/daily', label: 'Daily spends', icon: 'cup' },
-    { path: '/year', label: 'Year view', icon: 'chart' },
-    { path: '/admin', label: 'Admin', icon: 'shield', admin: true },
-  ];
   private readonly inApp = isInstalledApp();
-  /** Admin-only items are hidden from everyone else, and from the installed phone app (web-only). */
-  protected readonly nav = computed(() => this.allNav.filter((n) => !n.admin || (this.auth.account()?.isAdmin && !this.inApp)));
+  /**
+   * Overview, then the person's own sections in their order (switched-off ones left out), then Admin –
+   * only for the admin, and not in the installed phone app (web-only).
+   */
+  protected readonly nav = computed<MenuItem[]>(() => {
+    const hidden = this.theme.navHidden();
+    const own = this.theme.navOrder().filter((k) => !hidden.includes(k)).map(menuItem);
+    const admin = this.auth.account()?.isAdmin && !this.inApp ? [ADMIN_ITEM] : [];
+    return [OVERVIEW_ITEM, ...own, ...admin];
+  });
 
   protected open() {
     clearTimeout(this.closeTimer);

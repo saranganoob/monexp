@@ -1,8 +1,7 @@
 @use 'styles/breakpoints' as bp;
 
-// Account + Change password side by side on wide screens, stacked on narrow ones.
-.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 24px; align-items: stretch;
-  > * { display: block; } } // both boxes the same height
+// The tabs are links (each tab is its own page).
+.profile-tabs .seg { text-decoration: none; display: inline-flex; align-items: center; }
 
 // Phones: the tabs stay on one line and scroll sideways instead of wrapping.
 @media (max-width: bp.$phone) {
@@ -10,3 +9,6 @@
     &::-webkit-scrollbar { display: none; }
     .seg { flex: none; } }
 }
+
+// The Menu tab is for computers only.
+@media (max-width: bp.$tablet) { .web-only { display: none; } }

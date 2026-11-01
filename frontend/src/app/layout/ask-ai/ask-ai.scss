@@ -74,7 +74,7 @@
 @media (prefers-reduced-transparency: reduce) { .panel { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
 @media (max-width: bp.$tablet) {
-  .fab { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .fab { right: 16px; bottom: calc(92px + env(safe-area-inset-bottom)); } // above the bottom menu bar
   .panel { inset: 0; width: 100%; max-width: 100%; border-radius: 0; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
 }
 @media (max-width: bp.$phone) { .fab__label { display: none; } .fab { width: 56px; padding: 0; } }

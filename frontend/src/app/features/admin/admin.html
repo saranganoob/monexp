@@ -22,12 +22,13 @@
       @for (u of users(); track u.id) {
         <div class="row" role="row">
           <div class="who" role="cell">
-            <app-avatar [name]="u.email || u.phone" [tone]="u.isAdmin ? 'navy' : 'blue'" />
+            <app-avatar [name]="u.name || u.email || u.phone" [tone]="u.isAdmin ? 'navy' : 'blue'" />
             <div class="grow">
               <div class="row-flex">
-                <span class="strong login" [title]="u.email || u.phone">{{ u.email || u.phone }}</span>
+                <span class="strong login" [title]="u.email || u.phone">{{ u.name || u.email || u.phone }}</span>
                 @if (u.isAdmin) { <span class="tag">Admin</span> }
               </div>
+              @if (u.name) { <div class="small muted">{{ u.email || '+91 ' + u.phone }}</div> }
               @if (u.email && u.phone) { <div class="small muted">+91 {{ u.phone }}</div> }
             </div>
           </div>

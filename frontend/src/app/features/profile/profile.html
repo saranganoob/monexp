@@ -1,13 +1,9 @@
 <div class="page">
-  <div class="seg-group profile-tabs" role="tablist" aria-label="Profile sections">
-    @for (t of tabs(); track t.key) {
-      <button role="tab" class="seg" [class.is-on]="current() === t.key" [attr.aria-selected]="current() === t.key" (click)="picked.set(t.key)">{{ t.label }}</button>
+  <nav class="seg-group profile-tabs" aria-label="Profile sections">
+    @for (t of tabs(); track t.path) {
+      <a class="seg" [routerLink]="t.path" routerLinkActive="is-on" #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null"
+        [class.web-only]="t.webOnly">{{ t.label }}</a>
     }
-  </div>
-  @switch (current()) {
-    @case ('account') { <div class="two-col"><app-account-tab /><app-password-card /></div> }
-    @case ('appearance') { <app-appearance-tab /> }
-    @case ('cards') { <app-cards-tab /> }
-    @case ('persons') { <app-people-tab /> }
-  }
+  </nav>
+  <router-outlet />
 </div>

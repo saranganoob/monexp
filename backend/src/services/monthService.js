@@ -29,25 +29,28 @@ export async function findPrevMonth(ym) {
   return Month.findOne({ ym: { $lt: ym } }).sort({ ym: -1 }).lean();
 }
 
-/** Whether this person's daily spends come off the month's balance (Profile → Preferences; on unless turned off). */
-async function dailyInBudget() {
-  if (isUnscoped()) return true;
-  const me = await User.findById(currentOwner()).select('prefs.dailyInBudget').lean();
-  return me?.prefs?.dailyInBudget ?? true;
+/**
+ * What comes off this person's monthly balance (Profile → Preferences):
+ * daily spends unless turned off, sudden spends only when turned on.
+ */
+async function balanceRules() {
+  if (isUnscoped()) return { dailyInBudget: true, suddenInBudget: false };
+  const me = await User.findById(currentOwner()).select('prefs.dailyInBudget prefs.suddenInBudget').lean();
+  return { dailyInBudget: me?.prefs?.dailyInBudget ?? true, suddenInBudget: me?.prefs?.suddenInBudget ?? false };
 }
 
 // Computes several months in one go (a fixed number of queries, whatever the number of months).
 export async function computeMonths(yms, setup) {
   setup ??= await loadSetup();
   const filter = yms ? { ym: { $in: yms } } : {};
-  const [months, bills, entries, sudden, spends, daily, inBudget] = await Promise.all([
+  const [months, bills, entries, sudden, spends, daily, rules] = await Promise.all([
     Month.find(filter).sort({ ym: 1 }).lean(),
     BillItem.find(filter).sort(byOrder).lean(),
     PeopleEntry.find(filter).sort(byOrder).lean(),
     SuddenSpend.find(filter).sort(suddenOrder).lean(),
     CardSpend.find(filter).sort(suddenOrder).lean(),
     DailySpend.find(filter).lean(),
-    dailyInBudget(),
+    balanceRules(),
   ]);
   const dailyBy = new Map();
   for (const d of daily) dailyBy.set(d.ym, (dailyBy.get(d.ym) || 0) + dailyDayTotal(d));
@@ -75,7 +78,7 @@ export async function computeMonths(yms, setup) {
         sudden: suddenBy.get(m.ym) || [],
         cardSpends: spendsBy.get(m.ym) || [],
         daily: dailyBy.get(m.ym) || 0,
-        dailyInBudget: inBudget,
+        ...rules,
       }),
     };
   });

@@ -1,32 +1,24 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AppStore } from '../../core/app-store';
-import { AccountTab } from './account-tab/account-tab';
-import { AppearanceTab } from './appearance-tab/appearance-tab';
-import { CardsTab } from './cards-tab/cards-tab';
-import { PasswordCard } from './password-card/password-card';
-import { PeopleTab } from './people-tab/people-tab';
 
-type Tab = 'account' | 'appearance' | 'cards' | 'persons';
-
+/**
+ * Profile: tabs along the top, each its own page under /profile (account, preferences, cards, people, menu),
+ * shown in the outlet below – so every tab has a link of its own and the browser's back button works.
+ */
 @Component({
   selector: 'app-profile',
-  imports: [AccountTab, AppearanceTab, CardsTab, PasswordCard, PeopleTab],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })
 export class ProfilePage {
   private store = inject(AppStore);
-  /** ?tab=appearance, ?tab=cards or ?tab=persons opens that tab. */
-  readonly tab = input<string>();
-  protected readonly picked = signal<Tab | null>(null);
-  protected readonly current = computed<Tab>(() => {
-    const t = this.picked() ?? this.tab();
-    return t === 'appearance' || t === 'cards' || t === 'persons' ? t : 'account';
-  });
   protected readonly tabs = computed(() => [
-    { key: 'account' as Tab, label: 'Account' },
-    { key: 'appearance' as Tab, label: 'Preferences' },
-    { key: 'cards' as Tab, label: `Credit cards · ${this.store.cards().length}` },
-    { key: 'persons' as Tab, label: `People · ${this.store.people().length}` },
+    { path: 'account', label: 'Account' },
+    { path: 'preferences', label: 'Preferences' },
+    { path: 'cards', label: `Credit cards · ${this.store.cards().length}` },
+    { path: 'people', label: `People · ${this.store.people().length}` },
+    { path: 'menu', label: 'Menu', webOnly: true }, // computer only (hidden on phones)
   ]);
 }

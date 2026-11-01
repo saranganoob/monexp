@@ -1,8 +1,9 @@
 <form class="card panel" [formGroup]="form" (ngSubmit)="save()">
   <div>
     <h2 class="card__title">Account details</h2>
-    <p class="card__lead">You can sign in with either of these.</p>
+    <p class="card__lead">Your name shows at the top right. You can sign in with either the email or the phone number.</p>
   </div>
+  <label><span class="field-label">Your name</span><input class="field" formControlName="name" maxlength="40" placeholder="e.g. Sarangan E" autocomplete="name"></label>
   <label><span class="field-label">Email</span><input type="email" class="field" formControlName="email" placeholder="you@example.com" autocomplete="email"></label>
   <label><span class="field-label">Phone number</span>
     <span class="prefix-input"><span class="prefix">+91</span><input type="tel" class="field num" inputmode="numeric" formControlName="phone" placeholder="10-digit mobile number" autocomplete="tel-national"></span>

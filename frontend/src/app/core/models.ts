@@ -47,7 +47,7 @@ export interface Totals {
   toPay: number; paid: number; unpaid: number; paidCount: number; unpaidCount: number; skippedCount: number;
   paidPct: number; friendEmi: number; ownPay: number; sudden: number; balance: number; balanceInclPeople: number;
   /** The month's daily spends, and whether they come off the balance (Profile → Preferences). */
-  daily: number; dailyInBudget: boolean;
+  daily: number; dailyInBudget: boolean; suddenInBudget: boolean;
   recvTotal: number; recvPending: number; recvDone: number; payTotal: number; payPending: number; payDone: number;
 }
 
@@ -83,6 +83,8 @@ export interface DailyMonth { ym: string; today: string; days: DailyDay[]; month
 
 export interface YearView {
   year: number; trackedCount: number; budget: number; spent: number; leftOver: number;
+  /** Sudden spends counted as spending (taken off the balance) in some month, not just a note. */
+  suddenCounted: boolean;
   months: ({ ym: string; exists: false } | { ym: string; exists: true; budget: number; spent: number; sudden: number; daily: number })[];
   categories: { key: string; label: string; total: number }[];
 }
@@ -90,8 +92,11 @@ export interface YearView {
 /** Look & feel saved in the account (null = not chosen yet). */
 export type HomeLang = 'ta' | 'te' | 'hi';
 export type SidebarStyle = 'classic' | 'pin';
-export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; sidebar?: SidebarStyle | null; sidebarPinned?: boolean | null; aiName?: string | null; calculator?: boolean | null; dailyInBudget?: boolean | null; }
-export interface Account { email: string; phone: string; isAdmin?: boolean; aiAllowed?: boolean; prefs?: Prefs; }
+export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; sidebar?: SidebarStyle | null; sidebarPinned?: boolean | null; aiName?: string | null; calculator?: boolean | null; dailyInBudget?: boolean | null; suddenInBudget?: boolean | null;
+  /** Menu order (null = default) and the sections switched off (Profile → Menu). */
+  navOrder?: string[] | null; navHidden?: string[] | null; }
+/** `name` = what they typed in Profile → Account ('' = not set; the email is used instead). */
+export interface Account { name?: string; email: string; phone: string; isAdmin?: boolean; aiAllowed?: boolean; prefs?: Prefs; }
 /** A login as the Admin page shows it – never any money data. */
-export interface AdminUser { id: string; email: string; phone: string; isAdmin: boolean; aiAllowed: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }
+export interface AdminUser { id: string; name?: string; email: string; phone: string; isAdmin: boolean; aiAllowed: boolean; createdAt: string; lastSignInAt: string | null; online: boolean; }
 export interface ChangeResult { message: string; undoToken: string; id?: string; }

@@ -12,7 +12,7 @@
     <button type="submit" class="btn btn--primary" appBusy="add-sudden">{{ store.loading.isPending('add-sudden') ? 'Adding…' : 'Add spend' }}</button>
   </div>
   @if (byCard()) {
-    <div class="notice notice--info notice--sm">Paid by credit card, so it's already in that card's bill. Here it's just a note.</div>
+    <div class="notice notice--info notice--sm">Paid by credit card, so it's already in that card's bill – it isn't taken off your balance again.</div>
   }
   @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
 </form>

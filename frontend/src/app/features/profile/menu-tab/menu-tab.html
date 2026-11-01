@@ -1,0 +1,65 @@
+<div class="menu-tab">
+  <section class="card panel">
+    <div class="head">
+      <div>
+        <h2 class="card__title">Your menu</h2>
+        <p class="card__lead">Drag to reorder, and switch off what you don’t use. Saved to your account – your phone’s bottom bar follows the same order. Switching a section off only hides it; nothing is deleted.</p>
+      </div>
+      <span class="saved small" role="status">@if (saved()) { <app-icon name="check" [size]="14" [stroke]="2.6" /> Saved }</span>
+    </div>
+
+    <ol class="list" aria-label="Menu sections">
+      <li class="row row--fixed">
+        <span class="handle handle--lock" aria-hidden="true"><app-icon name="lock" [size]="15" /></span>
+        <span class="ico"><app-icon [name]="overview.icon" [size]="18" /></span>
+        <span class="name">{{ overview.label }}</span>
+        <span class="small muted">Always first</span>
+      </li>
+      @for (r of rows(); track r.key; let i = $index, first = $first, last = $last) {
+        <li class="row" [class.is-off]="!r.on" [class.is-dragging]="dragging() === r.key"
+          draggable="true" (dragstart)="dragStart($event, r.key)" (dragover)="dragOver($event, r.key)" (drop)="$event.preventDefault()" (dragend)="dragEnd()">
+          <span class="handle" title="Drag to move" (mousedown)="arm(r.key)" (mouseup)="disarm()" aria-hidden="true">⋮⋮</span>
+          <span class="ico"><app-icon [name]="r.icon" [size]="18" /></span>
+          <span class="name">{{ r.label }}</span>
+          <span class="moves">
+            <button type="button" class="btn btn--ghost btn--icon move" [disabled]="first" (click)="move(r.key, -1)" [attr.aria-label]="'Move ' + r.label + ' up'">
+              <app-icon name="chevron-down" [size]="16" class="up" />
+            </button>
+            <button type="button" class="btn btn--ghost btn--icon move" [disabled]="last" (click)="move(r.key, 1)" [attr.aria-label]="'Move ' + r.label + ' down'">
+              <app-icon name="chevron-down" [size]="16" />
+            </button>
+          </span>
+          <button type="button" role="switch" class="switch" [class.is-on]="r.on" [attr.aria-checked]="r.on" [attr.aria-label]="'Show ' + r.label" (click)="toggle(r.key)">
+            <span class="switch__knob"></span>
+          </button>
+        </li>
+      }
+    </ol>
+    <div class="sr" aria-live="polite">{{ said() }}</div>
+
+    <div class="foot">
+      <button type="button" class="btn btn--ghost btn--sm" [disabled]="isDefault()" (click)="reset()"><app-icon name="refresh" [size]="15" />Reset to default</button>
+      <span class="small muted">Only on a computer – on the phone the menu sits at the bottom.</span>
+    </div>
+  </section>
+
+  <aside class="card preview" aria-label="Preview of your menu">
+    <div class="label">Preview</div>
+    <div class="mini">
+      @for (p of preview(); track p.key) {
+        <div class="mini__item" [class.is-first]="$first"><app-icon [name]="p.icon" [size]="16" />{{ p.label }}</div>
+      }
+    </div>
+    <div class="label">Phone bar</div>
+    <div class="phone-bar">
+      @for (p of preview(); track p.key) {
+        <div class="phone-bar__item" [class.is-first]="$first"><app-icon [name]="p.icon" [size]="16" /><span>{{ p.short }}</span></div>
+      }
+    </div>
+  </aside>
+</div>
+
+<!-- Phones: the menu is edited on a computer. -->
+<div class="card panel phone-note">
+  <p class="muted">Open MonEXP on a computer to change your menu. Your phone’s bottom bar follows the order you set there.</p>
+</div>

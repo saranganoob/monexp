@@ -3,8 +3,11 @@ import { Api } from './api.service';
 import { AuthService } from './auth/auth.service';
 import { HomeLang, Prefs, SidebarStyle } from './models';
 import { accentTokens } from './utils/color';
+import { DEFAULT_MENU_ORDER, MenuKey, menuOrder } from './nav';
 
 export type ThemeMode = 'light' | 'dark';
+/** What can be taken off the monthly balance (Profile → Preferences). */
+export type BudgetRule = 'dailyInBudget' | 'suddenInBudget';
 
 const STORAGE_KEY = 'monexp-theme';
 const ACCENT_KEY = 'monexp-accent';
@@ -53,6 +56,11 @@ export class ThemeService {
   readonly calculator = signal(true);
   /** Daily spends come off the month's balance. On unless turned off in Profile → Preferences. */
   readonly dailyInBudget = signal(true);
+  /** Sudden spends come off the month's balance. Off (a note only) unless turned on in Profile → Preferences. */
+  readonly suddenInBudget = signal(false);
+  /** The menu (Profile → Menu): section order and the ones switched off. Same on phone and computer. */
+  readonly navOrder = signal<MenuKey[]>(DEFAULT_MENU_ORDER);
+  readonly navHidden = signal<MenuKey[]>([]);
 
   private appliedFor: string | null | undefined = undefined; // whose saved look is showing (null = signed out, undefined = none yet)
   private pending: Partial<Prefs> = {};
@@ -74,7 +82,8 @@ export class ThemeService {
           // Signed out: the sign-in page always shows MonEXP's own look (light, blue) – never the last person's colours.
           this.mode.set('light');
           this.accent.set(DEFAULT_ACCENT);
-          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); this.calculator.set(true); this.dailyInBudget.set(true);
+          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); this.calculator.set(true); this.dailyInBudget.set(true); this.suddenInBudget.set(false);
+          this.navOrder.set(DEFAULT_MENU_ORDER); this.navHidden.set([]);
           return;
         }
         // Their own choice, or the default look if they haven't picked one – never the previous person's.
@@ -86,6 +95,9 @@ export class ThemeService {
         this.aiName.set(account.prefs?.aiName || DEFAULT_AI_NAME);
         this.calculator.set(account.prefs?.calculator ?? true);
         this.dailyInBudget.set(account.prefs?.dailyInBudget ?? true);
+        this.suddenInBudget.set(account.prefs?.suddenInBudget ?? false);
+        this.navOrder.set(menuOrder(account.prefs?.navOrder));
+        this.navHidden.set(menuOrder(account.prefs?.navHidden).filter((k) => account.prefs?.navHidden?.includes(k)));
       });
     });
   }
@@ -151,16 +163,29 @@ export class ThemeService {
     this.save({ calculator: on });
   }
 
-  /** Saved straight away (the balance is worked out on the server); resolves once saved. */
-  async setDailyInBudget(on: boolean) {
-    const was = this.dailyInBudget();
-    this.dailyInBudget.set(on);
+  /**
+   * Whether daily / sudden spends come off the monthly balance. Saved straight away (the balance is
+   * worked out on the server); resolves once saved.
+   */
+  async setInBudget(key: BudgetRule, on: boolean) {
+    const rule = key === 'dailyInBudget' ? this.dailyInBudget : this.suddenInBudget;
+    const was = rule();
+    rule.set(on);
     try {
-      await this.api.updatePrefs({ dailyInBudget: on });
+      await this.api.updatePrefs({ [key]: on });
     } catch (e) {
-      this.dailyInBudget.set(was);
+      rule.set(was);
       throw e;
     }
+  }
+
+  /** New menu order / hidden sections: shown at once, saved a moment later. */
+  setMenu(order: MenuKey[], hidden: MenuKey[]) {
+    this.navOrder.set(order);
+    this.navHidden.set(hidden);
+    // Keep the signed-in account in step too – the page guard reads it.
+    this.auth.account.update((a) => (a ? { ...a, prefs: { ...a.prefs!, navOrder: order, navHidden: hidden } } : a));
+    this.save({ navOrder: order, navHidden: hidden });
   }
 
   /** An empty name goes back to the default. */

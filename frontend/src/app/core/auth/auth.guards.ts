@@ -19,6 +19,10 @@ export const adminGuard: CanActivateFn = async () => {
 /** Pages kept to the website (Profile, Admin) – the installed phone app goes to Overview instead. */
 export const webOnlyGuard: CanActivateFn = () => !isInstalledApp() || inject(Router).createUrlTree(['/']);
 
+/** A menu section the person switched off (Profile → Menu) – an old link or bookmark goes to Overview instead. */
+export const menuGuard = (key: string): CanActivateFn => () =>
+  !inject(AuthService).account()?.prefs?.navHidden?.includes(key) || inject(Router).createUrlTree(['/']);
+
 /** The sign-in page – skip it if you're already signed in. */
 export const loginGuard: CanActivateFn = async () => {
   const router = inject(Router);

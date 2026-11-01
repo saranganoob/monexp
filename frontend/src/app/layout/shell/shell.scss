@@ -8,6 +8,6 @@
 @media (max-width: bp.$small) { .main { padding: 24px 24px 120px; } }
 @media (max-width: bp.$tablet) {
   .shell { flex-direction: column; }
-  .main { padding: 16px 14px 120px; }
-  app-sidebar { position: sticky; top: calc(10px + env(safe-area-inset-top)); z-index: 15; }
+  // Room at the bottom for the menu bar (and the safe area under it on iPhones).
+  .main { padding: calc(16px + env(safe-area-inset-top)) 14px calc(140px + env(safe-area-inset-bottom)); }
 }

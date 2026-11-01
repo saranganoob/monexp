@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User, canUseAi } from '../models/index.js';
+import { User, canUseAi, MENU_KEYS } from '../models/index.js';
 import { config } from '../config.js';
 import { requireAuth, SESSION_COOKIE } from '../middleware/auth.js';
 import { HttpError, badRequest, notFound } from '../lib/http.js';
@@ -16,10 +16,11 @@ const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 
 const lastTenDigits = (s) => s.replace(/\D/g, '').slice(-10);
 const publicUser = (u) => ({
-  email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
+  name: u.name || '', email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
   prefs: {
     theme: u.prefs?.theme ?? null, accent: u.prefs?.accent ?? null, lang: u.prefs?.lang ?? null,
-    sidebar: u.prefs?.sidebar ?? null, sidebarPinned: u.prefs?.sidebarPinned ?? null, aiName: u.prefs?.aiName ?? null, calculator: u.prefs?.calculator ?? null, dailyInBudget: u.prefs?.dailyInBudget ?? null,
+    sidebar: u.prefs?.sidebar ?? null, sidebarPinned: u.prefs?.sidebarPinned ?? null, aiName: u.prefs?.aiName ?? null, calculator: u.prefs?.calculator ?? null, dailyInBudget: u.prefs?.dailyInBudget ?? null, suddenInBudget: u.prefs?.suddenInBudget ?? null,
+    navOrder: u.prefs?.navOrder?.length ? u.prefs.navOrder : null, navHidden: u.prefs?.navHidden ?? [],
   },
 });
 
@@ -115,6 +116,12 @@ router.get('/me', requireAuth, async (req, res) => {
 
 router.patch('/me', requireAuth, async (req, res) => {
   const update = {};
+  if (req.body?.name !== undefined) {
+    const name = String(req.body.name ?? '').replace(/\s+/g, ' ').trim();
+    if (name.length > 40) throw badRequest('Keep your name to 40 characters or fewer.');
+    if (/[<>{}\[\]\\`\p{Cc}]/u.test(name)) throw badRequest('Use letters, numbers and spaces for your name.');
+    update.name = name;
+  }
   if (req.body?.email !== undefined) {
     const email = toText(req.body.email, 'Email').toLowerCase();
     if (email && !EMAIL_RE.test(email)) throw badRequest('Enter a valid email address.');
@@ -169,8 +176,32 @@ router.patch('/prefs', requireAuth, async (req, res) => {
     set['prefs.calculator'] = req.body.calculator;
   }
   if (req.body?.dailyInBudget !== undefined) {
-    if (typeof req.body.dailyInBudget !== 'boolean') throw badRequest('Say whether daily spends come off the budget (true or false).');
+    // null = back to the default
+    if (req.body.dailyInBudget !== null && typeof req.body.dailyInBudget !== 'boolean') throw badRequest('Say whether daily spends come off the budget (true or false).');
     set['prefs.dailyInBudget'] = req.body.dailyInBudget;
+  }
+  if (req.body?.suddenInBudget !== undefined) {
+    // null = back to the default
+    if (req.body.suddenInBudget !== null && typeof req.body.suddenInBudget !== 'boolean') throw badRequest('Say whether sudden spends come off the budget (true or false).');
+    set['prefs.suddenInBudget'] = req.body.suddenInBudget;
+  }
+  // The menu: an order of sections (every section once) and the ones switched off.
+  if (req.body?.navOrder !== undefined) {
+    const order = req.body.navOrder;
+    if (order === null) set['prefs.navOrder'] = [];
+    else {
+      if (!Array.isArray(order) || order.length !== MENU_KEYS.length || new Set(order).size !== order.length || !order.every((k) => MENU_KEYS.includes(k))) {
+        throw badRequest('The menu order must list every section once.');
+      }
+      set['prefs.navOrder'] = order;
+    }
+  }
+  if (req.body?.navHidden !== undefined) {
+    const hidden = req.body.navHidden ?? [];
+    if (!Array.isArray(hidden) || new Set(hidden).size !== hidden.length || !hidden.every((k) => MENU_KEYS.includes(k))) {
+      throw badRequest('Unknown menu section.');
+    }
+    set['prefs.navHidden'] = hidden;
   }
   const user = await User.findByIdAndUpdate(req.userId, { $set: set }, { new: true, runValidators: true }).lean();
   if (!user) throw notFound('Account not found.');

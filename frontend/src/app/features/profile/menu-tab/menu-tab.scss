@@ -1,0 +1,42 @@
+@use 'styles/breakpoints' as bp;
+
+.menu-tab { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; align-items: start; }
+.panel { padding: 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.head { display: flex; align-items: flex-start; gap: 16px; justify-content: space-between; }
+.saved { display: inline-flex; align-items: center; gap: 4px; color: var(--ok-fg); font-weight: 700; min-width: 64px; justify-content: flex-end; white-space: nowrap; }
+
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 10px 6px 6px; border-radius: 14px;
+  background: var(--sel); border: 1px solid var(--hair);
+  transition: opacity .2s ease, background .2s ease, box-shadow .2s ease, transform var(--spring-dur) var(--spring); }
+.row:not(.row--fixed):hover { box-shadow: var(--lift); }
+.row.is-off { opacity: .55; .name { text-decoration: line-through; text-decoration-color: var(--muted); } }
+.row.is-dragging { opacity: .45; transform: scale(.98); background: var(--info-bg); border-style: dashed; border-color: var(--accent); }
+.row--fixed { background: var(--sub); }
+.handle { width: 28px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 8px;
+  color: var(--muted); font-size: 16px; letter-spacing: -2px; cursor: grab; user-select: none;
+  &:hover { background: var(--sub); color: var(--ink-2); }
+  &:active { cursor: grabbing; } }
+.handle--lock { cursor: default; &:hover { background: none; color: var(--muted); } }
+.ico { width: 32px; height: 32px; flex: none; border-radius: 10px; background: var(--info-bg); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; }
+.name { flex: 1; min-width: 0; font-weight: 700; font-size: 14px; }
+.moves { display: flex; gap: 2px; }
+.move { width: 32px; height: 32px; min-height: 32px; padding: 0; .up { transform: rotate(180deg); }
+  &:disabled { opacity: .3; } }
+.foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+
+// Preview: a mini sidebar and the phone's bottom bar, updating as you change things.
+.preview { padding: 20px; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 16px; }
+.mini { display: flex; flex-direction: column; gap: 2px; }
+.mini__item { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 7px 10px; border-radius: 10px;
+  &.is-first { background: var(--sel); color: var(--accent-ink); font-weight: 700; } }
+.phone-bar { display: flex; gap: 2px; overflow-x: auto; padding: 4px; border-radius: 16px; background: var(--sel); border: 1px solid var(--hair); scrollbar-width: none; }
+.phone-bar__item { flex: 0 0 46px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 0; border-radius: 10px;
+  font-size: 9.5px; font-weight: 700; color: var(--ink-2);
+  &.is-first { background: var(--info-bg); color: var(--accent-ink); } }
+
+.phone-note { display: none; }
+@media (max-width: 1000px) { .menu-tab { grid-template-columns: 1fr; } .preview { position: static; } }
+// The menu is edited on a computer.
+@media (max-width: bp.$tablet) { .menu-tab { display: none; } .phone-note { display: block; } }
+@media (prefers-reduced-motion: reduce) { .row { transition: none; } }

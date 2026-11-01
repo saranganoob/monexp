@@ -1,0 +1,64 @@
+@use 'styles/breakpoints' as bp;
+
+:host { position: relative; display: inline-block; }
+
+// ---- the chip: ring + initials, first name, caret ----
+.chip { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 3px 12px 3px 3px; border-radius: 999px; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); border: 1px solid var(--stroke); background: var(--sel);
+  touch-action: manipulation; transition: transform var(--press) ease-out, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+  &:hover { box-shadow: var(--lift); }
+  &:active { transform: scale(.97); }
+  &.is-open { border-color: var(--accent); background: var(--info-bg); }
+  &:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; } }
+.caret { color: var(--muted); transition: transform var(--spring-dur) var(--spring); }
+.chip.is-open .caret { transform: rotate(180deg); }
+
+// The ring sits around the initials; it starts at the top and sweeps clockwise.
+.ring { position: relative; width: 40px; height: 40px; flex: none; display: inline-flex; align-items: center; justify-content: center;
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; } }
+.ring__track, .ring__fill { fill: none; stroke-width: 3.2; }
+.ring__track { stroke: var(--hair-2); }
+.ring svg { opacity: 0; transition: opacity .3s ease; }
+.ring.has-bills svg { opacity: 1; }
+.ring__fill { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 100 100;
+  // A long, soft ease-out: quick at first, settling gently into place – on first show and after every Mark paid.
+  transition: stroke-dashoffset 1.2s cubic-bezier(.16, 1, .3, 1), stroke .5s ease; }
+.ring.is-done .ring__fill { stroke: var(--ok-fg); }
+.ring.is-done .avatar { animation: done-pop .6s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes done-pop { 40% { transform: scale(1.12); } }
+
+.avatar { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent-grad); color: var(--on-accent); font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+.avatar--lg { width: 44px; height: 44px; font-size: 16px; flex: none; }
+
+// ---- the menu ----
+.menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 50; width: 280px; padding: 8px;
+  background: var(--surface-strong); -webkit-backdrop-filter: var(--blur-lg); backdrop-filter: var(--blur-lg);
+  border: 1px solid var(--stroke); border-radius: var(--radius-lg); box-shadow: var(--lift-lg), var(--spec);
+  transform-origin: top right; transition: transform var(--spring-dur) var(--spring), opacity .18s ease; }
+@starting-style { .menu { opacity: 0; transform: translateY(-6px) scale(.94); } }
+.menu.is-leaving { opacity: 0; transform: translateY(-4px) scale(.96); transition-duration: .14s; }
+
+.who { display: flex; align-items: center; gap: 12px; padding: 10px; }
+.who__text { min-width: 0; }
+.who__name { font-weight: 800; font-size: 15px; overflow-wrap: anywhere; }
+.who__login { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.items { display: flex; flex-direction: column; border-top: 1px solid var(--hair); padding-top: 6px; }
+.item { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 12px; cursor: pointer;
+  font-size: 14px; font-weight: 600; color: var(--ink-2);
+  &:hover, &:focus-visible { background: var(--sel); color: var(--ink); }
+  app-icon { color: var(--muted); } }
+.item--out { color: var(--bad-fg); app-icon { color: var(--bad-fg); } &:hover, &:focus-visible { color: var(--bad-fg); } }
+
+// Phones: just the ring and initials.
+@media (max-width: bp.$tablet) {
+  .chip { padding: 3px; gap: 0; }
+  .first, .caret { display: none; }
+  .menu { width: min(280px, calc(100vw - 28px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ring__fill, .menu, .caret { transition: none; }
+  .ring.is-done .avatar { animation: none; }
+}
+@media (prefers-reduced-transparency: reduce) { .menu { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }

@@ -6,7 +6,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { firstError, optionalEmail, optionalMobile } from '../../../core/forms/validators';
 import { Busy } from '../../../shared/directives/busy';
 
-/** Email and mobile used to sign in. */
+/** Your name (shown at the top right) and the email / mobile used to sign in. */
 @Component({
   selector: 'app-account-tab',
   imports: [ReactiveFormsModule, Busy],
@@ -19,6 +19,7 @@ export class AccountTab {
   private router = inject(Router);
 
   protected readonly form = inject(NonNullableFormBuilder).group({
+    name: [''],
     email: ['', optionalEmail],
     phone: ['', optionalMobile],
   });
@@ -29,7 +30,7 @@ export class AccountTab {
   constructor() {
     effect(() => {
       const a = this.auth.account();
-      this.form.setValue({ email: a?.email ?? '', phone: a?.phone ?? '' }, { emitEvent: false });
+      this.form.setValue({ name: a?.name ?? '', email: a?.email ?? '', phone: a?.phone ?? '' }, { emitEvent: false });
     });
     this.form.valueChanges.subscribe(() => { this.error.set(''); this.status.set(''); });
   }
@@ -44,7 +45,7 @@ export class AccountTab {
     const v = this.form.getRawValue();
     this.busy.set(true);
     try {
-      this.auth.account.set(await this.api.updateMe({ email: v.email.trim(), phone: v.phone.replace(/\D/g, '') }));
+      this.auth.account.set(await this.api.updateMe({ name: v.name.replace(/\s+/g, ' ').trim(), email: v.email.trim(), phone: v.phone.replace(/\D/g, '') }));
       this.status.set('Saved');
     } catch (e) {
       this.error.set(errorMessage(e));

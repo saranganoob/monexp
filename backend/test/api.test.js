@@ -42,6 +42,12 @@ test('wrong password is rejected, right one signs in', async () => {
   assert.equal(res.status, 200);
   assert.match(res.headers['set-cookie'][0], /monexp_session=.*HttpOnly/);
   assert.equal((await agent.get('/api/auth/me')).body.email, LOGIN.identifier);
+  // A display name: tidied, kept, and cleared with ''; odd characters are refused.
+  assert.equal((await agent.get('/api/auth/me')).body.name, '');
+  assert.equal((await agent.patch('/api/auth/me').send({ name: '  Sarangan   E ' })).body.name, 'Sarangan E');
+  assert.equal((await agent.patch('/api/auth/me').send({ name: '<b>x</b>' })).status, 400);
+  assert.equal((await agent.patch('/api/auth/me').send({ name: 'x'.repeat(41) })).status, 400);
+  assert.equal((await agent.patch('/api/auth/me').send({ name: '' })).body.name, '');
   // Mobile number works too.
   assert.equal((await request(app).post('/api/auth/login').send({ identifier: '+91 98765 43210', password: LOGIN.password })).status, 200);
 });
@@ -162,6 +168,13 @@ test('adding to a month that does not exist sets it up first', async () => {
   const dec = (await agent.get('/api/months/2026-12')).body;
   assert.equal(dec.exists, true);
   assert.equal(dec.totals.sudden, 1500);
+  // A note only by default; switched on in Profile, it comes off the balance too.
+  assert.equal(dec.totals.suddenInBudget, false);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ suddenInBudget: 'yes' })).status, 400);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ suddenInBudget: true })).body.prefs.suddenInBudget, true);
+  const counted = (await agent.get('/api/months/2026-12')).body.totals;
+  assert.deepEqual([counted.suddenInBudget, counted.balance], [true, dec.totals.balance - 1500]);
+  await agent.patch('/api/auth/prefs').send({ suddenInBudget: null, navOrder: null, navHidden: [] }); // back to the default (a note only)
   const bad = await agent.post('/api/months/2026-12/sudden').send({ name: 'x', amount: 1, mode: 'Cash', date: '2026-11-30' });
   assert.equal(bad.status, 400);
 });
@@ -302,14 +315,14 @@ test('each account only sees its own data', async () => {
 });
 
 test('look & feel is saved per account', async () => {
-  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
+  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
   assert.equal((await agent.patch('/api/auth/prefs').send({ theme: 'purple' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ accent: 'red' })).status, 400);
   const res = await agent.patch('/api/auth/prefs').send({ theme: 'dark', accent: '#10b981' });
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
+  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
   // Changing one leaves the other as it was.
-  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
+  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
   // Home language: Tamil / Telugu / Hindi or none.
   assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'fr' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'ta' })).body.prefs.lang, 'ta');
@@ -317,10 +330,10 @@ test('look & feel is saved per account', async () => {
   // A fresh sign-in (another device) gets them back; another account has its own.
   const other = request.agent(app);
   await other.post('/api/auth/login').send(LOGIN);
-  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
+  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
   const friend = request.agent(app);
   await friend.post('/api/auth/login').send({ identifier: 'friend@example.com', password: 'friend-password-1' });
-  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null });
+  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
 });
 
 test('web sidebar style and pin are saved per account', async () => {
@@ -329,6 +342,14 @@ test('web sidebar style and pin are saved per account', async () => {
   const prefs = (await agent.patch('/api/auth/prefs').send({ sidebar: 'pin', sidebarPinned: false })).body.prefs;
   assert.deepEqual([prefs.sidebar, prefs.sidebarPinned, prefs.accent], ['pin', false, '#10B981']); // the rest is kept
   assert.equal((await agent.get('/api/auth/me')).body.prefs.sidebarPinned, false);
+  // The menu: order and hidden sections are kept; bad lists are refused; null goes back to the default.
+  const order = ['daily', 'pay', 'people', 'cards', 'installments', 'sudden', 'year'];
+  const menu = (await agent.patch('/api/auth/prefs').send({ navOrder: order, navHidden: ['cards'] })).body.prefs;
+  assert.deepEqual([menu.navOrder, menu.navHidden], [order, ['cards']]);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ navOrder: ['pay', 'pay'] })).status, 400);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ navHidden: ['admin'] })).status, 400);
+  const back = (await agent.patch('/api/auth/prefs').send({ navOrder: null, navHidden: [] })).body.prefs;
+  assert.deepEqual([back.navOrder, back.navHidden], [null, []]);
   assert.equal((await agent.patch('/api/auth/prefs').send({ calculator: 'off' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ calculator: false })).body.prefs.calculator, false);
   assert.equal((await agent.patch('/api/auth/prefs').send({ sidebar: 'classic' })).body.prefs.sidebar, 'classic');

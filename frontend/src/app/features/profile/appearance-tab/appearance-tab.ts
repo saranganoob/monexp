@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { COLOR_NAMES, NamedColor, searchColors } from '../../../core/utils/color-names';
-import { ACCENT_PRESETS, DEFAULT_ACCENT, DEFAULT_AI_NAME, ThemeMode, ThemeService } from '../../../core/theme.service';
+import { ACCENT_PRESETS, BudgetRule, DEFAULT_ACCENT, DEFAULT_AI_NAME, ThemeMode, ThemeService } from '../../../core/theme.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AppStore } from '../../../core/app-store';
 import { errorMessage } from '../../../core/api.service';
@@ -21,8 +21,9 @@ export class AppearanceTab {
   protected theme = inject(ThemeService);
   protected auth = inject(AuthService);
   private store = inject(AppStore);
-  protected readonly dailySaving = signal(false);
-  protected readonly dailyError = signal('');
+  /** The balance switch being saved, and the one whose save failed (with why). */
+  protected readonly ruleSaving = signal<BudgetRule | null>(null);
+  protected readonly ruleError = signal<{ key: BudgetRule; message: string } | null>(null);
   protected readonly defaultAiName = DEFAULT_AI_NAME;
   protected readonly aiNameSaved = signal(false);
   protected readonly options: { mode: ThemeMode; label: string; icon: IconName }[] = [
@@ -55,18 +56,19 @@ export class AppearanceTab {
   protected readonly hintLabels = HINT_LABELS;
   protected pickLang(code: HomeLang | null) { this.theme.setLang(code); }
 
-  /** Daily spends in / out of the balance: saved, then every total reloads. */
-  protected async setDaily(on: boolean) {
-    if (on === this.theme.dailyInBudget() || this.dailySaving()) return;
-    this.dailySaving.set(true);
-    this.dailyError.set('');
+  /** Daily or sudden spends in / out of the balance: saved, then every total reloads. */
+  protected async setRule(key: BudgetRule, on: boolean) {
+    const current = key === 'dailyInBudget' ? this.theme.dailyInBudget() : this.theme.suddenInBudget();
+    if (on === current || this.ruleSaving()) return;
+    this.ruleSaving.set(key);
+    this.ruleError.set(null);
     try {
-      await this.theme.setDailyInBudget(on);
+      await this.theme.setInBudget(key, on);
       this.store.reload();
     } catch (e) {
-      this.dailyError.set(errorMessage(e));
+      this.ruleError.set({ key, message: errorMessage(e) });
     } finally {
-      this.dailySaving.set(false);
+      this.ruleSaving.set(null);
     }
   }
   protected saveAiName(name: string) {

@@ -7,7 +7,7 @@ export { Person, RELATIONS } from './Person.js';
 export { PeopleEntry } from './PeopleEntry.js';
 export { SuddenSpend } from './SuddenSpend.js';
 export { CardSpend } from './CardSpend.js';
-export { User, canUseAi, DEFAULT_AI_NAME } from './User.js';
+export { User, canUseAi, DEFAULT_AI_NAME, MENU_KEYS } from './User.js';
 export { Undo } from './Undo.js';
 export { AiSummary } from './AiSummary.js';
 export { DailySpend, DAILY_SLOTS, dailyDayTotal } from './DailySpend.js';

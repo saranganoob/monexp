@@ -30,6 +30,8 @@ export class YearViewPage {
   protected readonly showSkeleton = computed(() => this.slow() && this.data()?.year !== this.year());
   /** Daily spends were counted as spending in some month of this year. */
   protected readonly hasDaily = computed(() => !!this.data()?.categories.some((c) => c.key === 'daily'));
+  /** Sudden spends were counted as spending in some month of this year (not just a note). */
+  protected readonly suddenCounted = computed(() => !!this.data()?.suddenCounted);
 
   constructor() {
     effect(async () => {

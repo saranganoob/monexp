@@ -4,7 +4,7 @@
     <section class="card card--clip">
       <div class="card-head">
         <h2>This month's sudden spends</h2>
-        <span class="num strong">{{ m.totals.sudden | inr }} · note only, not taken off your balance</span>
+        <span class="num strong">{{ m.totals.sudden | inr }} · {{ m.totals.suddenInBudget ? 'taken off your balance' : 'note only, not taken off your balance' }}</span>
       </div>
       @for (row of rows(); track row.s.id) {
         <div class="list-row">

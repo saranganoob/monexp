@@ -107,6 +107,7 @@ export function monthView(c) {
       billsUnpaid: c.totals.unpaidCount,
       billsSkipped: c.totals.skippedCount,
       suddenSpendsNotOnCards: c.totals.sudden,
+      suddenSpendsTakenOffBalance: c.totals.suddenInBudget,
       dailySpends: c.totals.daily,
       dailySpendsTakenOffBalance: c.totals.dailyInBudget,
       balanceLeft: c.totals.balance,

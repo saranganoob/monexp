@@ -7,14 +7,6 @@
         <app-icon name="calculator" [size]="16" /><span>Calculator</span>
       </button>
     }
-    @if (!inApp) {
-      <a routerLink="/profile" routerLinkActive="is-on" class="profile-btn" aria-label="Open profile">
-        <app-avatar [name]="who()" tone="navy" size="sm" />
-        <span class="hide-xs strong">Profile</span>
-      </a>
-    }
-    <button class="btn btn--ghost btn--sm" (click)="signOut()">
-      <app-icon name="sign-out" [size]="16" /><span class="hide-xs">Sign out</span>
-    </button>
+    <app-user-menu />
   </div>
 </div>

@@ -21,7 +21,7 @@ router.use(async (req, _res, next) => {
 });
 
 const listUser = (u) => ({
-  id: String(u._id), email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
+  id: String(u._id), name: u.name || '', email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
   createdAt: u.createdAt, lastSignInAt: u.lastSignInAt ?? null, online: isOnline(u._id),
 });
 

@@ -38,14 +38,31 @@
   </div>
   <div role="radiogroup" aria-labelledby="dailyLbl" class="seg-group">
     <button type="button" role="radio" class="seg option" [class.is-on]="theme.dailyInBudget()" [attr.aria-checked]="theme.dailyInBudget()"
-      [disabled]="dailySaving()" (click)="setDaily(true)"><app-icon name="check" />Take from balance</button>
+      [disabled]="!!ruleSaving()" (click)="setRule('dailyInBudget', true)"><app-icon name="check" />Take from balance</button>
     <button type="button" role="radio" class="seg option" [class.is-on]="!theme.dailyInBudget()" [attr.aria-checked]="!theme.dailyInBudget()"
-      [disabled]="dailySaving()" (click)="setDaily(false)"><app-icon name="eye" />Just track</button>
+      [disabled]="!!ruleSaving()" (click)="setRule('dailyInBudget', false)"><app-icon name="eye" />Just track</button>
   </div>
-  @if (dailyError()) { <div role="alert" class="notice notice--error notice--sm">{{ dailyError() }}</div> }
+  @if (ruleError()?.key === 'dailyInBudget') { <div role="alert" class="notice notice--error notice--sm">{{ ruleError()!.message }}</div> }
   <p class="small muted hint">{{ theme.dailyInBudget()
     ? 'Each month’s daily spends are taken off Balance left on Overview, and counted as spent in Year view.'
     : 'Daily spends are only tracked on their own page – your budget and balance ignore them.' }}</p>
+</section>
+
+<section class="card panel">
+  <div>
+    <h2 id="suddenLbl" class="card__title">Sudden spends</h2>
+    <p class="card__lead">Should sudden spends (repairs, gifts, one-off buys) come off your monthly balance? Saved to your account.</p>
+  </div>
+  <div role="radiogroup" aria-labelledby="suddenLbl" class="seg-group">
+    <button type="button" role="radio" class="seg option" [class.is-on]="theme.suddenInBudget()" [attr.aria-checked]="theme.suddenInBudget()"
+      [disabled]="!!ruleSaving()" (click)="setRule('suddenInBudget', true)"><app-icon name="check" />Take from balance</button>
+    <button type="button" role="radio" class="seg option" [class.is-on]="!theme.suddenInBudget()" [attr.aria-checked]="!theme.suddenInBudget()"
+      [disabled]="!!ruleSaving()" (click)="setRule('suddenInBudget', false)"><app-icon name="eye" />Note only</button>
+  </div>
+  @if (ruleError()?.key === 'suddenInBudget') { <div role="alert" class="notice notice--error notice--sm">{{ ruleError()!.message }}</div> }
+  <p class="small muted hint">{{ theme.suddenInBudget()
+    ? 'Each month’s sudden spends are taken off Balance left on Overview, and counted as spent in Year view. Ones paid by credit card are already in that card’s bill, so they aren’t taken off twice.'
+    : 'Sudden spends are only a note – listed on their page, but your budget and balance ignore them.' }}</p>
 </section>
 
 <section class="card panel">

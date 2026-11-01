@@ -505,7 +505,7 @@ test('EMIs and plans can be ongoing, with no end date', async () => {
   await agent.delete(`/api/plans/${plan.body.id}?at=2026-10`);
 });
 
-test('daily spends: today only, never part of budget or balance', async () => {
+test('daily spends: today and earlier days, never part of budget or balance', async () => {
   const { todayInIndia, addMonths } = await import('../src/lib/ym.js');
   const today = todayInIndia();
   const ym = today.slice(0, 7);
@@ -522,11 +522,15 @@ test('daily spends: today only, never part of budget or balance', async () => {
   const month = (await agent.get(`/api/daily?ym=${ym}`)).body;
   assert.deepEqual([month.today, month.monthTotal, month.days.at(-1).date], [today, 420, today]);
 
-  // Earlier and future days can't be changed; bad amounts are refused.
+  // A forgotten earlier day can be filled in; future and made-up days can't; bad amounts are refused.
   const d = new Date(`${today}T12:00:00Z`);
   const shift = (n) => new Date(d.getTime() + n * 86400000).toISOString().slice(0, 10);
-  assert.equal((await agent.put(`/api/daily/${shift(-1)}`).send({ lunch: 100 })).status, 400);
+  const past = shift(-1);
+  assert.equal((await agent.put(`/api/daily/${past}`).send({ lunch: 100 })).body.total, 100);
+  assert.equal((await agent.get(`/api/daily?ym=${past.slice(0, 7)}`)).body.days.find((x) => x.date === past).lunch, 100);
+  assert.equal((await agent.put(`/api/daily/${past}`).send({})).body.total, 0); // cleared again
   assert.equal((await agent.put(`/api/daily/${shift(1)}`).send({ lunch: 100 })).status, 400);
+  assert.equal((await agent.put('/api/daily/2026-02-30').send({ lunch: 100 })).status, 400);
   assert.equal((await agent.put(`/api/daily/${today}`).send({ lunch: -5 })).status, 400);
   assert.equal((await agent.get(`/api/daily?ym=${addMonths(ym, 1)}`)).body.days.length, 0);
 

@@ -37,8 +37,8 @@ const longDay = (date: string) => {
 };
 
 /**
- * Daily spends: tea, meals, snacks and other small spends, one card per day. Only today can be
- * filled in (it saves itself); earlier days open view-only from the calendar; future days don't exist yet.
+ * Daily spends: tea, meals, snacks and other small spends, one card per day. Today, or any earlier day
+ * picked on the calendar (for days you forgot), can be filled in – it saves itself. Future days don't exist yet.
  * Just for tracking – never part of the month's budget or balance.
  */
 @Component({
@@ -67,25 +67,32 @@ export class DailySpendsPage implements OnDestroy {
   private readonly byDate = computed(() => new Map((this.data()?.days ?? []).map((d) => [d.date, d])));
   protected readonly isCurrentMonth = computed(() => this.today().slice(0, 7) === this.ym());
   protected readonly isFutureMonth = computed(() => !!this.today() && this.ym() > this.today().slice(0, 7));
-  protected readonly editing = computed(() => !!this.today() && this.selected() === this.today());
-  protected readonly selectedDay = computed(() => (this.selected() ? this.byDate().get(this.selected()!) : undefined));
+  /** The picked day can be filled in: today or any earlier day. */
+  protected readonly editing = computed(() => !!this.today() && !!this.selected() && this.selected()! <= this.today());
+  protected readonly isToday = computed(() => !!this.today() && this.selected() === this.today());
   protected readonly selectedLabel = computed(() => (this.selected() ? longDay(this.selected()!) : ''));
   protected readonly draftTotal = computed(() => draftTotal(this.draft()));
 
   // ---- the numbers at the top ----
+  /** A day's total – for the day being filled in, what's being typed, so every figure moves as you enter. */
+  private totalOf(date: string) {
+    return this.editing() && date === this.selected() ? this.draftTotal() : this.byDate().get(date)?.total ?? 0;
+  }
   protected readonly monthTotal = computed(() => {
-    // Today's own figure comes from what's being typed, so the total moves as you enter.
     const d = this.data();
     if (!d) return 0;
-    const savedToday = this.byDate().get(this.today())?.total ?? 0;
-    return d.monthTotal + (this.isCurrentMonth() ? this.draftTotal() - savedToday : 0);
+    const sel = this.selected();
+    const live = this.editing() && sel?.slice(0, 7) === d.ym ? this.draftTotal() - (this.byDate().get(sel!)?.total ?? 0) : 0;
+    return d.monthTotal + live;
   });
-  protected readonly todayTotal = computed(() => (this.isCurrentMonth() ? this.draftTotal() : 0));
+  protected readonly todayTotal = computed(() => (this.isCurrentMonth() ? this.totalOf(this.today()) : 0));
   /** Days that have passed in this month (all of them for an earlier month). */
   private readonly daysSoFar = computed(() => (this.isFutureMonth() ? 0 : this.isCurrentMonth() ? Number(this.today().slice(8, 10)) : lastDay(this.ym())));
   protected readonly average = computed(() => (this.daysSoFar() ? Math.round(this.monthTotal() / this.daysSoFar()) : 0));
   protected readonly highest = computed(() => {
-    const days = (this.data()?.days ?? []).map((d) => (d.date === this.today() ? { ...d, total: this.draftTotal() } : d));
+    const days = (this.data()?.days ?? []).map((d) => ({ date: d.date, total: this.totalOf(d.date) }));
+    const sel = this.selected();
+    if (this.editing() && sel?.slice(0, 7) === this.ym() && !this.byDate().has(sel)) days.push({ date: sel, total: this.draftTotal() });
     return days.reduce<{ date: string; total: number } | null>((best, d) => (d.total > (best?.total ?? 0) ? d : best), null);
   });
   protected readonly highestLabel = computed(() => (this.highest() ? longDay(this.highest()!.date) : ''));
@@ -95,12 +102,12 @@ export class DailySpendsPage implements OnDestroy {
   protected readonly cells = computed(() => {
     const ym = this.ym(), today = this.today(), sel = this.selected();
     const offset = (new Date(ymYear(ym), ymMonth0(ym), 1).getDay() + 6) % 7; // Monday first
-    const totals = (this.data()?.days ?? []).map((d) => (d.date === today ? this.draftTotal() : d.total));
-    const max = Math.max(1, ...totals);
+    const totals = (this.data()?.days ?? []).map((d) => this.totalOf(d.date));
+    const max = Math.max(1, this.editing() ? this.draftTotal() : 0, ...totals);
     const blanks = Array.from({ length: offset }, () => null);
     const days = Array.from({ length: lastDay(ym) }, (_, i) => {
       const date = `${ym}-${String(i + 1).padStart(2, '0')}`;
-      const total = date === today ? this.draftTotal() : this.byDate().get(date)?.total ?? 0;
+      const total = this.totalOf(date);
       const future = !today || date > today;
       return {
         date, day: i + 1, total, short: shortInr(total), future, isToday: date === today, selected: date === sel,
@@ -132,7 +139,7 @@ export class DailySpendsPage implements OnDestroy {
   private pickDefaultDay() {
     const d = this.data()!, sel = this.selected();
     if (sel && sel.slice(0, 7) === d.ym && sel <= d.today) {
-      if (sel === d.today && !this.dirty) this.draft.set(draftOf(this.byDate().get(sel)));
+      if (!this.dirty) this.draft.set(draftOf(this.byDate().get(sel)));
       return;
     }
     const pick = d.today.slice(0, 7) === d.ym ? d.today : d.days.at(-1)?.date ?? null;
@@ -143,7 +150,8 @@ export class DailySpendsPage implements OnDestroy {
     if (date && this.today() && date > this.today()) return; // no future days
     this.flush();
     this.selected.set(date);
-    if (date === this.today()) this.draft.set(draftOf(this.byDate().get(date)));
+    this.saveState.set('idle');
+    if (date) this.draft.set(draftOf(this.byDate().get(date)));
   }
 
   /** From the calendar: show that day, bringing its card into view when the calendar sits below it (phones). */
@@ -160,7 +168,7 @@ export class DailySpendsPage implements OnDestroy {
     this.select(this.today());
   }
 
-  // ---- entering today's spends (saves itself) ----
+  // ---- entering a day's spends (saves itself) ----
   protected setSlot(key: DailySlot, value: string) {
     this.draft.update((d) => ({ ...d, slots: { ...d.slots, [key]: value } }));
     this.changed();
@@ -206,8 +214,8 @@ export class DailySpendsPage implements OnDestroy {
   }
 
   private async save() {
-    const date = this.today(), d = this.draft();
-    if (!date) return;
+    const date = this.selected(), d = this.draft();
+    if (!date || !this.today() || date > this.today()) return;
     this.dirty = false;
     this.saveState.set('saving');
     const body = {

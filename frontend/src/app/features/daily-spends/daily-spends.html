@@ -26,12 +26,12 @@
   @if (error()) { <div role="alert" class="err">{{ error() }}</div> }
 
   <section class="main">
-    <!-- One day: today (fill in) or an earlier day (view only) -->
-    <article class="card day" [class.is-today]="editing()" aria-live="polite">
+    <!-- One day: today or an earlier day you forgot – both can be filled in -->
+    <article class="card day" [class.is-today]="editing()" [class.is-past]="editing() && !isToday()" aria-live="polite">
       @if (editing()) {
         <header class="day__head">
           <div>
-            <div class="kicker">Today</div>
+            <div class="kicker">{{ isToday() ? 'Today' : 'Earlier day · filling in' }}</div>
             <h2>{{ selectedLabel() }}</h2>
           </div>
           <span class="save-state" [class]="'save-state save-state--' + saveState()" role="status">
@@ -81,40 +81,22 @@
         </div>
 
         <footer class="day__total">
-          <span>Total today</span>
+          <span>{{ isToday() ? 'Total today' : 'Total for the day' }}</span>
           <strong class="num">{{ draftTotal() | inr }}</strong>
         </footer>
-      } @else if (selected(); as date) {
-        <header class="day__head">
-          <div>
-            <div class="kicker">View only</div>
-            <h2>{{ selectedLabel() }}</h2>
+        @if (!isToday() && today()) {
+          <div class="past-foot">
+            <span class="small muted">Forgot a day? Tap it on the calendar to fill it in.</span>
+            <button type="button" class="btn btn--ghost btn--sm" (click)="goToToday()">Back to today</button>
           </div>
-          @if (today()) { <button type="button" class="btn btn--primary btn--sm" (click)="goToToday()">Back to today</button> }
-        </header>
-        @if (selectedDay(); as d) {
-          <div class="rows rows--view">
-            @for (s of slots; track s.key) {
-              @if (d[s.key]) {
-                <div class="row"><span class="emoji" aria-hidden="true">{{ s.emoji }}</span><span class="row__label">{{ s.label }}</span><span class="num strong">{{ d[s.key] | inr }}</span></div>
-              }
-            }
-            @for (o of d.others; track $index) {
-              <div class="row"><span class="emoji" aria-hidden="true">🛍️</span><span class="row__label">{{ o.name || 'Other' }}</span><span class="num strong">{{ o.amount | inr }}</span></div>
-            }
-          </div>
-          <footer class="day__total"><span>Total</span><strong class="num">{{ d.total | inr }}</strong></footer>
-        } @else {
-          <p class="empty">Nothing was logged on this day.</p>
         }
-        <p class="hint">Only today’s spends can be added or changed.</p>
       } @else {
         <div class="empty empty--big">
           <span class="emoji emoji--big" aria-hidden="true">🗓️</span>
           @if (isFutureMonth()) {
             <p><strong>{{ ym() | ym }} hasn’t started yet.</strong><br>You can add spends on the day itself.</p>
           } @else {
-            <p><strong>Nothing logged in {{ ym() | ym }}.</strong><br>Daily spends can only be added on the day.</p>
+            <p><strong>Nothing logged in {{ ym() | ym }}.</strong><br>Forgot to log? Tap any day on the calendar to fill it in.</p>
           }
           @if (today()) { <button type="button" class="btn btn--primary btn--sm" (click)="goToToday()">Go to today</button> }
         </div>
@@ -125,7 +107,7 @@
     <article class="card cal">
       <header class="cal__head">
         <h2>{{ monthName() }}</h2>
-        <span class="muted small">Tap a day to see what you spent</span>
+        <span class="muted small">Tap a day to see or add what you spent</span>
       </header>
       <div class="cal__grid" role="grid" [attr.aria-label]="'Daily totals for ' + monthName()">
         @for (w of weekdays; track w) { <div class="cal__wd" role="columnheader">{{ w }}</div> }

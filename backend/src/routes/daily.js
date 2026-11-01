@@ -1,6 +1,6 @@
 // Daily spends: tea, meals, snacks and other small everyday spends, one record per day.
 // Only for tracking – they're never part of the month's budget, bills or balance.
-// Today (India time) can be filled in; earlier days are view-only and future days don't exist yet.
+// Today (India time) and any earlier day can be filled in (for days you forgot); future days don't exist yet.
 import { Router } from 'express';
 import { DailySpend, DAILY_SLOTS } from '../models/index.js';
 import { badRequest } from '../lib/http.js';
@@ -27,12 +27,15 @@ router.get('/', async (req, res) => {
   res.json({ ym, today, days, monthTotal: days.reduce((s, d) => s + d.total, 0) });
 });
 
-// PUT /api/daily/2026-10-28 { teaMorning, breakfast, …, others: [{ name, amount }] } – today only.
+// PUT /api/daily/2026-10-28 { teaMorning, breakfast, …, others: [{ name, amount }] } – today or an earlier day.
 router.put('/:date', async (req, res) => {
   const date = String(req.params.date);
   const today = todayInIndia();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw badRequest('date must look like 2026-10-28.');
-  if (date !== today) throw badRequest(date > today ? 'You can’t add spends for a future day.' : 'Only today’s spends can be changed.');
+  const real = new Date(`${date}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(real.getTime()) || real.toISOString().slice(0, 10) !== date) {
+    throw badRequest('date must be a real day like 2026-10-28.');
+  }
+  if (date > today) throw badRequest('You can’t add spends for a future day.');
 
   const b = req.body || {};
   const slots = Object.fromEntries(DAILY_SLOTS.map((k) => [k, b[k] == null || b[k] === '' ? 0 : toAmount(b[k], 'Amount')]));

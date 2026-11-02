@@ -31,7 +31,7 @@ test('monthly plan: every month from the start, none after the end', () => {
 });
 
 // ---- the same rules inside a month's figures ----
-const people = [{ id: 'p1', name: 'Mohan' }, { id: 'p2', name: 'Sathish' }];
+const people = [{ id: 'p1', name: 'Vinod' }, { id: 'p2', name: 'Prakash' }];
 const cards = [{ id: 'c1', name: 'HDFC', network: 'Visa', last4: '1234', closedOn: '' }];
 const emis = [
   { id: 'e1', cardId: null, item: 'Insurance', forWho: 'friend', personId: 'p2', monthly: 12000, freq: 'yearly', totalMonths: 11, startYm: '2024-09' },
@@ -65,10 +65,10 @@ test('a 6-month card EMI starting Oct 2026 is in the card bill from Oct 2026 to 
 
 test('"I owe them" appears under Money I owe, counts in the totals once, and moved entries are left out', () => {
   const entries = [
-    { id: 'r1', ym: '2026-10', direction: 'out', personId: 'p1', name: 'Mohan', amount: 450, status: 'pending', planId: null },
-    { id: 'r2', ym: '2026-10', direction: 'out', personId: 'p1', name: 'Mohan · lunch', amount: 300, status: 'done', planId: null },
-    { id: 'r3', ym: '2026-10', direction: 'out', personId: 'p1', name: 'Mohan · old', amount: 999, status: 'moved', planId: null },
-    { id: 'r4', ym: '2026-10', direction: 'in', personId: 'p1', name: 'Mohan · trip', amount: 1000, status: 'pending', planId: null },
+    { id: 'r1', ym: '2026-10', direction: 'out', personId: 'p1', name: 'Vinod', amount: 450, status: 'pending', planId: null },
+    { id: 'r2', ym: '2026-10', direction: 'out', personId: 'p1', name: 'Vinod · lunch', amount: 300, status: 'done', planId: null },
+    { id: 'r3', ym: '2026-10', direction: 'out', personId: 'p1', name: 'Vinod · old', amount: 999, status: 'moved', planId: null },
+    { id: 'r4', ym: '2026-10', direction: 'in', personId: 'p1', name: 'Vinod · trip', amount: 1000, status: 'pending', planId: null },
   ];
   const without = monthOf('2026-10');
   const c = monthOf('2026-10', { entries });

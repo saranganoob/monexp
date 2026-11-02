@@ -16,7 +16,7 @@ Approved by the owner on 8 Oct 2026. Where this file and CLAUDE.md disagree, thi
 | 7 | AI monthly summary | A card on the Overview page. |
 | 8 | Apple Watch EMI | ₹0/month for now (amount is inside Flipkart Axis "my spends"). |
 | 9 | May "Kodai Trip" ₹5,000 | Counted in May's total (the sheet left it out). |
-| 10 | Sudden spend "paid by Gokul" | Kept as a note only. |
+| 10 | Sudden spend "paid by Deepak" | Kept as a note only. |
 | 11 | Data | Sample sheet is test data. Frontend uses the backend's seeded data directly (no separate mocks). |
 | 12 | Ports / DB | API on 3000, Angular on 4200, MongoDB database `monexp`. |
 

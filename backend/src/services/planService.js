@@ -1,6 +1,6 @@
 // Keeps each month's rows in line with its installment plans.
 // An "out" plan (Dad, gold chit) appears as a bill in Need to pay; an "in" plan
-// (Madhan paying back the gym money) appears as money owed to you in People.
+// (Arun paying back the gym money) appears as money owed to you in People.
 import { Month, BillItem, PeopleEntry, Person } from '../models/index.js';
 import { installmentAt } from './compute.js';
 
@@ -12,7 +12,7 @@ async function personName(plan) {
   return plan.person ? (await Person.findById(plan.person).lean())?.name ?? '' : '';
 }
 
-/** "Madhan · gym" – the person's name goes in front of "in" plans unless it's already there. */
+/** "Arun · gym" – the person's name goes in front of "in" plans unless it's already there. */
 export function planRowName(plan, who) {
   if (plan.direction !== 'in' || !who || plan.name.toLowerCase().startsWith(who.toLowerCase())) return plan.name;
   return `${who} · ${plan.name}`;

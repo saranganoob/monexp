@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 
-/** Round initial, e.g. "M" for Mohan. Tones match the design. */
+/** Round initial, e.g. "V" for Vinod. Tones match the design. */
 @Component({
   selector: 'app-avatar',
   templateUrl: './avatar.html',

@@ -8,7 +8,7 @@ const peopleEntrySchema = new Schema({
   ym: ymField({ required: true, index: true }),
   direction: { type: String, enum: ['in', 'out'], required: true },
   person: { type: ObjectId, ref: 'Person', default: null },
-  name: { type: String, required: true, trim: true }, // shown as-is, e.g. "Mohan · trip advance"
+  name: { type: String, required: true, trim: true }, // shown as-is, e.g. "Vinod · trip advance"
   amount: amountField(),
   status: { type: String, enum: ['pending', 'done', 'moved'], default: 'pending' },
   plan: { type: ObjectId, ref: 'Plan', default: null },

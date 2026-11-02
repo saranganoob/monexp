@@ -14,7 +14,7 @@ export function displayName(a: Named | null | undefined): string {
 /** First word only: "Sarangan E" → "Sarangan". */
 export const firstName = (full: string) => full.split(' ')[0];
 
-/** Up to two letters: "Sarangan E" → "SE", "Madhan" → "M". */
+/** Up to two letters: "Sarangan E" → "SE", "Arun" → "A". */
 export function initials(full: string): string {
   const parts = full.trim().split(/\s+/).filter(Boolean);
   const letters = parts.length > 1 ? parts[0].charAt(0) + parts[parts.length - 1].charAt(0) : parts[0]?.charAt(0) ?? '?';

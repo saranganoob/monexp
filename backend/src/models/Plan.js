@@ -4,7 +4,7 @@ import { ownerPlugin } from './ownerPlugin.js';
 import { CATEGORY_KEYS } from '../lib/categories.js';
 
 // Installment plans that aren't card EMIs: money I send on a schedule (Dad, gold chit)
-// or someone paying me back in parts (Madhan's gym).
+// or someone paying me back in parts (Arun's gym).
 const planSchema = new Schema({
   name: { type: String, required: true, trim: true },
   kind: { type: String, default: '' },   // e.g. "Monthly support", "Savings (chit)"

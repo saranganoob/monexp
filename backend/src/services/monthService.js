@@ -135,7 +135,7 @@ export async function createMonth(ym, { mode, carryIds = [] }) {
   const fromLabel = ymLabel(prev.ym, { short: true });
   const carried = prevEntries.filter((r) => !r.plan && r.status === 'pending' && carry.has(String(r._id)));
   const entries = [
-    // Installment plans (e.g. Madhan paying back the gym money) continue on their own.
+    // Installment plans (e.g. Arun paying back the gym money) continue on their own.
     ...prevEntries.filter((r) => r.plan && planActive(r.plan)).map((r) => ({
       ym, direction: r.direction, person: r.person, name: r.name, amount: r.amount, status: 'pending',
       plan: r.plan, note: r.note, sortOrder: r.sortOrder,

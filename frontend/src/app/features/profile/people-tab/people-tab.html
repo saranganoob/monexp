@@ -32,7 +32,7 @@
 <form id="person-form" class="card card--pad form" [formGroup]="form" (ngSubmit)="save()">
   <h2 class="card__title">{{ editingId() ? 'Edit person' : 'Add a person' }}</h2>
   <div class="form-grid">
-    <label><span class="field-label">Name</span><input id="pfName" class="field" formControlName="name" placeholder="e.g. Sathish Rajan"></label>
+    <label><span class="field-label">Name</span><input id="pfName" class="field" formControlName="name" placeholder="e.g. Prakash Kumar"></label>
     <label><span class="field-label">Relationship</span>
       <select class="field" formControlName="relation">
         <option value="">Not set</option>

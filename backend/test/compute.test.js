@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeMonth, computeYear, installmentAt, listInstallments } from '../src/services/compute.js';
-import { plainSetup, plainMonth, months } from '../scripts/seed-data.js';
+import { plainSetup, plainMonth, months } from './fixtures/sample-data.js';
 
 const setup = plainSetup();
 const run = (ym) => computeMonth({ ...plainMonth(ym), ...setup });
@@ -76,7 +76,7 @@ test('Skipped bills don’t count and card bills are named after the card', () =
 
 test('Installments list is sorted by closing month and drops finished ones', () => {
   const rows = listInstallments({ ym: '2026-10', ...setup });
-  assert.deepEqual(rows.map((r) => r.name), ['Madhan · gym', 'Dad']);
+  assert.deepEqual(rows.map((r) => r.name), ['Arun · gym', 'Dad']);
   const dad = rows.find((r) => r.name === 'Dad');
   assert.deepEqual([dad.n, dad.monthsLeft, dad.amountLeft, dad.endYm], [34, 7, 70000, '2027-04']);
 });

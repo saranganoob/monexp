@@ -270,7 +270,7 @@ router.delete('/people/:id', async (req, res) => {
   const person = await findOr404(Person, req.params.id, 'Person');
   if (await CardEmi.exists({ person: person._id })) throw conflict(`${person.name} still has an EMI on your card. Remove that EMI first.`);
   if (await Plan.exists({ person: person._id })) throw conflict(`${person.name} is linked to an installment plan. Remove or change that plan first.`);
-  // Past entries keep their text (e.g. "Mohan · trip advance"); they just stop linking to the person.
+  // Past entries keep their text (e.g. "Vinod · trip advance"); they just stop linking to the person.
   const yms = await PeopleEntry.distinct('ym', { person: person._id });
   res.json(await withUndo({ yms, global: ['Person'] }, async () => {
     await PeopleEntry.updateMany({ person: person._id }, { person: null });

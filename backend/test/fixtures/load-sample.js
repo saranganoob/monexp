@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
-import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, MONEY_MODELS } from '../src/models/index.js';
-import { runAsOwner } from '../src/lib/owner.js';
-import * as data from './seed-data.js';
+// Test data only: loads the sample months (made-up names) for a test login.
+import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, CardSpend, MONEY_MODELS } from '../../src/models/index.js';
+import { runAsOwner } from '../../src/lib/owner.js';
+import * as data from './sample-data.js';
 
 export function hasData(ownerId) {
   return runAsOwner(ownerId, async () => Boolean(await Month.exists({})));

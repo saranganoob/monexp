@@ -10,7 +10,7 @@ const { config } = await import('../src/config.js');
 config.jwtSecret = process.env.JWT_SECRET;
 const { createApp } = await import('../src/app.js');
 const { User } = await import('../src/models/index.js');
-const { seedSampleData } = await import('../scripts/seed-lib.js');
+const { seedSampleData } = await import('./fixtures/load-sample.js');
 const { setClientForTests } = await import('../src/services/ai/client.js');
 const { runTool: runToolAs } = await import('../src/services/ai/tools.js');
 const { runAsOwner } = await import('../src/lib/owner.js');
@@ -163,7 +163,7 @@ test('get_daily_spends: items per day, totals per item, and the name search find
 test('get_year gives yearly totals for EMI questions', async () => {
   const r = JSON.parse((await runTool('get_year', { year: 2026 })).content);
   assert.equal(r.monthsTracked, 10);
-  assert.equal(r.totals.friendsCardEmis, 1255 + 11062 + 1673 + 1255); // Sathish ×3 (Feb override) + Aravind (Jan)
+  assert.equal(r.totals.friendsCardEmis, 1255 + 11062 + 1673 + 1255); // Prakash ×3 (Feb override) + Harish (Jan)
   assert.equal(r.totals.installmentPlanPayments, r.months.reduce((s, m) => s + m.installmentPlanPayments, 0));
 });
 

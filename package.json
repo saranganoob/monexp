@@ -8,7 +8,6 @@
     "build": "npm ci --prefix backend --omit=dev && npm ci --prefix frontend --include=dev && npm --prefix frontend run build",
     "start": "npm --prefix backend start",
     "test": "npm --prefix backend test",
-    "seed": "npm --prefix backend run seed --",
     "seed-demo": "npm --prefix backend run seed-demo --",
     "create-user": "npm --prefix backend run create-user",
     "backup": "npm --prefix backend run backup --",

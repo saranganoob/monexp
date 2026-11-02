@@ -4,7 +4,7 @@ import { emiPlan } from './compute.js';
 import { instAt, leftFrom } from '../lib/installments.js';
 import { ymToIndex } from '../lib/ym.js';
 
-/** An entry belongs to a person by link, or by name ("Mohan · trip advance") when it isn't linked. */
+/** An entry belongs to a person by link, or by name ("Vinod · trip advance") when it isn't linked. */
 export const matchesPerson = (p, r) => r.personId === p.id
   || (!r.personId && r.name.split('·')[0].trim().toLowerCase() === p.name.toLowerCase());
 

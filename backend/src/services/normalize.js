@@ -26,11 +26,18 @@ export const normBill = (b) => ({
   dueDay: b.dueDay ?? null, note: b.note || '', cardId: sid(b.card), planId: sid(b.plan), sortOrder: b.sortOrder || 0,
 });
 
-export const normEntry = (r) => ({
-  id: sid(r._id), ym: r.ym, direction: r.direction, personId: sid(r.person), name: r.name, amount: r.amount || 0,
+const entryBase = (r, amount) => ({
+  id: sid(r._id), ym: r.ym, direction: r.direction, personId: sid(r.person), name: r.name, amount,
   status: r.status, planId: sid(r.plan), note: r.note || '', carriedFrom: r.carriedFrom || null, movedTo: r.movedTo || null,
   originId: sid(r.origin), sortOrder: r.sortOrder || 0,
 });
+/** Money between people: `paid` = received / paid back so far (all of it once done), `left` = still to come. */
+export const normEntry = (r) => {
+  const amount = r.amount || 0;
+  const parts = (r.parts || []).map((p) => ({ id: sid(p._id), amount: p.amount || 0, date: p.date }));
+  const paid = r.status === 'done' ? amount : Math.min(amount, parts.reduce((s, p) => s + p.amount, 0));
+  return { ...entryBase(r, amount), parts, paid, left: r.status === 'pending' ? amount - paid : 0 };
+};
 
 export const normSudden = (s) => ({
   id: sid(s._id), ym: s.ym, name: s.name, amount: s.amount || 0, mode: s.mode, cardId: sid(s.card),

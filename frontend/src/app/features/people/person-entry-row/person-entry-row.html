@@ -4,9 +4,23 @@
   <div class="info">
     <div class="strong" [class.muted]="x.done || x.moved">{{ x.r.name }}</div>
     <div class="small muted">{{ x.sub }}</div>
+    @if (x.partial) {
+      <div class="progress" role="img" [attr.aria-label]="x.pct + '% ' + (x.r.direction === 'in' ? 'received' : 'paid back')">
+        <span [style.width.%]="x.pct"></span>
+      </div>
+    }
   </div>
   <span class="chip" [class]="'chip chip--' + x.status">{{ x.statusLabel }}</span>
-  <div class="num heavy amount">{{ x.r.amount | inr }}</div>
+  <div class="amount">
+    <!-- Partly settled: what's still to come, with the full amount underneath. -->
+    <div class="num heavy">{{ (x.partial ? x.left : x.r.amount) | inr }}</div>
+    @if (x.partial) { <div class="small muted num">of {{ x.r.amount | inr }}</div> }
+  </div>
+  @if (x.canPart) {
+    <button type="button" class="btn btn--sm" [class.is-on]="partOpen()" (click)="partOpen() ? partOpen.set(false) : openPart()" [attr.aria-expanded]="partOpen()">
+      <app-icon name="plus" [size]="15" />{{ x.r.direction === 'in' ? 'Part received' : 'Part paid' }}
+    </button>
+  }
   @if (x.canToggle) {
     <button class="btn btn--sm" [class.btn--primary]="x.btnPrimary" (click)="toggle()" [appBusy]="key()">{{ saving() ? 'Saving…' : x.btnLabel }}</button>
   }
@@ -19,6 +33,39 @@
     }
   </div>
 </div>
+
+<!-- Parts so far (₹6,000 on 3 Nov …) – a wrong one can be removed. -->
+@if (x.r.parts?.length && !x.moved) {
+  <ul class="parts" [attr.aria-label]="'Parts ' + (x.r.direction === 'in' ? 'received' : 'paid back')">
+    @for (p of x.r.parts; track p.id) {
+      <li>
+        <app-icon name="check" [size]="13" [stroke]="2.6" />
+        <span class="num strong">{{ p.amount | inr }}</span>
+        <span class="muted">{{ x.r.direction === 'in' ? 'received' : 'paid back' }} on {{ dayMonth(p.date) }}</span>
+        @if (!x.done) {
+          <button type="button" class="btn btn--ghost btn--icon-sm part-del" (click)="removePart(p.id)" [appBusy]="'part-del:' + p.id"
+            [attr.aria-label]="'Remove ' + (p.amount | inr) + ' part'" title="Remove this part"><app-icon name="close" [size]="13" /></button>
+        }
+      </li>
+    }
+  </ul>
+}
+
+@if (partOpen() && x.canPart) {
+  <form class="edit-box editor part-box" [formGroup]="partForm" (ngSubmit)="savePart()" (keydown.escape)="partOpen.set(false)">
+    <div class="edit-box__title">{{ x.r.direction === 'in' ? 'How much came in?' : 'How much did you pay back?' }} <span class="muted">· {{ x.left | inr }} left</span></div>
+    <div class="form-grid">
+      <label><span class="field-label">Amount (₹)</span>
+        <input [id]="'partAmt-' + x.r.id" class="field num" inputmode="numeric" formControlName="amount" [placeholder]="'up to ' + (x.left | inr)" autocomplete="off"></label>
+      <label><span class="field-label">On</span><input type="date" class="field" formControlName="date" [max]="today"></label>
+      <div class="row-flex">
+        <button type="submit" class="btn btn--primary" [appBusy]="'part:' + x.r.id">{{ store.loading.isPending('part:' + x.r.id) ? 'Saving…' : 'Save' }}</button>
+        <button type="button" class="btn" (click)="partOpen.set(false)">Cancel</button>
+      </div>
+    </div>
+    @if (partError()) { <div role="alert" class="err err--sm">{{ partError() }}</div> }
+  </form>
+}
 
 @if (editing()) {
   <form class="edit-box editor" [formGroup]="form" (ngSubmit)="save()" (keydown.escape)="closed.emit()">

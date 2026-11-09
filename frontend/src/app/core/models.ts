@@ -16,6 +16,8 @@ export interface Bill {
   id: string; ym: string; name: string; category: CategoryKey; amount: number; status: BillStatus;
   dueDay: number | null; note: string; cardId: string | null; planId: string | null; sortOrder: number; inst: Inst | null;
   kind: 'bill' | 'emi' | 'owe'; emiId?: string; entryId?: string;
+  /** Money I owe that's partly paid back: the part paid so far (the row stays unpaid until it's all back). */
+  paidPart?: number;
 }
 
 export interface EmiView {
@@ -32,8 +34,13 @@ export interface CardView {
 
 export interface CardSpendItem { id: string; cardId: string; name: string; amount: number; date: string; }
 
+/** Part of the money received / paid back on a given day. */
+export interface EntryPart { id: string; amount: number; date: string; }
+
+/** `paid` = received / paid back so far, `left` = still to come (0 once settled). Friend-EMI rows have no parts. */
 export interface Entry {
   id: string; direction: 'in' | 'out'; personId: string | null; name: string; amount: number; status: EntryStatus;
+  paid?: number; left?: number; parts?: EntryPart[];
   planId: string | null; note: string; carriedFrom: string | null; movedTo: string | null;
   inst: Inst | null; auto: string | null; emiId?: string;
 }

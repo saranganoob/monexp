@@ -4,10 +4,15 @@
 // Inputs are plain objects with string ids (see normalize.js).
 
 import { CATEGORIES } from '../lib/categories.js';
+import { inr } from '../lib/format.js';
 import { ymToIndex, indexToYm, ymLabel } from '../lib/ym.js';
 import { instAt, leftFrom, endIdx, totalOf } from '../lib/installments.js';
 
 const sum = (list) => list.reduce((s, x) => s + (x.amount || 0), 0);
+// Money between people can come in bit by bit: what's settled so far, and what's still to come.
+const settledOf = (r) => (r.status === 'done' ? r.amount || 0 : r.paid || 0);
+const leftOf = (r) => (r.status === 'pending' ? r.left ?? r.amount ?? 0 : 0);
+const sumBy = (list, fn) => list.reduce((s, x) => s + fn(x), 0);
 
 /** An EMI in the shared installment shape (see lib/installments.js). */
 export const emiPlan = (e) => ({ startIdx: ymToIndex(e.startYm), total: totalOf(e.totalMonths), freq: e.freq || 'monthly' });
@@ -110,11 +115,15 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
   const payables = entries.filter((r) => r.direction === 'out').map(withInst);
   // "I owe them" is money to pay too: it's listed (and counted) in Need to pay under "Money I owe".
   // The People entry stays the single source of truth – ticking the row marks it paid back.
-  const oweRows = payables.filter((r) => r.status !== 'moved').map((r) => ({
-    id: `owe:${r.id}`, kind: 'owe', entryId: r.id, ym, name: r.name, category: 'owe', amount: r.amount,
-    status: r.status === 'done' ? 'paid' : 'unpaid', dueDay: null, note: r.note || 'You owe this – paid back is tracked in People',
-    cardId: null, planId: null, personId: r.personId, inst: null, sortOrder: r.sortOrder,
-  }));
+  const oweRows = payables.filter((r) => r.status !== 'moved').map((r) => {
+    const part = r.status === 'pending' ? r.paid || 0 : 0; // paid back so far, when only part of it is
+    return {
+      id: `owe:${r.id}`, kind: 'owe', entryId: r.id, ym, name: r.name, category: 'owe', amount: r.amount,
+      status: r.status === 'done' ? 'paid' : 'unpaid', dueDay: null,
+      note: part ? `${inr(part)} paid back · ${inr(r.amount - part)} left` : r.note || 'You owe this – paid back is tracked in People',
+      paidPart: part, cardId: null, planId: null, personId: r.personId, inst: null, sortOrder: r.sortOrder,
+    };
+  });
 
   const allBills = billViews.concat(emiBillRows, oweRows);
   const live = allBills.filter((b) => b.status !== 'skipped');
@@ -131,11 +140,10 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
   const receivables = entries.filter((r) => r.direction === 'in').map(withInst).filter(inPlanRange).concat(friendEmiRows);
 
   const notMoved = (r) => r.status !== 'moved';
-  const pending = (r) => r.status === 'pending';
-  const done = (r) => r.status === 'done';
 
   // ---- totals ----
   const toPay = sum(live);
+  const paidAmount = sum(paidBills) + sumBy(unpaidBills, (b) => b.paidPart || 0);
   // EMIs I pay for friends (on a card or from the bank) aren't my own spending – they pay me back.
   const friendEmi = cardViews.reduce((s, c) => s + c.friendEmis, 0)
     + sum(emiBillRows.filter((b) => b.forWho === 'friend' && b.status !== 'skipped'));
@@ -153,12 +161,13 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
     budget: month.budget,
     totals: {
       toPay,
-      paid: sum(paidBills),
-      unpaid: sum(unpaidBills),
+      // Money I owe that's partly paid back counts its paid part as paid (the row stays unpaid until it's all back).
+      paid: paidAmount,
+      unpaid: toPay - paidAmount,
       paidCount: paidBills.length,
       unpaidCount: unpaidBills.length,
       skippedCount: allBills.length - live.length,
-      paidPct: toPay ? Math.round((sum(paidBills) / toPay) * 100) : 0,
+      paidPct: toPay ? Math.round((paidAmount / toPay) * 100) : 0,
       friendEmi,
       ownPay,
       sudden: suddenTotal,
@@ -169,11 +178,11 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
       // What I owe is already inside "to pay" (Money I owe), so it isn't taken off a second time.
       balanceInclPeople: balance + recvOther,
       recvTotal: sum(receivables.filter(notMoved)),
-      recvPending: sum(receivables.filter(pending)),
-      recvDone: sum(receivables.filter(done)),
+      recvPending: sumBy(receivables, leftOf), // still to come in (parts already received taken off)
+      recvDone: sumBy(receivables.filter(notMoved), settledOf), // received so far, parts included
       payTotal,
-      payPending: sum(payables.filter(pending)),
-      payDone: sum(payables.filter(done)),
+      payPending: sumBy(payables, leftOf),
+      payDone: sumBy(payables.filter(notMoved), settledOf),
     },
     categories,
     bills: allBills,

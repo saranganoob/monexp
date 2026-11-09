@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, input, output, signal } from '@ang
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AppStore } from '../../../core/app-store';
 import { Api } from '../../../core/api.service';
-import { fmtInput, parseNum } from '../../../core/utils/format';
+import { dayMonth, fmtInput, inr, parseNum, todayIso } from '../../../core/utils/format';
 import { firstError, notBlank, rupees } from '../../../core/forms/validators';
 import { InrPipe } from '../../../shared/pipes/inr.pipe';
 import { PersonRow } from '../../../shared/utils/person-row';
@@ -11,7 +11,7 @@ import { Busy } from '../../../shared/directives/busy';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import { Icon } from '../../../shared/ui/icon/icon';
 
-/** One "they owe me / I owe them" line with Mark received, Edit and Delete. */
+/** One "they owe me / I owe them" line: Mark received, Record part (₹6,000 of ₹10,000), Edit and Delete. */
 @Component({
   selector: 'app-person-entry-row',
   imports: [ReactiveFormsModule, InrPipe, Avatar, Icon, Busy],
@@ -26,6 +26,12 @@ export class PersonEntryRow {
   readonly editing = input(false);
   readonly edit = output<void>();
   readonly closed = output<void>();
+  /** The "Record part" box is open. */
+  protected readonly partOpen = signal(false);
+  protected readonly partError = signal('');
+  protected readonly partForm = inject(NonNullableFormBuilder).group({ amount: ['', rupees(1)], date: [''] });
+  protected readonly today = todayIso();
+  protected readonly dayMonth = dayMonth;
 
   protected readonly error = signal('');
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -48,6 +54,31 @@ export class PersonEntryRow {
   protected readonly saving = computed(() => this.store.loading.isPending(this.key()));
   toggle() { toggleEntry(this.api, this.store, this.row().r); }
   remove() { const id = this.row().r.id; this.store.run(() => this.api.deleteEntry(id), { key: `remove:${id}` }); }
+
+  protected openPart() {
+    this.partOpen.set(true);
+    this.partError.set('');
+    this.partForm.setValue({ amount: '', date: this.today });
+    setTimeout(() => (document.getElementById('partAmt-' + this.row().r.id) as HTMLInputElement | null)?.focus());
+  }
+
+  /** Part of the money came in / was paid back. Settles the entry once it's all there. */
+  async savePart() {
+    this.partForm.markAllAsTouched();
+    const left = this.row().left;
+    const amount = parseNum(this.partForm.controls.amount.value);
+    if (!amount) return this.partError.set('Enter the amount, above ₹0.');
+    if (amount > left) return this.partError.set(`Only ${inr(left)} is left.`);
+    const id = this.row().r.id, date = this.partForm.controls.date.value || this.today;
+    const err = await this.store.run(() => this.api.addEntryPart(id, { amount, date }), { quiet: true, key: `part:${id}` });
+    if (err) return this.partError.set(err);
+    this.partOpen.set(false);
+  }
+
+  removePart(partId: string) {
+    const id = this.row().r.id;
+    this.store.run(() => this.api.deleteEntryPart(id, partId), { key: `part-del:${partId}` });
+  }
 
   async save() {
     this.form.markAllAsTouched();

@@ -4,6 +4,7 @@ import * as N from './normalize.js';
 import { computeMonth, installmentAt } from './compute.js';
 import { addPlanRow } from './planService.js';
 import { ymLabel } from '../lib/ym.js';
+import { inr } from '../lib/format.js';
 import { badRequest, conflict } from '../lib/http.js';
 
 export const byOrder = { sortOrder: 1, createdAt: 1, _id: 1 };
@@ -140,10 +141,15 @@ export async function createMonth(ym, { mode, carryIds = [] }) {
       ym, direction: r.direction, person: r.person, name: r.name, amount: r.amount, status: 'pending',
       plan: r.plan, note: r.note, sortOrder: r.sortOrder,
     })),
-    ...carried.map((r) => ({
-      ym, direction: r.direction, person: r.person, name: r.name, amount: r.amount, status: 'pending',
-      note: `Carried over from ${fromLabel}`, carriedFrom: prev.ym, origin: r._id, sortOrder: r.sortOrder,
-    })),
+    // Only what's still left moves to the new month (parts already received stay in the old one).
+    ...carried.map((r) => {
+      const soFar = (r.parts || []).reduce((s, p) => s + (p.amount || 0), 0);
+      return {
+        ym, direction: r.direction, person: r.person, name: r.name, amount: r.amount - soFar, status: 'pending',
+        note: soFar ? `Carried over from ${fromLabel} · ${inr(soFar)} of ${inr(r.amount)} already settled` : `Carried over from ${fromLabel}`,
+        carriedFrom: prev.ym, origin: r._id, sortOrder: r.sortOrder,
+      };
+    }),
   ];
 
   const month = await Month.create({ ym, budget: prev.budget, createdHow: 'rollover' });

@@ -9,7 +9,8 @@
         <div class="strong" [class.muted]="row.done || row.moved">{{ row.r.name }}</div>
         <div class="small muted">{{ row.shortSub }}</div>
       </div>
-      <div class="num strong">{{ row.r.amount | inr }}</div>
+      <!-- Partly received: what's still to come. -->
+      <div class="num strong">{{ (row.partial ? row.left : row.r.amount) | inr }}</div>
       @if (row.canToggle) {
         <button class="btn btn--sm" [class.btn--primary]="row.btnPrimary" (click)="toggle(row.r)" [appBusy]="entryKey(row.r)">{{ store.loading.isPending(entryKey(row.r)) ? 'Saving…' : row.btnLabel }}</button>
       }

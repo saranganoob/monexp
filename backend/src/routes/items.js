@@ -5,7 +5,8 @@ import { withUndo } from '../services/undo.js';
 import { CATEGORY_KEYS } from '../lib/categories.js';
 import { badRequest, notFound } from '../lib/http.js';
 import { toAmount, toText, toId, toEnum, toInt } from '../lib/validate.js';
-import { ymLabel } from '../lib/ym.js';
+import { ymLabel, todayInIndia } from '../lib/ym.js';
+import { inr } from '../lib/format.js';
 
 const router = Router();
 
@@ -60,6 +61,9 @@ router.patch('/people-entries/:id', async (req, res) => {
   if (b.amount !== undefined) {
     set.amount = toAmount(b.amount, 'Amount');
     if (!set.amount) throw badRequest('Enter an amount above ₹0 — or delete the entry if nothing is due.');
+    const soFar = partsTotal(entry);
+    if (set.amount < soFar) throw badRequest(`${inr(soFar)} has already ${entry.direction === 'in' ? 'come in' : 'been paid back'} – the amount can't be less than that.`);
+    if (entry.status === 'pending' && soFar && set.amount === soFar) set.status = 'done'; // the parts now cover it all
   }
   if (b.status !== undefined) set.status = toEnum(b.status, ['pending', 'done'], 'status');
   if (!Object.keys(set).length) throw badRequest('Nothing to change.');
@@ -69,6 +73,45 @@ router.patch('/people-entries/:id', async (req, res) => {
     : set.status === 'pending' ? `${name} set back to pending`
       : `${name} updated for ${ymLabel(entry.ym)}`;
   res.json(await withUndo({ yms: [entry.ym] }, () => PeopleEntry.updateOne({ _id: entry._id }, { $set: set }).then(() => ({})), message));
+});
+
+const partsTotal = (entry) => (entry.parts || []).reduce((s, p) => s + (p.amount || 0), 0);
+
+// POST /api/people-entries/:id/parts  { amount, date? } – part of the money came in / was paid back.
+// Once the parts add up to the full amount, the entry is marked received / paid back.
+router.post('/people-entries/:id/parts', async (req, res) => {
+  const entry = await findOr404(PeopleEntry, req.params.id, 'Entry');
+  if (entry.status === 'moved') throw badRequest(`This was carried over to ${ymLabel(entry.movedTo)} – record it there.`);
+  if (entry.status === 'done') throw badRequest(`${entry.name} is already settled.`);
+  const amount = toAmount(req.body?.amount, 'Amount');
+  if (!amount) throw badRequest('Enter the amount that came in, above ₹0.');
+  const left = entry.amount - partsTotal(entry);
+  if (amount > left) throw badRequest(`Only ${inr(left)} is left on ${entry.name}.`);
+  const date = req.body?.date ? String(req.body.date) : todayInIndia();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayInIndia()) throw badRequest('Pick today or an earlier date.');
+
+  const settled = amount === left;
+  const inbound = entry.direction === 'in';
+  const message = settled
+    ? `${entry.name}: last ${inr(amount)} ${inbound ? 'received' : 'paid back'} – all settled`
+    : `${entry.name}: ${inr(amount)} ${inbound ? 'received' : 'paid back'} · ${inr(left - amount)} left`;
+  res.status(201).json(await withUndo({ yms: [entry.ym] }, () => PeopleEntry.updateOne(
+    { _id: entry._id },
+    { $push: { parts: { amount, date } }, ...(settled ? { $set: { status: 'done' } } : {}) },
+  ).then(() => ({})), message));
+});
+
+// DELETE /api/people-entries/:id/parts/:partId – a part entered by mistake.
+router.delete('/people-entries/:id/parts/:partId', async (req, res) => {
+  const entry = await findOr404(PeopleEntry, req.params.id, 'Entry');
+  if (entry.status === 'moved') throw badRequest(`This was carried over to ${ymLabel(entry.movedTo)} – change it there.`);
+  const partId = toId(req.params.partId, 'part');
+  const part = (entry.parts || []).find((p) => String(p._id) === String(partId));
+  if (!part) throw notFound('Part not found.');
+  res.json(await withUndo({ yms: [entry.ym] }, () => PeopleEntry.updateOne(
+    { _id: entry._id },
+    { $pull: { parts: { _id: partId } }, $set: { status: 'pending' } }, // something is left again
+  ).then(() => ({})), `${inr(part.amount)} removed from ${entry.name}`));
 });
 
 router.delete('/people-entries/:id', async (req, res) => {

@@ -8,7 +8,10 @@ import { ymToIndex } from '../lib/ym.js';
 export const matchesPerson = (p, r) => r.personId === p.id
   || (!r.personId && r.name.split('·')[0].trim().toLowerCase() === p.name.toLowerCase());
 
-const sum = (rows) => rows.reduce((s, r) => s + r.amount, 0);
+/** Still to come on pending entries (parts already settled taken off). */
+const left = (rows) => rows.reduce((s, r) => s + (r.status === 'pending' ? r.left ?? r.amount : 0), 0);
+/** Settled so far: whole entries once done, plus parts of the rest (carried-over ones included). */
+const settled = (rows) => rows.reduce((s, r) => s + (r.status === 'done' ? r.amount : r.paid || 0), 0);
 
 /** Everyone, with what they owe / are owed in month `at`, running EMIs, and everything received so far. */
 export async function peopleStats(at) {
@@ -18,8 +21,8 @@ export async function peopleStats(at) {
   const I = ymToIndex(at);
 
   return setup.people.map((p) => {
-    const owed = now ? sum(now.receivables.filter((r) => r.status === 'pending' && matchesPerson(p, r))) : 0;
-    const iOwe = now ? sum(now.payables.filter((r) => r.status === 'pending' && matchesPerson(p, r))) : 0;
+    const owed = now ? left(now.receivables.filter((r) => matchesPerson(p, r))) : 0;
+    const iOwe = now ? left(now.payables.filter((r) => matchesPerson(p, r))) : 0;
     // EMIs I pay for them that still have payments to come (monthly or yearly, card or bank).
     const running = setup.emis.filter((e) => e.personId === p.id && leftFrom(emiPlan(e), I) > 0);
     const leftToRecover = running.reduce((s, e) => {
@@ -29,7 +32,7 @@ export async function peopleStats(at) {
       if (instAt(plan, I).due && now?.receivables.some((r) => r.emiId === e.id && r.status === 'done')) left -= 1;
       return s + (e.monthly || 0) * left;
     }, 0);
-    const receivedSoFar = all.reduce((s, c) => s + sum(c.receivables.filter((r) => r.status === 'done' && matchesPerson(p, r))), 0);
+    const receivedSoFar = all.reduce((s, c) => s + settled(c.receivables.filter((r) => matchesPerson(p, r))), 0);
     return { ...p, owed, iOwe, runningEmis: running.length, leftToRecover, receivedSoFar };
   });
 }

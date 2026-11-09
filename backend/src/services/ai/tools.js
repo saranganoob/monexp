@@ -134,12 +134,17 @@ export function monthView(c) {
       })),
       itemisedSpends: x.items.map((i) => ({ name: i.name, amount: i.amount, date: i.date })),
     })),
+    // Money can come in bit by bit: receivedSoFar / stillToCome show partly settled entries.
     peopleOweMe: c.receivables.map((r) => ({
       name: r.name, amount: r.amount, status: r.status === 'done' ? 'received' : r.status,
+      ...(r.status === 'pending' && r.paid ? { receivedSoFar: r.paid, stillToCome: r.left } : {}),
       ...(r.inst ? { installment: instLabel(r.inst.n, r.inst.total) } : {}),
       ...(r.auto ? { source: `friend's EMI on ${r.auto}` } : {}),
     })),
-    iOwe: c.payables.map((r) => ({ name: r.name, amount: r.amount, status: r.status === 'done' ? 'paid back' : r.status })),
+    iOwe: c.payables.map((r) => ({
+      name: r.name, amount: r.amount, status: r.status === 'done' ? 'paid back' : r.status,
+      ...(r.status === 'pending' && r.paid ? { paidBackSoFar: r.paid, stillToPay: r.left } : {}),
+    })),
     suddenSpends: c.suddenSpends.map((s) => ({
       name: s.name, amount: s.amount, date: s.dateUnknown ? 'unknown' : s.date, paidWith: s.mode,
       ...(s.cardId ? { alreadyInCardBill: true, card: cardById.get(s.cardId)?.name } : {}),

@@ -573,6 +573,64 @@ test('daily spends: today and earlier days, taken off the balance unless switche
   assert.equal((await agent.get(`/api/daily?ym=${ym}`)).body.days.length, 0);
 });
 
+test('money between people can be settled in parts, and only what is left carries over', async () => {
+  const ym = '2026-10';
+  const totals = async () => (await agent.get(`/api/months/${ym}`)).body;
+  const before = (await totals()).totals;
+  const lent = await agent.post(`/api/months/${ym}/people-entries`).send({ direction: 'in', name: 'Test friend · loan', amount: 10000 });
+  const id = lent.body.id;
+
+  // ₹6,000 back: ₹4,000 still to come, and the entry stays pending.
+  const part = await agent.post(`/api/people-entries/${id}/parts`).send({ amount: 6000 });
+  assert.equal(part.status, 201);
+  assert.match(part.body.message, /₹4,000 left/);
+  let m = await totals();
+  let row = m.receivables.find((r) => r.id === id);
+  assert.deepEqual([row.status, row.paid, row.left, row.parts.length], ['pending', 6000, 4000, 1]);
+  assert.equal(m.totals.recvPending, before.recvPending + 4000);
+  assert.equal(m.totals.recvDone, before.recvDone + 6000);
+
+  // More than what's left, ₹0, or a future date is refused; the amount can't drop below what came in.
+  assert.equal((await agent.post(`/api/people-entries/${id}/parts`).send({ amount: 4001 })).status, 400);
+  assert.equal((await agent.post(`/api/people-entries/${id}/parts`).send({ amount: 0 })).status, 400);
+  assert.equal((await agent.post(`/api/people-entries/${id}/parts`).send({ amount: 100, date: '2999-01-01' })).status, 400);
+  assert.equal((await agent.patch(`/api/people-entries/${id}`).send({ amount: 5000 })).status, 400);
+
+  // A part entered by mistake can be removed.
+  await agent.post(`/api/people-entries/${id}/parts`).send({ amount: 1000 });
+  const extra = (await totals()).receivables.find((r) => r.id === id).parts.at(-1);
+  assert.equal((await agent.delete(`/api/people-entries/${id}/parts/${extra.id}`)).status, 200);
+  assert.equal((await totals()).receivables.find((r) => r.id === id).left, 4000);
+
+  // I owe someone ₹3,000 and pay ₹1,000 back: Need to pay counts ₹1,000 as paid, the row stays unpaid.
+  const owe = await agent.post(`/api/months/${ym}/people-entries`).send({ direction: 'out', name: 'Test lender · advance', amount: 3000 });
+  const mid = (await totals()).totals;
+  await agent.post(`/api/people-entries/${owe.body.id}/parts`).send({ amount: 1000 });
+  m = await totals();
+  const oweRow = m.bills.find((b) => b.entryId === owe.body.id);
+  assert.deepEqual([oweRow.status, oweRow.paidPart], ['unpaid', 1000]);
+  assert.equal(m.totals.paid, mid.paid + 1000);
+  assert.equal(m.totals.payPending, mid.payPending - 1000);
+
+  // The last ₹4,000 settles the loan by itself.
+  await agent.post(`/api/people-entries/${id}/parts`).send({ amount: 4000 });
+  row = (await totals()).receivables.find((r) => r.id === id);
+  assert.deepEqual([row.status, row.paid, row.left], ['done', 10000, 0]);
+
+  // Tidy up October so other tests see it as before.
+  await agent.delete(`/api/people-entries/${owe.body.id}`);
+  await agent.delete(`/api/people-entries/${id}`);
+
+  // Rolling over carries only what's still to pay back (₹2,000 of ₹3,000) – in months no other test uses.
+  await agent.post('/api/months/2027-02').send({ mode: 'blank' });
+  const owed = await agent.post('/api/months/2027-02/people-entries').send({ direction: 'out', name: 'Test lender · advance', amount: 3000 });
+  await agent.post(`/api/people-entries/${owed.body.id}/parts`).send({ amount: 1000 });
+  assert.equal((await agent.post('/api/months/2027-03').send({ mode: 'rollover', carryIds: [owed.body.id] })).status, 201);
+  const copy = (await agent.get('/api/months/2027-03')).body.payables.find((r) => r.name === 'Test lender · advance');
+  assert.equal(copy.amount, 2000);
+  assert.match(copy.note, /₹1,000 of ₹3,000 already settled/);
+});
+
 test('logout clears the session', async () => {
   await agent.post('/api/auth/logout');
   assert.equal((await agent.get('/api/months/2026-10')).status, 401);

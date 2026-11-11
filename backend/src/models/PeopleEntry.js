@@ -24,6 +24,9 @@ const peopleEntrySchema = new Schema({
   carriedFrom: ymField({ default: null }), // set on the copy in the new month
   movedTo: ymField({ default: null }),     // set on the original when carried over
   origin: { type: ObjectId, ref: 'PeopleEntry', default: null },
+  // Bought for a friend on my card: the card purchase this is for (removed together), or the friend EMI whose fee it is.
+  cardSpend: { type: ObjectId, ref: 'CardSpend', default: null },
+  emi: { type: ObjectId, ref: 'CardEmi', default: null },
   sortOrder: { type: Number, default: 0 },
 }, { timestamps: true });
 

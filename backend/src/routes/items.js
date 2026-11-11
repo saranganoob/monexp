@@ -118,12 +118,17 @@ router.delete('/people-entries/:id', async (req, res) => {
   const entry = await findOr404(PeopleEntry, req.params.id, 'Entry');
   if (entry.status === 'moved') throw badRequest(`This was carried over to ${ymLabel(entry.movedTo)} – remove it there.`);
   const yms = entry.carriedFrom ? [entry.ym, entry.carriedFrom] : [entry.ym];
+  // Bought for a friend: the purchase on my card goes too (it was only on the card for them).
+  const spend = entry.cardSpend ? await CardSpend.findById(entry.cardSpend).lean() : null;
+  if (spend && !yms.includes(spend.ym)) yms.push(spend.ym);
   res.json(await withUndo({ yms }, async () => {
     await PeopleEntry.deleteOne({ _id: entry._id });
     // Removing a carried-over copy puts the original back to pending in its month.
     if (entry.origin) await PeopleEntry.updateOne({ _id: entry.origin }, { status: 'pending', movedTo: null });
+    if (spend) await removeSpend(spend);
     return {};
-  }, `${entry.name} removed from ${ymLabel(entry.ym)}${entry.carriedFrom ? ` — back to pending in ${ymLabel(entry.carriedFrom)}` : ''}`));
+  }, `${entry.name} removed from ${ymLabel(entry.ym)}${entry.carriedFrom ? ` — back to pending in ${ymLabel(entry.carriedFrom)}` : ''}`
+    + (spend ? ` – and its ${inr(spend.amount)} purchase from the card` : '')));
 });
 
 // ---- sudden spends ----
@@ -135,20 +140,29 @@ router.delete('/sudden/:id', async (req, res) => {
 
 // ---- itemised card spends ----
 
+/** Removes a card purchase and takes its amount off that card's "my spends". */
+async function removeSpend(s) {
+  await CardSpend.deleteOne({ _id: s._id });
+  const month = await Month.findOne({ ym: s.ym });
+  if (month) {
+    const key = String(s.card);
+    month.cardSpends.set(key, Math.max(0, (month.cardSpends.get(key) || 0) - s.amount));
+    await month.save();
+  }
+}
+
 // Removing an item also takes its amount off the card's "my spends".
+// A purchase bought for a friend takes their "they owe me" entry with it.
 router.delete('/card-spends/:id', async (req, res) => {
   const s = await findOr404(CardSpend, req.params.id, 'Spend');
   const card = await Card.findById(s.card).lean();
-  res.json(await withUndo({ yms: [s.ym] }, async () => {
-    await CardSpend.deleteOne({ _id: s._id });
-    const month = await Month.findOne({ ym: s.ym });
-    if (month) {
-      const key = String(s.card);
-      month.cardSpends.set(key, Math.max(0, (month.cardSpends.get(key) || 0) - s.amount));
-      await month.save();
-    }
+  const entry = s.entry ? await PeopleEntry.findById(s.entry).lean() : null;
+  const yms = entry && entry.ym !== s.ym ? [s.ym, entry.ym] : [s.ym];
+  res.json(await withUndo({ yms }, async () => {
+    await removeSpend(s);
+    if (entry) await PeopleEntry.deleteOne({ _id: entry._id });
     return {};
-  }, `${s.name} removed from ${card?.name ?? 'the card'}`));
+  }, `${s.name} removed from ${card?.name ?? 'the card'}${entry ? ` – and “${entry.name}” from People` : ''}`));
 });
 
 export default router;

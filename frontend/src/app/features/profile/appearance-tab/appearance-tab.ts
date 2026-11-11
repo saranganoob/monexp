@@ -3,6 +3,9 @@ import { COLOR_NAMES, NamedColor, searchColors } from '../../../core/utils/color
 import { ACCENT_PRESETS, BudgetRule, DEFAULT_ACCENT, DEFAULT_AI_NAME, ThemeMode, ThemeService } from '../../../core/theme.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AppStore } from '../../../core/app-store';
+import { fmtInput } from '../../../core/utils/format';
+
+const DEFAULT_DAILY_LIMIT = 300;
 import { errorMessage } from '../../../core/api.service';
 import { SidebarStyle } from '../../../core/models';
 import { Icon, IconName } from '../../../shared/ui/icon/icon';
@@ -55,6 +58,24 @@ export class AppearanceTab {
   protected readonly previewKeys = Object.keys(HINT_LABELS) as HintKey[];
   protected readonly hintLabels = HINT_LABELS;
   protected pickLang(code: HomeLang | null) { this.theme.setLang(code); }
+
+  // ---- daily limit ----
+  protected readonly limitText = computed(() => fmtInput(this.theme.dailyLimit()));
+  /** Switching on starts at ₹300 – then type your own. */
+  protected limitOn() {
+    if (this.theme.dailyLimit() != null) return;
+    this.theme.setDailyLimit(DEFAULT_DAILY_LIMIT);
+    setTimeout(() => (document.getElementById('dailyLimit') as HTMLInputElement | null)?.select());
+  }
+  /** Digits only; an empty box keeps the last limit (switch Off to remove it). */
+  protected setLimit(e: Event) {
+    const el = e.target as HTMLInputElement;
+    const digits = el.value.replace(/[^0-9]/g, '').slice(0, 7);
+    if (digits !== el.value) el.value = digits;
+    const n = Number(digits);
+    if (n >= 1 && n <= 1000000) this.theme.setDailyLimit(n);
+  }
+  protected tidyLimit(e: Event) { (e.target as HTMLInputElement).value = this.limitText(); }
 
   /** Daily or sudden spends in / out of the balance: saved, then every total reloads. */
   protected async setRule(key: BudgetRule, on: boolean) {

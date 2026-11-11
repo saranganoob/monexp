@@ -57,6 +57,8 @@ export class AppStore {
   readonly dialog = signal<{ type: AddType } | null>(null);
   /** The "Add EMI / installment" dialog; cardId pre-selects "Paid from" (null = bank / cash). */
   readonly emiDialog = signal<{ cardId: string | null } | null>(null);
+  /** The "Bought for a friend" dialog; cardId pre-selects the card. */
+  readonly friendBuyDialog = signal<{ cardId: string | null } | null>(null);
   readonly askAiOpen = signal(false);
   readonly calcOpen = signal(false);
 
@@ -102,6 +104,7 @@ export class AppStore {
     this.toast.set(null);
     this.dialog.set(null);
     this.emiDialog.set(null);
+    this.friendBuyDialog.set(null);
     this.askAiOpen.set(false);
     this.calcOpen.set(false);
   }
@@ -184,4 +187,5 @@ export class AppStore {
 
   openAdd(type: AddType = 'bill') { this.dialog.set({ type }); }
   openEmi(cardId: string | null = null) { this.emiDialog.set({ cardId }); }
+  openFriendBuy(cardId: string | null = null) { this.friendBuyDialog.set({ cardId }); }
 }

@@ -58,6 +58,8 @@ export class ThemeService {
   readonly dailyInBudget = signal(true);
   /** Sudden spends come off the month's balance. Off (a note only) unless turned on in Profile → Preferences. */
   readonly suddenInBudget = signal(false);
+  /** Daily spends limit per day (₹), or null = off (the default). Going over only shows a warning. */
+  readonly dailyLimit = signal<number | null>(null);
   /** The menu (Profile → Menu): section order and the ones switched off. Same on phone and computer. */
   readonly navOrder = signal<MenuKey[]>(DEFAULT_MENU_ORDER);
   readonly navHidden = signal<MenuKey[]>([]);
@@ -82,7 +84,7 @@ export class ThemeService {
           // Signed out: the sign-in page always shows MonEXP's own look (light, blue) – never the last person's colours.
           this.mode.set('light');
           this.accent.set(DEFAULT_ACCENT);
-          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); this.calculator.set(true); this.dailyInBudget.set(true); this.suddenInBudget.set(false);
+          this.lang.set(null); this.sidebar.set('classic'); this.sidebarPinned.set(true); this.aiName.set(DEFAULT_AI_NAME); this.calculator.set(true); this.dailyInBudget.set(true); this.suddenInBudget.set(false); this.dailyLimit.set(null);
           this.navOrder.set(DEFAULT_MENU_ORDER); this.navHidden.set([]);
           return;
         }
@@ -96,6 +98,7 @@ export class ThemeService {
         this.calculator.set(account.prefs?.calculator ?? true);
         this.dailyInBudget.set(account.prefs?.dailyInBudget ?? true);
         this.suddenInBudget.set(account.prefs?.suddenInBudget ?? false);
+        this.dailyLimit.set(account.prefs?.dailyLimit ?? null);
         this.navOrder.set(menuOrder(account.prefs?.navOrder));
         this.navHidden.set(menuOrder(account.prefs?.navHidden).filter((k) => account.prefs?.navHidden?.includes(k)));
       });
@@ -177,6 +180,12 @@ export class ThemeService {
       rule.set(was);
       throw e;
     }
+  }
+
+  /** null switches the limit off. Saved a moment after the last change. */
+  setDailyLimit(limit: number | null) {
+    this.dailyLimit.set(limit);
+    this.save({ dailyLimit: limit });
   }
 
   /** New menu order / hidden sections: shown at once, saved a moment later. */

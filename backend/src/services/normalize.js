@@ -6,6 +6,7 @@ export const normCard = (c) => ({ id: sid(c._id), name: c.name, last4: c.last4 |
 export const normEmi = (e) => ({
   id: sid(e._id), cardId: sid(e.card), item: e.item, forWho: e.forWho, personId: sid(e.person),
   monthly: e.monthly || 0, freq: e.freq || 'monthly', totalMonths: e.totalMonths ?? null, ongoing: e.totalMonths == null, startYm: e.startYm,
+  price: e.price ?? null, fee: e.fee || 0, chargesBy: e.chargesBy || 'friend', boughtOn: e.boughtOn || '',
 });
 
 export const normPlan = (p) => ({
@@ -46,4 +47,5 @@ export const normSudden = (s) => ({
 
 export const normCardSpend = (s) => ({
   id: sid(s._id), ym: s.ym, cardId: sid(s.card), name: s.name, amount: s.amount || 0, date: s.date,
+  personId: sid(s.person), entryId: sid(s.entry), emiId: sid(s.emi),
 });

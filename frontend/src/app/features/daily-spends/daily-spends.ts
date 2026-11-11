@@ -77,6 +77,24 @@ export class DailySpendsPage implements OnDestroy {
   protected readonly selectedLabel = computed(() => (this.selected() ? longDay(this.selected()!) : ''));
   protected readonly draftTotal = computed(() => draftTotal(this.draft()));
 
+  // ---- daily limit (Profile → Preferences; off unless set) ----
+  protected readonly limit = this.theme.dailyLimit;
+  /** The open day against the limit: share used (for the bar), how far over, and the bar's tone. */
+  protected readonly vsLimit = computed(() => {
+    const limit = this.limit();
+    if (limit == null || !this.editing()) return null;
+    const total = this.draftTotal();
+    const pct = Math.min(100, Math.round((total / limit) * 100));
+    return { limit, total, pct, over: Math.max(0, total - limit), left: Math.max(0, limit - total),
+      tone: total > limit ? 'over' : pct >= 80 ? 'near' : 'ok' };
+  });
+  /** Days this month that went over the limit. */
+  protected readonly daysOver = computed(() => {
+    const limit = this.limit();
+    if (limit == null) return 0;
+    return this.cells().filter((c) => c && !c.future && c.total > limit).length;
+  });
+
   // ---- the numbers at the top ----
   /** A day's total – for the day being filled in, what's being typed, so every figure moves as you enter. */
   private totalOf(date: string) {
@@ -115,14 +133,17 @@ export class DailySpendsPage implements OnDestroy {
       const future = !today || date > today;
       return {
         date, day: i + 1, total, short: shortInr(total), future, isToday: date === today, selected: date === sel,
+        over: !future && this.theme.dailyLimit() != null && total > this.theme.dailyLimit()!, // went over the daily limit
         level: future || !total ? 0 : Math.min(4, Math.ceil((total / max) * 4)), // shade by how much was spent
-        label: `${i + 1} ${MONTHS[ymMonth0(ym)]}${future ? ', not yet' : total ? ', ' + inr(total) : ', nothing logged'}`,
+        label: `${i + 1} ${MONTHS[ymMonth0(ym)]}${future ? ', not yet' : total ? ', ' + inr(total) : ', nothing logged'}`
+          + (!future && this.theme.dailyLimit() != null && total > this.theme.dailyLimit()! ? ', over the daily limit' : ''),
       };
     });
     return [...blanks, ...days];
   });
 
   constructor() {
+
     // Load the month (again after any change elsewhere, e.g. another tab).
     effect(async () => {
       const ym = this.ym();

@@ -1,6 +1,6 @@
 // Things that live across months: cards, card EMIs, installment plans, people.
 import { Router } from 'express';
-import { Month, BillItem, Card, CardEmi, Plan, Person, PeopleEntry, SuddenSpend, NETWORKS, RELATIONS } from '../models/index.js';
+import { Month, BillItem, Card, CardEmi, CardSpend, Plan, Person, PeopleEntry, SuddenSpend, NETWORKS, RELATIONS } from '../models/index.js';
 import { withUndo } from '../services/undo.js';
 import { addCardBills, loadSetup } from '../services/monthService.js';
 import { syncPlanRows, detachPlanRows, planYms } from '../services/planService.js';
@@ -137,7 +137,19 @@ router.patch('/emis/:id', async (req, res) => {
 
 router.delete('/emis/:id', async (req, res) => {
   const emi = await findOr404(CardEmi, req.params.id, 'EMI');
-  res.json(await withUndo({ global: ['CardEmi'] }, () => CardEmi.deleteOne({ _id: emi._id }).then(() => ({})), `${emi.item} EMI removed`));
+  // Bought for a friend on EMI: its one-time fee (on the card, and owed by the friend) goes too.
+  const feeSpends = await CardSpend.find({ emi: emi._id }).lean();
+  const feeEntries = await PeopleEntry.find({ emi: emi._id }).lean();
+  const yms = [...new Set([...feeSpends, ...feeEntries].map((x) => x.ym))];
+  res.json(await withUndo({ global: ['CardEmi'], yms }, async () => {
+    await CardEmi.deleteOne({ _id: emi._id });
+    for (const s of feeSpends) {
+      await CardSpend.deleteOne({ _id: s._id });
+      await Month.updateOne({ ym: s.ym }, { $inc: { [`cardSpends.${s.card}`]: -s.amount } });
+    }
+    await PeopleEntry.deleteMany({ emi: emi._id });
+    return {};
+  }, `${emi.item} EMI removed`));
 });
 
 // ---------------- installment plans ----------------

@@ -13,6 +13,12 @@ const cardEmiSchema = new Schema({
   freq: { type: String, enum: ['monthly', 'yearly'], default: 'monthly' },
   totalMonths: { type: Number, default: null, min: 1, max: 600, validate: (v) => v == null || Number.isInteger(v) }, // number of payments; null = ongoing, no end date
   startYm: ymField({ required: true }), // month of payment 1
+  // Bought for a friend and converted to EMI on my card: the price, a one-time fee (processing + GST),
+  // and who carries the extra (interest + fee). 'me' = the friend repays only price ÷ months.
+  price: { ...amountField(), default: null },
+  fee: { ...amountField(), default: 0 },
+  chargesBy: { type: String, enum: ['friend', 'me'], default: 'friend' },
+  boughtOn: { type: String, match: /^(\d{4}-\d{2}-\d{2})?$/, default: '' },
 }, { timestamps: true });
 
 cardEmiSchema.plugin(ownerPlugin);

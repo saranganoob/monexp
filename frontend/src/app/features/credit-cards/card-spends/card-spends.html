@@ -17,7 +17,7 @@
     <div class="items">
       @for (it of card().items; track it.id) {
         <div class="item">
-          <span class="grow strong">{{ it.name }}</span>
+          <span class="grow strong">{{ it.name }}@if (it.personId) { <span class="tag tag--friend">Friend</span> }</span>
           <span class="tiny muted">{{ it.date | ym: 'day' }}</span>
           <span class="num strong amount">{{ it.amount | inr }}</span>
           <button type="button" class="btn btn--ghost btn--sm remove"  (click)="remove(it)" [appBusy]="'remove:' + it.id" [attr.aria-label]="'Remove ' + it.name + ' ' + (it.amount | inr)">

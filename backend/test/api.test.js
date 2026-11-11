@@ -174,7 +174,7 @@ test('adding to a month that does not exist sets it up first', async () => {
   assert.equal((await agent.patch('/api/auth/prefs').send({ suddenInBudget: true })).body.prefs.suddenInBudget, true);
   const counted = (await agent.get('/api/months/2026-12')).body.totals;
   assert.deepEqual([counted.suddenInBudget, counted.balance], [true, dec.totals.balance - 1500]);
-  await agent.patch('/api/auth/prefs').send({ suddenInBudget: null, navOrder: null, navHidden: [] }); // back to the default (a note only)
+  await agent.patch('/api/auth/prefs').send({ suddenInBudget: null, dailyLimit: null, navOrder: null, navHidden: [] }); // back to the default (a note only)
   const bad = await agent.post('/api/months/2026-12/sudden').send({ name: 'x', amount: 1, mode: 'Cash', date: '2026-11-30' });
   assert.equal(bad.status, 400);
 });
@@ -315,14 +315,14 @@ test('each account only sees its own data', async () => {
 });
 
 test('look & feel is saved per account', async () => {
-  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
+  assert.deepEqual((await agent.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, dailyLimit: null, navOrder: null, navHidden: [] });
   assert.equal((await agent.patch('/api/auth/prefs').send({ theme: 'purple' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ accent: 'red' })).status, 400);
   const res = await agent.patch('/api/auth/prefs').send({ theme: 'dark', accent: '#10b981' });
   assert.equal(res.status, 200);
-  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
+  assert.deepEqual(res.body.prefs, { theme: 'dark', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, dailyLimit: null, navOrder: null, navHidden: [] });
   // Changing one leaves the other as it was.
-  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
+  assert.deepEqual((await agent.patch('/api/auth/prefs').send({ theme: 'light' })).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, dailyLimit: null, navOrder: null, navHidden: [] });
   // Home language: Tamil / Telugu / Hindi or none.
   assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'fr' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ lang: 'ta' })).body.prefs.lang, 'ta');
@@ -330,10 +330,10 @@ test('look & feel is saved per account', async () => {
   // A fresh sign-in (another device) gets them back; another account has its own.
   const other = request.agent(app);
   await other.post('/api/auth/login').send(LOGIN);
-  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
+  assert.deepEqual((await other.get('/api/auth/me')).body.prefs, { theme: 'light', accent: '#10B981', lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, dailyLimit: null, navOrder: null, navHidden: [] });
   const friend = request.agent(app);
   await friend.post('/api/auth/login').send({ identifier: 'friend@example.com', password: 'friend-password-1' });
-  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, navOrder: null, navHidden: [] });
+  assert.deepEqual((await friend.get('/api/auth/me')).body.prefs, { theme: null, accent: null, lang: null, sidebar: null, sidebarPinned: null, aiName: null, calculator: null, dailyInBudget: null, suddenInBudget: null, dailyLimit: null, navOrder: null, navHidden: [] });
 });
 
 test('web sidebar style and pin are saved per account', async () => {
@@ -350,6 +350,11 @@ test('web sidebar style and pin are saved per account', async () => {
   assert.equal((await agent.patch('/api/auth/prefs').send({ navHidden: ['admin'] })).status, 400);
   const back = (await agent.patch('/api/auth/prefs').send({ navOrder: null, navHidden: [] })).body.prefs;
   assert.deepEqual([back.navOrder, back.navHidden], [null, []]);
+  // Daily limit: off by default, whole rupees when on, null switches it off again.
+  assert.equal((await agent.patch('/api/auth/prefs').send({ dailyLimit: 300 })).body.prefs.dailyLimit, 300);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ dailyLimit: 0 })).status, 400);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ dailyLimit: 12.5 })).status, 400);
+  assert.equal((await agent.patch('/api/auth/prefs').send({ dailyLimit: null })).body.prefs.dailyLimit, null);
   assert.equal((await agent.patch('/api/auth/prefs').send({ calculator: 'off' })).status, 400);
   assert.equal((await agent.patch('/api/auth/prefs').send({ calculator: false })).body.prefs.calculator, false);
   assert.equal((await agent.patch('/api/auth/prefs').send({ sidebar: 'classic' })).body.prefs.sidebar, 'classic');
@@ -629,6 +634,75 @@ test('money between people can be settled in parts, and only what is left carrie
   const copy = (await agent.get('/api/months/2027-03')).body.payables.find((r) => r.name === 'Test lender · advance');
   assert.equal(copy.amount, 2000);
   assert.match(copy.note, /₹1,000 of ₹3,000 already settled/);
+});
+
+test('bought for a friend on my card: one-time and EMI, with charges paid by them or by me', async () => {
+  const card = (await agent.get('/api/cards')).body.find((c) => c.name === 'Amazon Pay ICICI');
+  const ym = '2026-10';
+  const get = async (m = ym) => (await agent.get(`/api/months/${m}`)).body;
+  const before = await get();
+  const cardBefore = before.cards.find((c) => c.id === card.id);
+
+  // One-time ₹20,000 phone + ₹400 charges the friend pays: card bill +₹20,400, friend owes ₹20,400.
+  const once = await agent.post('/api/friend-purchases').send({
+    newPersonName: 'Test buyer', item: 'Phone', cardId: card.id, price: 20000, fee: 400, chargesBy: 'friend', date: '2026-10-05', type: 'once',
+  });
+  assert.equal(once.status, 201);
+  let m = await get();
+  const owes = m.receivables.find((r) => r.name === 'Test buyer · Phone');
+  assert.equal(owes.amount, 20400);
+  assert.equal(m.cards.find((c) => c.id === card.id).spends, cardBefore.spends + 20400);
+  assert.equal(m.totals.balanceInclPeople - m.totals.balance, before.totals.balanceInclPeople - before.totals.balance + 20400);
+  // Removing the "owes me" entry takes the card purchase with it.
+  await agent.delete(`/api/people-entries/${owes.id}`);
+  m = await get();
+  assert.equal(m.cards.find((c) => c.id === card.id).spends, cardBefore.spends);
+
+  // Refused: no card, a future date, an EMI that adds up to less than the price.
+  assert.equal((await agent.post('/api/friend-purchases').send({ newPersonName: 'X', item: 'TV', price: 100, date: '2026-10-05' })).status, 400);
+  assert.equal((await agent.post('/api/friend-purchases').send({ newPersonName: 'X', item: 'TV', cardId: card.id, price: 100, date: '2999-01-01' })).status, 400);
+  assert.equal((await agent.post('/api/friend-purchases').send({
+    newPersonName: 'X', item: 'TV', cardId: card.id, price: 12000, date: '2026-10-05', type: 'emi', monthly: 900, months: 12,
+  })).status, 400);
+
+  // EMI: ₹30,000 laptop, 6 × ₹5,300 on the card + ₹600 fee, and I absorb the charges:
+  // the card bill has ₹5,300 a month, the friend repays ₹5,000 – the ₹300 interest is my own spending.
+  const emiBuy = await agent.post('/api/friend-purchases').send({
+    newPersonName: 'Test buyer', item: 'Laptop', cardId: card.id, price: 30000, fee: 600, chargesBy: 'me',
+    date: '2026-10-08', type: 'emi', monthly: 5300, months: 6, startYm: '2026-10',
+  });
+  assert.equal(emiBuy.status, 201);
+  m = await get();
+  const view = m.cards.find((c) => c.id === card.id);
+  assert.equal(view.friendEmis - cardBefore.friendEmis, 5300);
+  assert.equal(view.spends - cardBefore.spends, 600); // the fee lands on the first bill
+  const repay = m.receivables.find((r) => r.name === 'Test buyer · Laptop EMI');
+  assert.deepEqual([repay.amount, repay.inst.n, repay.inst.total], [5000, 1, 6]);
+  assert.equal(m.totals.friendEmi - before.totals.friendEmi, 5000);
+  assert.equal(m.receivables.some((r) => r.name.includes('EMI fee')), false); // I absorb the fee too
+
+  // Removing the EMI takes its fee off the card.
+  const emi = (await agent.get('/api/emis')).body.find((e) => e.item === 'Laptop');
+  assert.deepEqual([emi.price, emi.fee, emi.chargesBy], [30000, 600, 'me']);
+  await agent.delete(`/api/emis/${emi.id}`);
+  m = await get();
+  assert.equal(m.cards.find((c) => c.id === card.id).spends, cardBefore.spends);
+
+  // Friend pays the charges: they repay the full ₹5,300 and owe the ₹600 fee.
+  await agent.post('/api/friend-purchases').send({
+    newPersonName: 'Test buyer', item: 'Tablet', cardId: card.id, price: 30000, fee: 600, chargesBy: 'friend',
+    date: '2026-10-08', type: 'emi', monthly: 5300, months: 6,
+  });
+  m = await get();
+  assert.equal(m.receivables.find((r) => r.name === 'Test buyer · Tablet EMI').amount, 5300);
+  assert.equal(m.receivables.find((r) => r.name === 'Test buyer · Tablet EMI fee').amount, 600);
+  const tablet = (await agent.get('/api/emis')).body.find((e) => e.item === 'Tablet');
+  await agent.delete(`/api/emis/${tablet.id}`);
+  m = await get();
+  assert.equal(m.receivables.some((r) => r.name.startsWith('Test buyer')), false);
+  assert.equal(m.cards.find((c) => c.id === card.id).spends, cardBefore.spends);
+  const person = (await agent.get('/api/people')).body.find((p) => p.name === 'Test buyer');
+  await agent.delete(`/api/people/${person.id}`);
 });
 
 test('logout clears the session', async () => {

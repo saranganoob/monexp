@@ -1,18 +1,25 @@
-// Wide screens: Theme and Sidebar side by side, then Accent colour and Home language across the full width.
-:host { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: 'theme side' 'accent accent' 'lang lang'; gap: 24px; align-items: stretch; }
+// Wide screens: cards in pairs – Theme · Sidebar, Daily spends · Daily limit, Sudden spends · Calculator –
+// then Accent colour across the full width, and Home language (with the AI name card when there is one).
+:host { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: stretch;
+  grid-template-areas: 'theme side' 'daily limit' 'sudden calc' 'accent accent' 'lang lang'; }
+:host:has(.ai-panel) { grid-template-areas: 'theme side' 'daily limit' 'sudden calc' 'accent accent' 'lang ai'; }
 .panel { padding: 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.panel:nth-of-type(1) { grid-area: theme; }
-.panel:nth-of-type(2) { grid-area: side; }
-.panel:nth-of-type(3) { grid-area: accent; }
+.p-theme { grid-area: theme; }
+.p-side { grid-area: side; }
+.p-daily { grid-area: daily; }
+.p-limit { grid-area: limit; }
+.p-sudden { grid-area: sudden; }
+.p-calc { grid-area: calc; }
+.p-accent { grid-area: accent; }
+.p-lang { grid-area: lang;
+  .option { min-width: 0; padding: 0 16px; } } // four language buttons fit on one line
 .ai-panel { grid-area: ai; }
-// With the AI name card, Home language and AI name share the last row.
-:host:has(.ai-panel) { grid-template-areas: 'theme side' 'accent accent' 'lang ai'; }
 .name-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
   .field { flex: 1 1 180px; min-width: 0; } }
-.panel:nth-of-type(4) { grid-area: lang;
-  .option { min-width: 0; padding: 0 16px; } } // four language buttons fit on one line
+.limit-field { max-width: 240px; }
 @media (max-width: 1000px) {
-  :host, :host:has(.ai-panel) { grid-template-columns: 1fr; grid-template-areas: 'theme' 'side' 'accent' 'lang' 'ai'; }
+  :host, :host:has(.ai-panel) { grid-template-columns: 1fr;
+    grid-template-areas: 'theme' 'side' 'daily' 'limit' 'sudden' 'calc' 'accent' 'lang' 'ai'; }
 }
 @media (max-width: 520px) {
   .panel { padding: 20px; }

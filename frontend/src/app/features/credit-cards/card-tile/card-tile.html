@@ -59,7 +59,10 @@
     </div>
 
     <div class="row-flex">
-      @if (!c.closedOn) { <button class="btn btn--sm" (click)="addEmi.emit(c.id)">Add EMI to this card</button> }
+      @if (!c.closedOn) {
+        <button class="btn btn--sm" (click)="addEmi.emit(c.id)">Add EMI to this card</button>
+        <button class="btn btn--sm" (click)="friendBuy.emit(c.id)">Bought for a friend</button>
+      }
       @if (c.billId) { <button class="btn btn--sm" (click)="togglePaid()" [appBusy]="payKey()">{{ store.loading.isPending(payKey()) ? 'Saving…' : (paid() ? 'Mark bill unpaid' : 'Mark bill paid') }}</button> }
     </div>
   </div>

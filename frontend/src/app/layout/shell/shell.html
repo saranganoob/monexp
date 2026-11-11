@@ -24,6 +24,7 @@
 
   @if (store.dialog()) { <app-add-expense-dialog animate.leave="is-leaving" /> }
   @if (store.emiDialog()) { <app-emi-dialog animate.leave="is-leaving" /> }
+  @if (store.friendBuyDialog()) { <app-friend-buy-dialog animate.leave="is-leaving" /> }
   <!-- Screen readers hear "Saving…" when an action takes a while (the toast then says how it went). -->
   <div class="sr" role="status" aria-live="polite">{{ store.loading.anySlow() ? 'Saving…' : '' }}</div>
   <!-- Ask AI only for logins the admin switched AI on for – others never see it. -->

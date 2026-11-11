@@ -19,7 +19,7 @@ const publicUser = (u) => ({
   name: u.name || '', email: u.email || '', phone: u.phone || '', isAdmin: Boolean(u.isAdmin), aiAllowed: canUseAi(u),
   prefs: {
     theme: u.prefs?.theme ?? null, accent: u.prefs?.accent ?? null, lang: u.prefs?.lang ?? null,
-    sidebar: u.prefs?.sidebar ?? null, sidebarPinned: u.prefs?.sidebarPinned ?? null, aiName: u.prefs?.aiName ?? null, calculator: u.prefs?.calculator ?? null, dailyInBudget: u.prefs?.dailyInBudget ?? null, suddenInBudget: u.prefs?.suddenInBudget ?? null,
+    sidebar: u.prefs?.sidebar ?? null, sidebarPinned: u.prefs?.sidebarPinned ?? null, aiName: u.prefs?.aiName ?? null, calculator: u.prefs?.calculator ?? null, dailyInBudget: u.prefs?.dailyInBudget ?? null, suddenInBudget: u.prefs?.suddenInBudget ?? null, dailyLimit: u.prefs?.dailyLimit ?? null,
     navOrder: u.prefs?.navOrder?.length ? u.prefs.navOrder : null, navHidden: u.prefs?.navHidden ?? [],
   },
 });
@@ -184,6 +184,14 @@ router.patch('/prefs', requireAuth, async (req, res) => {
     // null = back to the default
     if (req.body.suddenInBudget !== null && typeof req.body.suddenInBudget !== 'boolean') throw badRequest('Say whether sudden spends come off the budget (true or false).');
     set['prefs.suddenInBudget'] = req.body.suddenInBudget;
+  }
+  // Daily spends limit per day: whole rupees, or null = off. Going over only shows a warning.
+  if (req.body?.dailyLimit !== undefined) {
+    const limit = req.body.dailyLimit;
+    if (limit !== null && !(Number.isInteger(limit) && limit >= 1 && limit <= 1000000)) {
+      throw badRequest('The daily limit must be whole rupees between ₹1 and ₹10,00,000 – or off.');
+    }
+    set['prefs.dailyLimit'] = limit;
   }
   // The menu: an order of sections (every section once) and the ones switched off.
   if (req.body?.navOrder !== undefined) {

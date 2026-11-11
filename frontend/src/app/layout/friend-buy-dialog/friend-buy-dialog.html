@@ -1,0 +1,91 @@
+<div class="backdrop" (click)="backdrop($event)">
+  <form role="dialog" aria-modal="true" aria-labelledby="fbTitle" class="card dialog" [formGroup]="form" (ngSubmit)="save()">
+    <div class="between top">
+      <div>
+        <h2 id="fbTitle">Bought for a friend</h2>
+        <p class="hint">A friend bought something on your credit card (for the card discount) and pays you back – all at once or as an EMI.</p>
+      </div>
+      <button type="button" class="btn btn--ghost btn--icon" (click)="close()" aria-label="Close"><app-icon name="close" [size]="20" /></button>
+    </div>
+
+    <div class="form-grid form-grid--wide">
+      <label><span class="field-label">Friend</span>
+        <select id="fbPerson" class="field" formControlName="personId">
+          <option value="">Choose a person…</option>
+          @for (p of store.people(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+          <option [value]="newPerson">+ Someone new…</option>
+        </select>
+      </label>
+      @if (form.controls.personId.value === newPerson) {
+        <label><span class="field-label">Friend’s name</span><input class="field" formControlName="newName" placeholder="e.g. Deepak" maxlength="60"></label>
+      }
+      <label><span class="field-label">What did they buy?</span><input class="field" formControlName="item" placeholder="e.g. Phone, Laptop, TV" maxlength="80"></label>
+      <label><span class="field-label">Charged to</span>
+        <select class="field" formControlName="cardId">
+          <option value="">Choose a card…</option>
+          @for (c of openCards(); track c.id) { <option [value]="c.id">{{ c.name }}{{ c.last4 ? ' ·· ' + c.last4 : '' }}</option> }
+        </select>
+        @if (!openCards().length) { <span class="field-hint">Add your cards first under Profile → Credit cards.</span> }
+      </label>
+      <label><span class="field-label">Price (₹)</span><input class="field num" inputmode="numeric" formControlName="price" placeholder="0"></label>
+      <label><span class="field-label">Bought on</span><input type="date" class="field" formControlName="date" [max]="today"></label>
+    </div>
+
+    <fieldset class="group">
+      <legend class="field-label">How will they pay you back?</legend>
+      <div class="seg-group" role="radiogroup">
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="!isEmi()" [attr.aria-checked]="!isEmi()" (click)="setType('once')">One-time</button>
+        <button type="button" role="radio" class="seg seg--sm" [class.is-on]="isEmi()" [attr.aria-checked]="isEmi()" (click)="setType('emi')">EMI on my card</button>
+      </div>
+    </fieldset>
+
+    @if (isEmi()) {
+      <div class="form-grid form-grid--wide">
+        <label><span class="field-label">EMI per month on the card (₹)</span><input class="field num" inputmode="numeric" formControlName="monthly" placeholder="incl. interest"></label>
+        <label><span class="field-label">Number of EMIs</span><input class="field num" inputmode="numeric" formControlName="count" placeholder="e.g. 6"></label>
+      </div>
+      <div class="two">
+        <label><span class="field-label">First EMI · month</span>
+          <select class="field" formControlName="startMonth">
+            @for (mn of months; track $index) { <option [ngValue]="$index">{{ mn }}</option> }
+          </select>
+        </label>
+        <label><span class="field-label">Year</span>
+          <select class="field" formControlName="startYear">
+            @for (y of years(); track y) { <option [ngValue]="y">{{ y }}</option> }
+          </select>
+        </label>
+      </div>
+    }
+
+    <div class="form-grid form-grid--wide">
+      <label><span class="field-label">{{ isEmi() ? 'One-time fee – processing + GST (₹, optional)' : 'Extra charges (₹, optional)' }}</span>
+        <input class="field num" inputmode="numeric" formControlName="fee" placeholder="0"></label>
+    </div>
+
+    @if (plan()?.hasCharges) {
+      <fieldset class="group">
+        <legend class="field-label">Who pays the extra charges?</legend>
+        <div class="seg-group" role="radiogroup">
+          <button type="button" role="radio" class="seg seg--sm" [class.is-on]="form.controls.chargesBy.value === 'friend'" [attr.aria-checked]="form.controls.chargesBy.value === 'friend'" (click)="setCharges('friend')">{{ who() === 'Your friend' ? 'My friend' : who() }} pays</button>
+          <button type="button" role="radio" class="seg seg--sm" [class.is-on]="form.controls.chargesBy.value === 'me'" [attr.aria-checked]="form.controls.chargesBy.value === 'me'" (click)="setCharges('me')">I absorb them</button>
+        </div>
+      </fieldset>
+    }
+
+    <!-- Live summary -->
+    @if (plan()?.problem) {
+      <div role="alert" class="notice notice--error notice--sm">{{ plan()!.problem }}</div>
+    } @else if (plan()?.lines?.length) {
+      <div class="notice notice--info summary" aria-live="polite">
+        @for (line of plan()!.lines; track $index) { <div [class.strong]="$index < 2">{{ line }}</div> }
+      </div>
+    }
+    @if (error() && error() !== plan()?.problem) { <div role="alert" class="err">{{ error() }}</div> }
+
+    <div class="actions">
+      <button type="button" class="btn" (click)="close()">Close</button>
+      <button type="submit" class="btn btn--primary" [appBusy]="saveKey">{{ store.loading.isPending(saveKey) ? 'Saving…' : 'Add' }}</button>
+    </div>
+  </form>
+</div>

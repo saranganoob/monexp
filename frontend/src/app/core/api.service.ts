@@ -64,6 +64,8 @@ export class Api {
   updateEntry(id: string, body: { name?: string; amount?: number; status?: 'pending' | 'done' }) { return this.patch<ChangeResult>(`/people-entries/${id}`, body); }
   deleteEntry(id: string) { return this.del<ChangeResult>(`/people-entries/${id}`); }
   /** Part of the money came in / was paid back; settles the entry once it's all there. */
+  /** Bought for a friend on my card: a one-time purchase they owe, or a friend's EMI (see backend routes/friendPurchases.js). */
+  addFriendPurchase(body: Record<string, unknown>) { return this.post<ChangeResult>('/friend-purchases', body); }
   addEntryPart(id: string, body: { amount: number; date?: string }) { return this.post<ChangeResult>(`/people-entries/${id}/parts`, body); }
   deleteEntryPart(id: string, partId: string) { return this.del<ChangeResult>(`/people-entries/${id}/parts/${partId}`); }
 

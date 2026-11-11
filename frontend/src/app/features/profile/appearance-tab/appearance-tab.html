@@ -1,4 +1,4 @@
-<section class="card panel">
+<section class="card panel p-theme">
   <div>
     <h2 id="themeLbl" class="card__title">Theme</h2>
     <p class="card__lead">Choose how MonEXP looks. Saved to your account.</p>
@@ -13,7 +13,7 @@
   </div>
 </section>
 
-<section class="card panel">
+<section class="card panel p-side">
   <div>
     <h2 id="sideLbl" class="card__title">Sidebar</h2>
     <p class="card__lead">How the menu on the left behaves on a computer. Saved to your account.</p>
@@ -31,7 +31,7 @@
     : 'The menu stays open; the « button shrinks it to icons.' }}</p>
 </section>
 
-<section class="card panel">
+<section class="card panel p-daily">
   <div>
     <h2 id="dailyLbl" class="card__title">Daily spends</h2>
     <p class="card__lead">Should tea, meals and other daily spends come off your monthly balance? Saved to your account.</p>
@@ -48,7 +48,30 @@
     : 'Daily spends are only tracked on their own page – your budget and balance ignore them.' }}</p>
 </section>
 
-<section class="card panel">
+<section class="card panel p-limit">
+  <div>
+    <h2 id="limitLbl" class="card__title">Daily limit</h2>
+    <p class="card__lead">A limit per day for Daily spends (tea, meals, snacks…). Going over never stops you – you just see a red dot and a short note. Saved to your account.</p>
+  </div>
+  <div role="radiogroup" aria-labelledby="limitLbl" class="seg-group">
+    <button type="button" role="radio" class="seg option" [class.is-on]="theme.dailyLimit() == null" [attr.aria-checked]="theme.dailyLimit() == null"
+      (click)="theme.setDailyLimit(null)"><app-icon name="close" />Off</button>
+    <button type="button" role="radio" class="seg option" [class.is-on]="theme.dailyLimit() != null" [attr.aria-checked]="theme.dailyLimit() != null"
+      (click)="limitOn()"><app-icon name="check" />On</button>
+  </div>
+  @if (theme.dailyLimit() != null) {
+    <label class="limit-field">
+      <span class="field-label">Limit per day</span>
+      <span class="prefix-input"><span class="prefix">₹</span>
+        <input id="dailyLimit" class="field num" inputmode="numeric" autocomplete="off" [value]="limitText()" (input)="setLimit($event)" (blur)="tidyLimit($event)"></span>
+    </label>
+  }
+  <p class="small muted hint">{{ theme.dailyLimit() != null
+    ? 'Over the limit: a red bar and “₹80 over today’s limit” on the day, and a red dot on that day in the calendar.'
+    : 'Off – Daily spends look exactly as they do now.' }}</p>
+</section>
+
+<section class="card panel p-sudden">
   <div>
     <h2 id="suddenLbl" class="card__title">Sudden spends</h2>
     <p class="card__lead">Should sudden spends (repairs, gifts, one-off buys) come off your monthly balance? Saved to your account.</p>
@@ -65,7 +88,7 @@
     : 'Sudden spends are only a note – listed on their page, but your budget and balance ignore them.' }}</p>
 </section>
 
-<section class="card panel">
+<section class="card panel p-calc">
   <div>
     <h2 id="calcLbl" class="card__title">Calculator</h2>
     <p class="card__lead">A calculator button at the top of every page, on a computer. Type a sum like 23+22, then copy the answer into any amount box. Saved to your account.</p>
@@ -79,7 +102,7 @@
   <p class="small muted hint">Not shown on phones. Drag it anywhere by its top bar; double-click the bar to put it back in the corner.</p>
 </section>
 
-<section class="card panel">
+<section class="card panel p-accent">
   <div>
     <h2 id="accentLbl" class="card__title">Accent colour</h2>
     <p class="card__lead">Used for buttons, the selected menu item, links and the budget card. Saved to your account, so it follows you to every device.</p>
@@ -135,7 +158,7 @@
   </div>
 </section>
 
-<section class="card panel">
+<section class="card panel p-lang">
   <div>
     <h2 id="langLbl" class="card__title">Home language <span class="native">(தாய்மொழி / మాతృభాష / मातृभाषा)</span></h2>
     <p class="card__lead">MonEXP stays in English. Pick a language to see a small hint in it under “They owe me” and “I owe them”. Saved to your account.</p>

@@ -103,3 +103,17 @@
   .cell__amt { font-size: 10px; letter-spacing: -0.03em; text-overflow: clip; .full { display: none; } .short { display: inline; } }
 }
 @media (prefers-reduced-motion: reduce) { .cell, .row { transition: none; } }
+
+// ---- daily limit: a bar towards the limit, a short note, and red dots – never a block ----
+.limit { display: flex; flex-direction: column; gap: 6px; margin-top: -4px; }
+.limit__bar { height: 6px; border-radius: 999px; background: var(--hair-2); overflow: hidden;
+  span { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .6s cubic-bezier(.16, 1, .3, 1), background .3s ease; } }
+.limit--near .limit__bar span { background: var(--warn-fg); }
+.limit--over .limit__bar span { background: var(--bad-fg); }
+.limit__note { color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.limit--over .limit__note { color: var(--bad-fg); }
+.limit__dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--bad-fg); }
+.over-days { display: flex; align-items: center; gap: 6px; color: var(--bad-fg); margin-top: 2px; }
+.cell__over { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--bad-fg);
+  box-shadow: 0 0 0 1.5px var(--surface-solid); }
+@media (prefers-reduced-motion: reduce) { .limit__bar span { transition: none; } }

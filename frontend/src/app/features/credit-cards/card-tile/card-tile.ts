@@ -27,6 +27,8 @@ export class CardTile {
   readonly card = input.required<CardView>();
   /** "Add EMI to this card" was clicked. */
   readonly addEmi = output<string>();
+  /** Opens "Bought for a friend" with this card picked. */
+  readonly friendBuy = output<string>();
 
   protected readonly editingBill = signal(false);
   protected readonly editingEmi = signal<string | null>(null);

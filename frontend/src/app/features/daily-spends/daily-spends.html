@@ -15,6 +15,9 @@
       <div class="label">Daily average</div>
       <div class="stat__value num">{{ average() | inr }}</div>
       <div class="stat__note">{{ isFutureMonth() ? 'This month hasn’t started yet' : 'Across the days so far' }}</div>
+      @if (limit() != null && daysOver()) {
+        <div class="stat__note over-days"><span class="limit__dot" aria-hidden="true"></span>{{ daysOver() }} day{{ daysOver() === 1 ? '' : 's' }} over your {{ limit()! | inr }} limit</div>
+      }
     </div>
     <div class="card stat">
       <div class="label">Highest day</div>
@@ -84,6 +87,16 @@
           <span>{{ isToday() ? 'Total today' : 'Total for the day' }}</span>
           <strong class="num">{{ draftTotal() | inr }}</strong>
         </footer>
+        <!-- Daily limit (Profile → Preferences): a bar towards the limit and a short note – it never blocks anything. -->
+        @if (vsLimit(); as v) {
+          <div class="limit" [class]="'limit limit--' + v.tone">
+            <div class="limit__bar" role="img" [attr.aria-label]="v.pct + '% of the ' + (v.limit | inr) + ' daily limit'"><span [style.width.%]="v.pct"></span></div>
+            <div class="limit__note small" role="status">
+              @if (v.over) { <span class="limit__dot" aria-hidden="true"></span><strong class="num">{{ v.over | inr }}</strong> over {{ isToday() ? 'today’s' : 'the' }} {{ v.limit | inr }} limit }
+              @else { <span class="num">{{ v.left | inr }}</span> left of {{ isToday() ? 'today’s' : 'the' }} {{ v.limit | inr }} limit }
+            </div>
+          </div>
+        }
         @if (!isToday() && today()) {
           <div class="past-foot">
             <span class="small muted">Forgot a day? Tap it on the calendar to fill it in.</span>
@@ -116,6 +129,7 @@
             <button type="button" class="cell" role="gridcell" [class]="'cell cell--l' + c.level" [class.is-today]="c.isToday" [class.is-sel]="c.selected"
               [class.is-future]="c.future" [disabled]="c.future" [attr.aria-label]="c.label" [attr.aria-pressed]="c.selected" (click)="pick(c.date)">
               <span class="cell__day">{{ c.day }}</span>
+              @if (c.over) { <span class="cell__over" aria-hidden="true"></span> }
               @if (!c.future) { <span class="cell__amt num"><span class="full">{{ c.total ? (c.total | inr) : '–' }}</span><span class="short">{{ c.total ? c.short : '–' }}</span></span> }
             </button>
           } @else {

@@ -15,6 +15,7 @@ const prefsSchema = new Schema({
   calculator: { type: Boolean, default: null }, // calculator button in the top bar (web); null = on
   dailyInBudget: { type: Boolean, default: null }, // daily spends come off the month's balance; null = yes
   suddenInBudget: { type: Boolean, default: null }, // sudden spends come off the month's balance; null = no (a note only)
+  dailyLimit: { type: Number, default: null, min: 1, max: 1000000 }, // daily spends limit per day (₹); null = off
   navOrder: { type: [{ type: String, enum: MENU_KEYS }], default: undefined }, // menu order; none = the default order
   navHidden: { type: [{ type: String, enum: MENU_KEYS }], default: undefined }, // menu sections switched off
 }, { _id: false });

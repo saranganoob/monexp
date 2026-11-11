@@ -9,6 +9,7 @@ import monthRoutes from './routes/months.js';
 import dailyRoutes from './routes/daily.js';
 import itemRoutes from './routes/items.js';
 import setupRoutes from './routes/setup.js';
+import friendPurchaseRoutes from './routes/friendPurchases.js';
 import reportRoutes from './routes/reports.js';
 import aiRoutes from './routes/ai.js';
 import adminRoutes from './routes/admin.js';
@@ -60,6 +61,7 @@ export function createApp() {
   app.use('/api/daily', dailyRoutes);
   app.use('/api', itemRoutes);
   app.use('/api', setupRoutes);
+  app.use('/api', friendPurchaseRoutes);
   app.use('/api', reportRoutes);
   app.use('/api/ai', aiRoutes);
   app.use('/api/admin', adminRoutes);

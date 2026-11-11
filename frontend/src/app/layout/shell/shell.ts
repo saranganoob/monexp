@@ -10,6 +10,7 @@ import { AddExpenseDialog } from '../add-expense-dialog/add-expense-dialog';
 import { EmiDialog } from '../emi-dialog/emi-dialog';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { AskAi } from '../ask-ai/ask-ai';
+import { FriendBuyDialog } from '../friend-buy-dialog/friend-buy-dialog';
 import { ThemeService } from '../../core/theme.service';
 import { Calculator } from '../calculator/calculator';
 import { PageHeader, PageMeta } from '../page-header/page-header';
@@ -25,7 +26,7 @@ interface LastPage { url: string; who: string; at: number; }
 /** The signed-in app frame. Each route's `data` is a PageMeta (title, picker, …). */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, Sidebar, TopBar, PageHeader, EmptyMonth, AddExpenseDialog, EmiDialog, AskAi, Calculator, UndoToast, Skeleton],
+  imports: [RouterOutlet, Sidebar, TopBar, PageHeader, EmptyMonth, AddExpenseDialog, EmiDialog, FriendBuyDialog, AskAi, Calculator, UndoToast, Skeleton],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
   providers: [LiveService], // live updates while signed in

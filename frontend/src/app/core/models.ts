@@ -23,6 +23,8 @@ export interface Bill {
 export interface EmiView {
   id: string; cardId: string | null; item: string; forWho: 'me' | 'friend'; freq: Freq; personId: string | null; personName: string;
   monthly: number; amount: number; n: number; total: number | null; ongoing?: boolean; startYm: string; endYm: string | null; received: 'pending' | 'done';
+  /** What the friend repays this month (less than `amount` when I absorb the charges of a purchase bought for them). */
+  repay?: number;
 }
 
 export interface CardView {
@@ -32,7 +34,8 @@ export interface CardView {
   billId: string | null; billStatus: BillStatus | null;
 }
 
-export interface CardSpendItem { id: string; cardId: string; name: string; amount: number; date: string; }
+/** `personId` set = bought for a friend (linked to their "owes me" entry); `emiId` = the fee of a friend's EMI purchase. */
+export interface CardSpendItem { id: string; cardId: string; name: string; amount: number; date: string; personId?: string | null; entryId?: string | null; emiId?: string | null; }
 
 /** Part of the money received / paid back on a given day. */
 export interface EntryPart { id: string; amount: number; date: string; }
@@ -100,6 +103,8 @@ export interface YearView {
 export type HomeLang = 'ta' | 'te' | 'hi';
 export type SidebarStyle = 'classic' | 'pin';
 export interface Prefs { theme: 'light' | 'dark' | null; accent: string | null; lang: HomeLang | null; sidebar?: SidebarStyle | null; sidebarPinned?: boolean | null; aiName?: string | null; calculator?: boolean | null; dailyInBudget?: boolean | null; suddenInBudget?: boolean | null;
+  /** Daily spends limit per day (₹); null = off. */
+  dailyLimit?: number | null;
   /** Menu order (null = default) and the sections switched off (Profile → Menu). */
   navOrder?: string[] | null; navHidden?: string[] | null; }
 /** `name` = what they typed in Profile → Account ('' = not set; the email is used instead). */

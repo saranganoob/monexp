@@ -26,6 +26,13 @@ export function installmentAt(startYm, total, ym) {
   return { n, total: ongoing ? null : total, ongoing, endYm: ongoing ? null : indexToYm(start + total - 1), active: n >= 1 && n <= totalOf(total) };
 }
 
+/** A friend's share of one EMI payment (see CardEmi: price / chargesBy). */
+export function friendRepay(e, n, amount) {
+  if (e.forWho !== 'friend' || e.chargesBy !== 'me' || !e.price || !e.totalMonths) return amount;
+  const base = Math.floor(e.price / e.totalMonths);
+  return n === e.totalMonths ? e.price - base * (e.totalMonths - 1) : base;
+}
+
 // `daily` = the month's daily spends (tea, meals…); taken off the balance when `dailyInBudget`.
 // Sudden spends are taken off the balance when `suddenInBudget`; otherwise they're a note only.
 export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: spendItems = [], cards, emis, plans, people, daily = 0, dailyInBudget = false, suddenInBudget = false }) {
@@ -41,11 +48,15 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
       const plan = emiPlan(e);
       const at = instAt(plan, I);
       const o = overrides.get(e.id);
+      const amount = o && o.amount != null ? o.amount : e.monthly || 0; // this payment's amount
       return {
         id: e.id, cardId: e.cardId, item: e.item, forWho: e.forWho, freq: plan.freq,
         personId: e.personId, personName: personName.get(e.personId) || '',
         monthly: e.monthly,
-        amount: o && o.amount != null ? o.amount : e.monthly || 0, // this payment's amount
+        amount,
+        // What the friend repays this month: the whole payment – or, when I absorb the charges of a purchase
+        // bought for them, just its price spread over the months (the last one evens out the rounding).
+        repay: friendRepay(e, at.n, amount),
         n: at.n, total: e.totalMonths ?? null, ongoing: e.totalMonths == null, startYm: e.startYm, active: at.due,
         left: e.totalMonths == null ? null : leftFrom(plan, I), endYm: e.totalMonths == null ? null : indexToYm(endIdx(plan)),
         received: (o && o.received) || 'pending',
@@ -61,12 +72,13 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
     const em = cardEmis.filter((e) => e.cardId === c.id);
     const myEmis = sum(em.filter((e) => e.forWho !== 'friend'));
     const friendEmis = sum(em.filter((e) => e.forWho === 'friend'));
+    const friendRepays = em.filter((e) => e.forWho === 'friend').reduce((s, e) => s + e.repay, 0); // what friends pay me back
     const spends = cardSpends[c.id] || 0;
     const items = spendItems.filter((s) => s.cardId === c.id);
     const itemised = sum(items);
     return {
       id: c.id, name: c.name, network: c.network, last4: c.last4, closedOn: c.closedOn,
-      spends, myEmis, friendEmis, total: spends + myEmis + friendEmis,
+      spends, myEmis, friendEmis, friendRepays, total: spends + myEmis + friendEmis,
       // Itemised purchases, plus whatever part of "my spends" wasn't itemised.
       items, itemised, notItemised: spends - itemised,
       emis: em, billId: null, billStatus: null,
@@ -102,7 +114,7 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
   const emiBillRows = bankEmis.map((e) => ({
     id: `emi:${e.id}`, kind: 'emi', emiId: e.id, ym,
     name: e.item + (e.forWho === 'friend' ? ` · ${e.personName || 'friend'}` : ''),
-    category: 'emi', amount: e.amount, status: e.paid, dueDay: null,
+    category: 'emi', amount: e.amount, repay: e.repay, status: e.paid, dueDay: null,
     note: `${freqLabel(e)} · paid from bank / cash · ${e.ongoing ? 'ongoing' : `closes ${ymLabel(e.endYm, { short: true })}`}`,
     cardId: null, planId: null, forWho: e.forWho, inst: { n: e.n, total: e.total, left: e.left, ongoing: e.ongoing }, sortOrder: 0,
   }));
@@ -134,7 +146,7 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
     .filter((e) => e.forWho === 'friend')
     .map((e) => ({
       id: `emi:${e.id}`, emiId: e.id, direction: 'in', personId: e.personId,
-      name: `${e.personName || 'Friend'} · ${e.item} EMI`, amount: e.amount, status: e.received,
+      name: `${e.personName || 'Friend'} · ${e.item} EMI`, amount: e.repay, status: e.received,
       inst: { n: e.n, total: e.total, ongoing: e.ongoing }, auto: e.cardId ? cardById.get(e.cardId)?.name || 'card' : 'bank / cash',
     }));
   const receivables = entries.filter((r) => r.direction === 'in').map(withInst).filter(inPlanRange).concat(friendEmiRows);
@@ -145,8 +157,9 @@ export function computeMonth({ ym, month, bills, entries, sudden, cardSpends: sp
   const toPay = sum(live);
   const paidAmount = sum(paidBills) + sumBy(unpaidBills, (b) => b.paidPart || 0);
   // EMIs I pay for friends (on a card or from the bank) aren't my own spending – they pay me back.
-  const friendEmi = cardViews.reduce((s, c) => s + c.friendEmis, 0)
-    + sum(emiBillRows.filter((b) => b.forWho === 'friend' && b.status !== 'skipped'));
+  // (Only what they repay – charges I absorb on a purchase bought for a friend stay my own spending.)
+  const friendEmi = cardViews.reduce((s, c) => s + c.friendRepays, 0)
+    + emiBillRows.filter((b) => b.forWho === 'friend' && b.status !== 'skipped').reduce((s, b) => s + b.repay, 0);
   const ownPay = toPay - friendEmi;
   // Card-paid sudden spends are left out of the total: they're already inside that card's bill.
   const suddenTotal = sum(sudden.filter((s) => !s.cardId));
